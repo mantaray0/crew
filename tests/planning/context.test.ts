@@ -3,7 +3,10 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { latestSnapshotPath, readProjectContext } from "../../src/planning/context.js";
+import {
+  latestSnapshotPath,
+  readProjectContext,
+} from "../../src/planning/context.js";
 
 describe("context helper", () => {
   let root: string;
@@ -20,14 +23,20 @@ describe("context helper", () => {
 
   it("returns PROJECT.md content within the char budget", async () => {
     await fs.mkdir(path.join(root, ".planning"), { recursive: true });
-    await fs.writeFile(path.join(root, ".planning", "PROJECT.md"), "# Demo\nhello");
+    await fs.writeFile(
+      path.join(root, ".planning", "PROJECT.md"),
+      "# Demo\nhello",
+    );
     const c = await readProjectContext(root, 1000);
     expect(c).toContain("# Demo");
   });
 
   it("truncates and marks when over budget", async () => {
     await fs.mkdir(path.join(root, ".planning"), { recursive: true });
-    await fs.writeFile(path.join(root, ".planning", "PROJECT.md"), "x".repeat(5000));
+    await fs.writeFile(
+      path.join(root, ".planning", "PROJECT.md"),
+      "x".repeat(5000),
+    );
     const c = await readProjectContext(root, 100);
     expect(c?.length).toBeLessThan(300);
     expect(c).toContain("truncated");
