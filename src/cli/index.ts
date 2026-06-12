@@ -4,6 +4,12 @@ import { Command } from "commander";
 import prompts from "prompts";
 import { loadConfig } from "../config/load.js";
 import { scaffoldPlanning } from "../planning/scaffold.js";
+import {
+  GLOBAL_REGISTRY_PATH,
+  loadRegistry,
+  resolveArchetype,
+  writeStarterRegistry,
+} from "../registry/load.js";
 
 // Daniels Default-Stack — vorbefüllt im Interview.
 const STACK_DEFAULTS: Record<string, string> = {
@@ -49,30 +55,65 @@ export function buildProgram(): Command {
         }
       }
 
+      const registry = await loadRegistry();
+      let projectType: string | null = null;
+      let tags: string[] = [];
       let stack = { ...STACK_DEFAULTS };
+      let testingPolicy:
+        | "from-archetype"
+        | "tdd"
+        | "tests-required"
+        | "optional"
+        | undefined;
+
+      if (!opts.yes && registry.archetypes.length > 0) {
+        const pick = await prompts({
+          type: "select",
+          name: "archetype",
+          message: "Project type?",
+          choices: [
+            ...registry.archetypes.map((a) => ({
+              title: a.name,
+              description: a.description,
+              value: a.name,
+            })),
+            { title: "(none / decide later)", value: "__none__" },
+          ],
+        });
+        if (pick.archetype && pick.archetype !== "__none__") {
+          const resolved = resolveArchetype(registry, pick.archetype);
+          if (resolved) {
+            projectType = pick.archetype;
+            tags = resolved.tags;
+            stack = { ...STACK_DEFAULTS, ...resolved.stack };
+            testingPolicy = resolved.testing;
+          }
+        }
+      }
+
       if (!opts.yes) {
         const res = await prompts({
           type: "confirm",
           name: "useDefaults",
-          message: `Use the default stack (${STACK_DEFAULTS.app}/${STACK_DEFAULTS.api}/${STACK_DEFAULTS.db})?`,
+          message: `Use this stack (${stack.app ?? stack.api ?? "?"} / ${stack.db ?? "?"})?`,
           initial: true,
         });
         if (res.useDefaults === false) {
           const edited = await prompts(
-            Object.keys(STACK_DEFAULTS).map((k) => ({
+            Object.keys(stack).map((k) => ({
               type: "text" as const,
               name: k,
               message: k,
-              initial: STACK_DEFAULTS[k],
+              initial: stack[k],
             })),
           );
-          stack = { ...STACK_DEFAULTS, ...edited };
+          stack = { ...stack, ...edited };
         }
       }
 
       const dir = await scaffoldPlanning(
         root,
-        { projectName, projectType: null, tags: [], stack },
+        { projectName, projectType, tags, stack, testingPolicy },
         { force: opts.force },
       );
       const cfg = await loadConfig(root);
@@ -80,8 +121,30 @@ export function buildProgram(): Command {
         `crew: initialized ${path.relative(root, dir) || ".planning"}`,
       );
       console.log(
-        `crew: provider=${cfg.tasks.provider} models=${cfg.models.mode} parallel=${cfg.execution.parallel}`,
+        `crew: type=${projectType ?? "none"} tags=[${tags.join(",")}] provider=${cfg.tasks.provider} models=${cfg.models.mode}`,
       );
+    });
+
+  program
+    .command("setup")
+    .description(
+      "Write the starter project-type/tag registry to ~/.claude/crew/",
+    )
+    .option("-f, --force", "overwrite an existing registry")
+    .action(async (opts: { force?: boolean }) => {
+      const exists = await fs
+        .access(GLOBAL_REGISTRY_PATH)
+        .then(() => true)
+        .catch(() => false);
+      if (exists && !opts.force) {
+        console.error(
+          `crew: registry already exists at ${GLOBAL_REGISTRY_PATH} (use --force to overwrite)`,
+        );
+        process.exitCode = 1;
+        return;
+      }
+      const written = await writeStarterRegistry();
+      console.log(`crew: wrote starter registry to ${written}`);
     });
 
   return program;
