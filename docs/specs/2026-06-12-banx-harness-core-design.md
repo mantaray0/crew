@@ -1,0 +1,344 @@
+# banx — Meta-Agent-Harness (Core Engine) · Design-Spec
+
+- **Datum:** 2026-06-12
+- **Status:** Entwurf zur Freigabe
+- **Arbeitsname:** `banx` (Plugin + CLI + Command-Namespace) — provisorisch, vor Veröffentlichung bestätigen
+- **Scope dieser Spec:** Core Engine. Stack-spezifische Skills, externe PM-Adapter, das PM-Tool (eigenes) und die Boilerplate sind eigene Folge-Specs.
+
+---
+
+## 1. Ziel & Leitprinzip
+
+`banx` ist ein **Claude-Code-Plugin** mit begleitendem **CLI**, das einen schlanken, **config-getriebenen** agentischen Workflow liefert, zugeschnitten auf den Stack und die Arbeitsweise des Nutzers.
+
+Es löst die Schmerzpunkte bestehender Ansätze:
+
+- **Zu rigide Gates** → Klärung gebündelt (Roast-Me mit Empfehlungen), danach Durcharbeiten; Rückfragen nur wenn nötig.
+- **Zu viele Pflicht-Artefakte / Renumbering-Drama** → Roadmap ist editierbares Markdown; Phasen einschieben/tauschen ist eine Textänderung.
+- **Autonome Loops als Default** → Loop ist **opt-in**.
+
+**Leitprinzip:** *Eine Konfiguration mit Workflow* — nicht ein Workflow mit Konfiguration. Verhalten (Git, Verify, Modelle, Klärungstiefe, PM-Anbindung) wird per Config bestimmt; der Workflow folgt.
+
+### Originalität / keine Fremdreferenzen
+
+Adaptierte Inhalte stammen aus öffentlichen, MIT-lizenzierten Quellen, werden aber **substanziell umgeschrieben, umbenannt, gekürzt/ergänzt und teils neu erzeugt**. Im gesamten Repo gibt es **keine Referenzen auf Fremd-Harnesse, deren Namen, Branding oder Marketing**. Ergebnis sind eigenständige Derivate bzw. Neufassungen.
+
+### Non-Goals
+
+- Keine Multi-IDE/Cross-Tool-Distribution (Claude Code zuerst; Struktur erlaubt spätere Targets, baut sie aber nicht).
+- Nicht autonom-by-default.
+- Keine 1:1-Kopien fremder Inhalte.
+
+---
+
+## 2. Architektur-Überblick
+
+```
+Control-Surface   commands/        →  /banx:* Slash-Commands (die Steuerung)
+Spezialisten      agents/          →  Reviewer, Architect, Simplifier, …
+Wissen            skills/ rules/ contexts/
+Automatik         hooks/           →  Session-Lifecycle (Kontext laden/sichern)
+CLI               cli/             →  banx init / banx update  (Bun-first, Node-kompatibel)
+Zustand (Projekt) .planning/       →  committed im Ziel-Repo
+```
+
+Der **Harness lebt zentral** (Plugin, einmal installiert, zentral aktualisierbar). Der **Projekt-Zustand lebt im Ziel-Repo** (`.planning/`, committed, teilbar, später vom PM-Tool auslesbar).
+
+---
+
+## 3. Repo-Layout
+
+```
+banx/
+├── .claude-plugin/plugin.json     # Manifest: name, version, commands/agents/skills/hooks
+├── commands/                      # /banx:new, /banx:plan, /banx:next, …
+├── agents/                        # planner, code-explorer, *-reviewer, simplifier, …
+├── skills/                        # Meta-Skills jetzt; Stack-Skills = Folge-Spec
+├── rules/                         # immer geltende Leitplanken (adaptiert, rebranded)
+├── contexts/                      # Modi: dev / review / research
+├── hooks/                         # hooks.json + scripts/
+├── cli/                           # TS-Quelle des banx-CLI
+├── templates/.planning/           # Vorlage des Projekt-Zustands (von banx init kopiert)
+└── docs/specs/                    # Design-Specs (diese Datei)
+```
+
+---
+
+## 4. Projekt-Zustand: `.planning/` (committed)
+
+Von `banx init` pro Projekt angelegt:
+
+```
+.planning/
+├── config.json          # Steuerzentrum (§5)
+├── PROJECT.md            # lebende Projekt-Wahrheit ("Tech-Deck")
+├── roadmap.md            # Meilensteine → Phasen, Status + Zeitstempel
+├── plans/<id>.md         # detaillierter Plan je Feature/Phase/Ticket
+├── log.md                # append-only Fortschritts-Log
+├── sessions/             # Session-Snapshots (exakter nächster Schritt)
+└── .gitignore            # schließt volatile Snapshots aus, falls config das will
+```
+
+### 4.1 `PROJECT.md` — Single Source of Truth (statisch-lebend)
+
+Wird vom **SessionStart-Hook automatisch (gebündelt) geladen**. Enthält:
+
+- **Stack** (aus dem Interview): DB, ORM, Frontend, UI, Backend/API, Queue, Deploy.
+- **Architektur-Entscheidungen** (warum, nicht nur was) — verhindert Relitigation.
+- **Aktueller Stand** in 2–3 Sätzen (was läuft, was als Nächstes).
+- **Constraints** (Dinge, die immer gelten).
+
+`PROJECT.md` ist die *immer geltende* Wahrheit; `roadmap.md` ist der *Fahrplan*; `plans/` ist die *Detailebene*; `log.md` ist die *Historie*.
+
+### 4.2 `roadmap.md` — flexibel
+
+Plain Markdown, Meilensteine → Phasen, jede Phase mit Status-Marker und (bei Abschluss) Zeitstempel:
+
+```markdown
+## Meilenstein 1: Fundament
+- [x] 1.1 Backend-Struktur        — erledigt 2026-06-12 14:30
+- [>] 1.2 DB-Schema (Drizzle)     — aktiv
+- [ ] 1.3 Auth
+## Meilenstein 2: …
+```
+
+Marker: `[ ]` offen · `[>]` aktiv · `[x]` erledigt · `[~]` zurückgestellt. **Einschieben/Umsortieren/Streichen** ist reine Textänderung (per `/banx:adjust` oder direkt). Keine Nummerierungs-Zwänge.
+
+### 4.3 `plans/<id>.md` — Spec-Kopf + Detailplan in einer Datei
+
+Bewusst **eine** Datei mit zwei Ebenen (keine getrennte Spec-/Plan-Datei, außer `clarify.specArtifact:"separate"`):
+
+```markdown
+# <Feature/Ticket>
+
+## Spec   ← das "Was/Warum" (aus Roast-Me oder externem Ticket)
+- Ziel / Problem
+- Anforderungen
+- Akzeptanzkriterien
+- Out of Scope
+- externalRef: <ticket-id>   ← nur bei /banx:pull
+
+## Plan   ← das "Wie"
+- betroffene Dateien
+- Tasks: Action / zu spiegelndes Muster / Validierungsbefehl
+- Risiken
+- Verify-Konfiguration dieser Phase
+```
+
+- **Spec-Quelle:** Bei `/banx:new`/`/banx:plan` füllt Roast-Me den Spec-Kopf. Bei `/banx:pull <id>` kommt der Spec-Kopf aus dem externen Ticket (Titel/Beschreibung/Akzeptanzkriterien) — **keine Doppelung**.
+- **`clarify.specArtifact`:** `"section"` (Default, Spec-Kopf im Plan) · `"separate"` (eigene `specs/<id>.md`, Superpowers-Stil) · `"off"` (Quick-Tasks ohne formale Spec).
+- **Neues Projekt** braucht keinen Spec-Kopf je Feature für die Gesamtvision — die lebt in `PROJECT.md`.
+
+### 4.4 `log.md` — Fortschritt
+
+Append-only: `2026-06-12 14:30 · M1.2 erledigt · commit abc1234 · Verify: pass`.
+
+### 4.5 `sessions/` — Snapshots
+
+Format mit: Was wird gebaut · Was funktioniert (mit Beleg) · Was NICHT funktioniert (mit Grund) · Dateizustände · Entscheidungen · Blocker · **exakter nächster Schritt**. Committed per Default; `config.state.commitSessions=false` schließt sie via `.gitignore` aus.
+
+---
+
+## 5. `config.json` — Steuerzentrum
+
+Defaults aus dem Plugin; pro Projekt überschreibbar; einzelne Phasen dürfen im Setup-Flow abweichen. Globaler Layer in `~/.claude/banx/config.json` für Defaults über alle Projekte.
+
+```jsonc
+{
+  "git": {
+    "autoCommitPerPhase": true,     // atomarer Commit nach verifizierter Phase
+    "autoPush": false,              // Remote nie ohne Freigabe
+    "autoPR": false,
+    "commitStyle": "conventional",
+    "branchPattern": "feat/{slug}"
+  },
+  "verify": {
+    "default": ["verify", "review", "harden", "simplify"],
+    "perPhaseOverride": true        // Phase darf Schritte an-/abschalten
+  },
+  "models": {
+    "mode": "auto",                 // "auto" | "manual"
+    "planning": "opus",
+    "execution": "sonnet",
+    "review": "opus",
+    "simplify": "sonnet",
+    "trivial": "haiku"
+  },
+  "clarify": {
+    "depth": "normal",              // "light" | "normal" | "deep"
+    "askOnlyWhenStuck": true,       // nach der Klärungsphase nur bei echten Blockern fragen
+    "specArtifact": "section"       // "section" (Spec-Kopf im Plan) | "separate" (eigene Datei) | "off"
+  },
+  "tasks": {
+    "provider": "local",            // "local" | "mcp:linear" | "mcp:jira" | "mcp:clickup" | "banx-pm"
+    "writeBack": false,             // Status/Kommentar zurück ins externe Tool
+    "projectKey": null              // externe Projekt-/Board-ID
+  },
+  "state": { "commitSessions": true },
+  "loop": { "maxIterations": 6 },
+  "stack": { /* vom banx-init-Interview befüllt */ }
+}
+```
+
+Harte Grenze bleibt immer `settings.json` (welche Tools/Commands überhaupt erlaubt sind). `config.json` steuert *Verhalten innerhalb* dieser Grenzen.
+
+---
+
+## 6. Command-Surface (die Spine)
+
+Jeder Command: liest definierten Zustand, schreibt definierten Zustand, respektiert `config.json`.
+
+| Command | Zweck | Liest | Schreibt | Gates |
+|---|---|---|---|---|
+| `/banx:new` | Idee/Feature starten: **Roast-Me-Klärung** (Teil der Planungsphase) + **Stack-Interview** | – | `PROJECT.md`, initiale Spec | wartet auf Zusammenfassung-OK |
+| `/banx:plan` | Klarheit → Fahrplan + Detailpläne | PROJECT.md, Spec | `roadmap.md`, `plans/<id>.md` | wartet auf Plan-OK |
+| `/banx:next` | Nächste Phase ausführen (Kern-Loop) | PROJECT, roadmap, plan, log | Code, `log.md`, ggf. Commit | Verify + Commit per config |
+| `/banx:verify` | Verify→Review→Härten→Simplify explizit | plan, Diff | Review-Bericht, `log.md` | – |
+| `/banx:adjust` | Roadmap mitten im Flow ändern | roadmap | `roadmap.md` | – |
+| `/banx:status` | Stand zeigen | roadmap, log | – | – |
+| `/banx:resume` | Frische Session orientieren | PROJECT, letzter Snapshot, log | – | wartet auf „weiter" |
+| `/banx:ship` | Commit/Push/PR gemäß config | config, Diff | Git-Remote/PR | Freigabe-Gates |
+| `/banx:pull <id>` | Externes Ticket → interner Plan | Provider (MCP) | `plans/<id>.md`, roadmap-Eintrag | – |
+| `/banx:loop` | **Opt-in** „iterieren bis Ziel" auf einer Phase | plan | Code, log | maxIterations |
+
+### 6.1 `/banx:new` — Roast-Me + Stack-Interview
+
+- **Roast-Me-Klärung** (Teil der Planungsphase): unerbittlich-aber-begrenztes Befragen entlang des Entscheidungsbaums; **jede Frage trägt eine empfohlene Antwort** (Nutzer nickt ab statt zu tippen); wenn eine Frage aus dem Code beantwortbar ist, wird recherchiert statt gefragt; Abschluss mit Zusammenfassung. Tiefe via `clarify.depth`.
+- **Stack-Interview:** fragt DB / Frontend / UI / Backend-API / Queue / Deploy — **mit den Defaults des Nutzers vorbefüllt**. Option „**du entscheidest** → schlag vor → ich segne ab". Ergebnis → `config.stack` + `PROJECT.md`.
+
+### 6.2 `/banx:next` — Kern-Loop
+
+1. Kontext laden: `PROJECT.md` + aktive Phase aus `roadmap.md` + zugehöriger `plans/<id>.md` + letzter Eintrag in `log.md` → **exakter nächster Schritt** steht fest.
+2. Umsetzen (Model = `models.execution` bzw. auto).
+3. **Verify-Pipeline** gemäß `verify` (Phase-Override beachtet), in **frischen Subagent-Kontexten** (§8).
+4. Bei Erfolg: atomarer Commit (falls `git.autoCommitPerPhase`), `roadmap.md` Status + Zeitstempel, `log.md` Eintrag.
+5. Bericht an Nutzer.
+
+---
+
+## 7. Model-Management
+
+- Jeder Command/Agent trägt einen **Task-Typ** (`planning|execution|review|simplify|trivial`).
+- `mode:"manual"` → Task-Typ wird auf das fest konfigurierte Model gemappt.
+- `mode:"auto"` → Heuristik: Planen/Review → Opus, Ausführen/Simplify → Sonnet, Triviales → Haiku.
+- Commands **überschreiben das Model des Subagents pro Aufruf** (statt es in jeder Agent-Datei zu verdrahten).
+- **Override-Präzedenz:** ad-hoc (Nutzer im Lauf) > Projekt-`config.json` > globaler Default > Plugin-Default.
+- *Umsetzungs-Risiko:* Agent-Dateien tragen ein `model`-Frontmatter; die config-getriebene Übersteuerung erfolgt über den Subagent-Start mit Model-Override. In Phase 1 verifizieren, dass die Laufzeit das zuverlässig erlaubt; sonst Fallback: `banx init` generiert agent-Varianten je Profil.
+
+---
+
+## 8. Context-Handling über Sessions
+
+- **SessionStart-Hook:** lädt `PROJECT.md` gebündelt (zeichenbegrenzt) → Claude orientiert sich automatisch, ohne Erklärung.
+- **PreCompact-Hook:** sichert aktuellen Zustand in `sessions/` → kein Kontextverlust beim Komprimieren.
+- **`/banx:resume`:** liest `PROJECT.md` + neuesten Snapshot + `log.md` → strukturiertes Briefing (Stand, „nicht erneut versuchen", nächster Schritt) → wartet auf „weiter".
+- **Frischer Kontext pro Schritt:** Umsetzung und Verifikation laufen als getrennte Subagent-Durchläufe; der Plan + Log halten den Faden, nicht das Kontextfenster.
+
+---
+
+## 9. Verify-Pipeline
+
+Reihenfolge (config-/phasensteuerbar), je in **frischem Subagent-Kontext**:
+
+1. **verify** — Tests / Build / Typecheck (stack-spezifische Befehle aus `PROJECT.md`).
+2. **review** — Reviewer-Agents (allgemein + sprach-/domänenspezifisch).
+3. **harden** — Silent-Failure-Jagd, Type-Design, Security-Pass.
+4. **simplify** — Vereinfachung ohne Funktionsänderung.
+
+Ergebnis wird zusammengefasst; kritische Findings blockieren den Phasen-Commit, bis behoben oder bewusst übergangen.
+
+---
+
+## 10. Agents (adaptiert & rebranded)
+
+Kuratiert, an den Stack angepasst, ohne Fremdreferenzen:
+
+- **planner / architect** (Task-Typ planning) — Planung & Architektur.
+- **code-explorer** — Bestand verstehen vor Änderungen.
+- **code-reviewer** (allgemein) + **typescript-reviewer**, **react-reviewer**, **database-reviewer** (Drizzle/Postgres) — Review.
+- **security-reviewer** — Sicherheits-Pass.
+- **silent-failure-hunter**, **type-design-analyzer** — Härten.
+- **code-simplifier** — Simplify.
+- **build-error-resolver** — Build-Fixes.
+- **loop-operator** (optional) — opt-in Iterations-Loop.
+
+Jeder Agent: Frontmatter `name, description, tools, model` (+ Task-Typ). Default-Model gemäß §7.
+
+---
+
+## 11. Skills, Rules, Contexts
+
+- **Meta-Skills jetzt:** `roast-me` (Befragung), `banx-planning` (Fahrplan/Phasen-Konventionen), `banx-context` (Zustands-/Session-Handling), `git-conventions`, `verification-loop`, `tdd-workflow`.
+- **Stack-Skills (Folge-Spec):** hono-api, drizzle-postgres, shadcn-baseui, tanstack-query/form/table, bullmq-redis, bun-scripts, nextjs, react-patterns/testing/performance, coolify-deploy (optional).
+- **Rules:** immer geltende Leitplanken (Sicherheit, Validierung, Muster-vor-Neuerfindung, fokussierte Änderungen) — adaptiert, rebranded.
+- **Contexts:** `dev`, `review`, `research` — Verhaltensmodi.
+
+---
+
+## 12. Hooks
+
+| Event | Hook | Zweck | Blockierend |
+|---|---|---|---|
+| SessionStart | load-project-context | `PROJECT.md` gebündelt laden | nein |
+| PreCompact | snapshot-state | Zustand in `sessions/` sichern | nein |
+| Stop (optional, config) | quality-gate | Format/Typecheck-Quickgate | je nach Ausgang |
+
+Lokal per Default; nichts wird ohne explizite Integration an externe Dienste gesendet.
+
+---
+
+## 13. CLI (`banx`)
+
+- In TypeScript geschrieben, **Bun-first**, lauffähig auch unter **Node/npx/pnpmx** (keine Bun-only-APIs im Entrypoint).
+- `banx init` — legt `.planning/` aus `templates/` an, führt Stack-Interview, schreibt `config.json` + `PROJECT.md`.
+- `banx update` — zieht zentrale Harness-Updates.
+- Install global: `/plugin marketplace add <repo>` → `/plugin install banx`.
+
+---
+
+## 14. Task-Provider-Abstraktion (PM-Brücke)
+
+Trennt **„woher die Arbeit kommt"** von **„wie sie abgearbeitet wird"**.
+
+- Normalisiertes **Work-Item:** `{ id, title, description, acceptanceCriteria, status, externalRef? }`.
+- **Provider:**
+  - `local` (Default, zero-config) → interne `roadmap.md`. **Wird jetzt gebaut.**
+  - `mcp:linear` / `mcp:jira` / `mcp:clickup` → über die jeweils existierenden MCP-Connectors. **Folge-Spec.**
+  - `banx-pm` → eigenes PM-Tool (Thema 3). **Folge-Spec.**
+- **Pro Projekt *und* global wählbar:** `config.tasks.provider` (Projekt) + globaler Default in `~/.claude/banx/`. Der Provider bestimmt, welcher Skill/MCP für Pull/Write-Back gerufen wird.
+- **Kollisionsfrei:** Internes `.planning/` ist **immer die Arbeitsebene** (Detail); das externe Ticket ist **Nordstern + Sync-Grenze** (grob). 1 Ticket → 1 Plan (ggf. mehrere Phasen). Sync nur an Phasen-/Meilenstein-Grenzen.
+- `/banx:pull <id>` importiert ein Ticket → `plans/<id>.md` + roadmap-Eintrag mit `externalRef`. Bei Abschluss (falls `writeBack`) Kommentar + Status zurück ins externe Tool.
+
+---
+
+## 15. Out of Scope (Folge-Specs)
+
+1. **Stack-spezifische Skills** (hono/drizzle/tanstack/bullmq/…).
+2. **Externe PM-Adapter** (Linear/Jira/ClickUp) inkl. Write-Back.
+3. **Eigenes PM-Tool** (Thema 3) als `banx-pm`-Provider.
+4. **Boilerplate-Monorepo** (Thema 1).
+
+---
+
+## 16. Risiken & offene Punkte
+
+| Risiko | Mitigation |
+|---|---|
+| Config-getriebener Model-Override evtl. nicht zuverlässig zur Laufzeit | In Phase 1 verifizieren; Fallback: profil-spezifische Agent-Varianten via `banx init` |
+| `sessions/` committed erzeugt Rauschen | `config.state.commitSessions=false` → gitignore |
+| Verify-Pipeline in frischem Kontext kann Faden verlieren | Plan + Log als externes Gedächtnis; Briefing-Format erzwingen |
+| MIT-Attribution vs. „keine Referenz" | Substanzielles Umschreiben → eigenständiges Derivat; keine Fremdmarken |
+
+---
+
+## 17. Akzeptanzkriterien (Core Engine)
+
+- [ ] `banx` als installierbares Claude-Code-Plugin (Manifest, Commands, Agents, Skills, Rules, Contexts, Hooks).
+- [ ] `banx init` legt `.planning/` an und führt das Stack-Interview (inkl. „du entscheidest"-Option).
+- [ ] `config.json` steuert Git-, Verify-, Model-, Clarify- und Tasks-Verhalten; Projekt- + globaler Layer.
+- [ ] Voller Zyklus lauffähig: `/banx:new` → `/banx:plan` → `/banx:next` (mit Verify-Pipeline) → Commit + Log.
+- [ ] Context-Handling über Sessions: SessionStart lädt PROJECT.md, `/banx:resume` brieft korrekt, „mach weiter" trifft den exakten nächsten Schritt.
+- [ ] `/banx:adjust` schiebt/sortiert/streicht Phasen ohne Renumbering-Bruch.
+- [ ] Model-Management mit `auto`- und `manual`-Modus + Override-Präzedenz.
+- [ ] Task-Provider-Abstraktion vorhanden; `local`-Provider voll funktionsfähig.
+- [ ] Keine Fremd-Harness-Referenzen/Branding im Repo.
