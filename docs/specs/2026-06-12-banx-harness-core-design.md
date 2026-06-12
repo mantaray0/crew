@@ -51,7 +51,7 @@ Der **Harness lebt zentral** (Plugin, einmal installiert, zentral aktualisierbar
 ```
 banx/
 ├── .claude-plugin/plugin.json     # Manifest: name, version, commands/agents/skills/hooks
-├── commands/                      # /banx:new, /banx:plan, /banx:next, …
+├── commands/                      # /banx:brief, /banx:plan, /banx:next, …
 ├── agents/                        # planner, code-explorer, *-reviewer, simplifier, …
 ├── skills/                        # Meta-Skills jetzt; Stack-Skills = Folge-Spec
 ├── rules/                         # immer geltende Leitplanken (adaptiert, rebranded)
@@ -74,6 +74,7 @@ Von `banx init` pro Projekt angelegt:
 ├── PROJECT.md            # lebende Projekt-Wahrheit ("Tech-Deck")
 ├── roadmap.md            # Meilensteine → Phasen, Status + Zeitstempel + Claims
 ├── plans/<id>.md         # detaillierter Plan je Feature/Phase/Ticket
+├── backlog.md            # Ideen-Inbox: reibungslos ablegen, bei plan/groom triagieren
 ├── claims.json           # welche Instanz/Worktree bearbeitet welche Phase (§6.3)
 ├── log.md (oder log/<feature>.md) # append-only Fortschritts-Log
 ├── sessions/<worktree-id>/ # Session-Snapshots je Instanz (kollisionsfrei)
@@ -126,7 +127,7 @@ Bewusst **eine** Datei mit zwei Ebenen (keine getrennte Spec-/Plan-Datei, außer
 - Verify-Konfiguration dieser Phase
 ```
 
-- **Spec-Quelle:** Bei `/banx:new`/`/banx:plan` füllt Roast-Me den Spec-Kopf. Bei `/banx:pull <id>` kommt der Spec-Kopf aus dem externen Ticket (Titel/Beschreibung/Akzeptanzkriterien) — **keine Doppelung**.
+- **Spec-Quelle:** Bei `/banx:brief`/`/banx:plan` füllt Roast-Me den Spec-Kopf. Bei `/banx:pull <id>` kommt der Spec-Kopf aus dem externen Ticket (Titel/Beschreibung/Akzeptanzkriterien) — **keine Doppelung**.
 - **`clarify.specArtifact`:** `"section"` (Default, Spec-Kopf im Plan) · `"separate"` (eigene `specs/<id>.md`, Superpowers-Stil) · `"off"` (Quick-Tasks ohne formale Spec).
 - **Neues Projekt** braucht keinen Spec-Kopf je Feature für die Gesamtvision — die lebt in `PROJECT.md`.
 
@@ -193,7 +194,7 @@ Defaults aus dem Plugin; pro Projekt überschreibbar; einzelne Phasen dürfen im
     "events": ["blocker", "completion"], // Blocker (braucht dich) + Abschluss längerer Läufe
     "channel": "os"                 // "os" (macOS osascript/terminal-notifier) | "push:ntfy" | "push:pushover" | "off"
   },
-  "learn": { "enabled": true },     // /banx:learn aktiv (Self-Learn in Core)
+  "learn": { "enabled": true },     // /banx:retro aktiv (Self-Learn in Core)
   "state": { "commitSessions": true },
   "loop": { "maxIterations": 6 },
   "projectType": "saas-app",        // gewählter Archetyp aus dem globalen Registry (§5.1)
@@ -230,7 +231,8 @@ Jeder Command: liest definierten Zustand, schreibt definierten Zustand, respekti
 
 | Command | Zweck | Liest | Schreibt | Gates |
 |---|---|---|---|---|
-| `/banx:new` | Idee/Feature starten: **Roast-Me-Klärung** (Teil der Planungsphase) + **Stack-Interview** | – | `PROJECT.md`, initiale Spec | wartet auf Zusammenfassung-OK |
+| `/banx:brief` | Idee/Feature starten: **Roast-Me-Klärung** (Teil der Planungsphase) + **Stack-Interview** | – | `PROJECT.md`, initiale Spec | wartet auf Zusammenfassung-OK |
+| `/banx:backlog` | Ideen-Inbox: jederzeit (auch mitten in der Umsetzung) Idee ablegen; anzeigen/triagieren | backlog | `backlog.md` | – |
 | `/banx:plan` | Klarheit → Fahrplan + Detailpläne | PROJECT.md, Spec | `roadmap.md`, `plans/<id>.md` | wartet auf Plan-OK |
 | `/banx:next` | Nächste Phase ausführen (Kern-Loop) | PROJECT, roadmap, plan, log | Code, `log.md`, ggf. Commit | Verify + Commit per config |
 | `/banx:verify` | Verify→Review→Härten→Simplify explizit | plan, Diff | Review-Bericht, `log.md` | – |
@@ -240,13 +242,13 @@ Jeder Command: liest definierten Zustand, schreibt definierten Zustand, respekti
 | `/banx:ship` | Commit/Push/PR gemäß config | config, Diff | Git-Remote/PR | Freigabe-Gates |
 | `/banx:pull <id>` | Externes Ticket → interner Plan | Provider (MCP) | `plans/<id>.md`, roadmap-Eintrag | – |
 | `/banx:dispatch` | Unabhängige Phasen parallel ausführen (DAG, Worktrees, Sub-Agents) + rollend integrieren | roadmap, plans | Worktrees, Branches, claims, log | Parallel-Plan-Bestätigung |
-| `/banx:aside` | **Quick-Lane** für Kleinkram/Bugfix außerhalb der Roadmap | – | Code, optional Commit | stört aktive Phase/Claims nicht |
+| `/banx:quick` | **Quick-Lane** für Kleinkram/Bugfix außerhalb der Roadmap | – | Code, optional Commit | stört aktive Phase/Claims nicht |
 | `/banx:loop` | **Opt-in** „iterieren bis Ziel" auf einer Phase | plan | Code, log | maxIterations |
-| `/banx:learn` | Muster/Entscheidungen aus fertiger Arbeit destillieren → Skill/Tag-Vorschlag fürs globale Registry | log, Diff, PROJECT | Skill/Tag-Vorschlag (Core) | du bestätigst Übernahme |
+| `/banx:retro` | Muster/Entscheidungen aus fertiger Arbeit destillieren → Skill/Tag-Vorschlag fürs globale Registry | log, Diff, PROJECT | Skill/Tag-Vorschlag (Core) | du bestätigst Übernahme |
 | `/banx:rollback` | Revert auf letzten verifizierten Phasen-Commit | log, git | revertet Code, Roadmap/Log zurück | Bestätigung |
 | `/banx:report` | Token-/Kosten-Übersicht über Phasen | log | – | – |
 
-### 6.1 `/banx:new` — Roast-Me + Stack-Interview
+### 6.1 `/banx:brief` — Roast-Me + Stack-Interview
 
 - **Roast-Me-Klärung** (Teil der Planungsphase): unerbittlich-aber-begrenztes Befragen entlang des Entscheidungsbaums; **jede Frage trägt eine empfohlene Antwort** (Nutzer nickt ab statt zu tippen); wenn eine Frage aus dem Code beantwortbar ist, wird recherchiert statt gefragt; Abschluss mit Zusammenfassung. Tiefe via `clarify.depth`.
 - **Stack-Interview:** fragt DB / Frontend / UI / Backend-API / Queue / Deploy — **mit den Defaults des Nutzers vorbefüllt**. Option „**du entscheidest** → schlag vor → ich segne ab". Ergebnis → `config.stack` + `PROJECT.md`.
@@ -405,7 +407,7 @@ Trennt **„woher die Arbeit kommt"** von **„wie sie abgearbeitet wird"**.
 - [ ] `banx` als installierbares Claude-Code-Plugin (Manifest, Commands, Agents, Skills, Rules, Contexts, Hooks).
 - [ ] `banx init` legt `.planning/` an und führt das Stack-Interview (inkl. „du entscheidest"-Option).
 - [ ] `config.json` steuert Git-, Verify-, Model-, Clarify- und Tasks-Verhalten; Projekt- + globaler Layer.
-- [ ] Voller Zyklus lauffähig: `/banx:new` → `/banx:plan` → `/banx:next` (mit Verify-Pipeline) → Commit + Log.
+- [ ] Voller Zyklus lauffähig: `/banx:brief` → `/banx:plan` → `/banx:next` (mit Verify-Pipeline) → Commit + Log.
 - [ ] Context-Handling über Sessions: SessionStart lädt PROJECT.md, `/banx:resume` brieft korrekt, „mach weiter" trifft den exakten nächsten Schritt.
 - [ ] `/banx:adjust` schiebt/sortiert/streicht Phasen ohne Renumbering-Bruch.
 - [ ] Model-Management mit `auto`- und `manual`-Modus + Override-Präzedenz.
@@ -413,8 +415,9 @@ Trennt **„woher die Arbeit kommt"** von **„wie sie abgearbeitet wird"**.
 - [ ] Globaler Layer mit Projektarten/Tags-Registry; `banx init` wählt Archetyp und seedet das Projekt; Tag-Set steuert aktive Rules/Skills.
 - [ ] Parallel-Dispatch unabhängiger Phasen (DAG) in Worktrees mit `claims.json`-Kollisionsschutz; `execution.parallel='auto'` + `/banx:dispatch`.
 - [ ] Rolling Integration via `merge-coordinator` gemäß `git.mergeStrategy`; Konflikte per `conflictPolicy` (lösen-oder-fragen).
-- [ ] `/banx:aside` Quick-Lane stört aktive Phasen/Claims nicht.
-- [ ] `/banx:learn` schlägt aus fertiger Arbeit Skills/Tags fürs globale Registry vor (du bestätigst).
+- [ ] `/banx:quick` Quick-Lane stört aktive Phasen/Claims nicht.
+- [ ] `/banx:backlog` legt Ideen reibungslos in `backlog.md` ab; Triage bei `/banx:plan`/`/banx:adjust`.
+- [ ] `/banx:retro` schlägt aus fertiger Arbeit Skills/Tags fürs globale Registry vor (du bestätigst).
 - [ ] Test-Politik aus Projektart/Tag ableitbar (`testing.policy`); Security-Pass nur auf Empfehlung+Freigabe.
 - [ ] Notifications über `Notification`/`Stop`-Hooks (Blocker + Abschluss), config-getriebener Channel.
 - [ ] `/banx:rollback` setzt sicher auf den letzten verifizierten Phasen-Commit zurück.

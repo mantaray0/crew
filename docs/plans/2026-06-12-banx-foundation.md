@@ -495,7 +495,7 @@ describe("scaffoldPlanning", () => {
 
   it("creates the .planning structure with a valid config", async () => {
     const dir = await scaffoldPlanning(root, answers);
-    for (const f of ["config.json", "PROJECT.md", "roadmap.md", "log.md", "claims.json"]) {
+    for (const f of ["config.json", "PROJECT.md", "roadmap.md", "log.md", "claims.json", "backlog.md"]) {
       await expect(fs.access(path.join(dir, f))).resolves.toBeUndefined();
     }
     await expect(fs.access(path.join(dir, "plans"))).resolves.toBeUndefined();
@@ -553,7 +553,7 @@ ${stackLines}
 - (werden hier festgehalten — das Warum, nicht nur das Was)
 
 ## Aktueller Stand
-- Projekt initialisiert. Nächster Schritt: \`/banx:new\` oder \`/banx:plan\`.
+- Projekt initialisiert. Nächster Schritt: \`/banx:brief\` oder \`/banx:plan\`.
 
 ## Constraints
 - (immer geltende Leitplanken hier)
@@ -591,6 +591,7 @@ export async function scaffoldPlanning(
   );
   await fs.writeFile(path.join(dir, "log.md"), "# Log\n");
   await fs.writeFile(path.join(dir, "claims.json"), "{}\n");
+  await fs.writeFile(path.join(dir, "backlog.md"), "# Backlog\n\n_Ideen hier ablegen; Triage bei /banx:plan oder /banx:adjust._\n");
 
   return dir;
 }
