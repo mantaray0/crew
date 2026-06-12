@@ -11,3 +11,5 @@ export { Registry, Archetype, Tag } from "./registry/schema.js";
 export { readProjectContext, latestSnapshotPath } from "./planning/context.js";
 export { resolveModel } from "./models/resolve.js";
 export type { TaskType } from "./models/resolve.js";
+export { parseRoadmap, topoWaves, readyPhases } from "./planning/dag.js";
+export { readClaims, claimPhase, releasePhase } from "./planning/claims.js";
