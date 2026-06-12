@@ -16,6 +16,6 @@ For small fixes/chores that shouldn't go through the full brief→plan→next fl
 3. **Do it.** Implement the fix directly, mirroring existing patterns.
 4. **Verify lightly.** Run tests/build/typecheck for the touched area (full verify pipeline is optional for quick tasks).
 5. **Commit.** One atomic conventional commit (per `config.git`); never push/PR here.
-6. **Log.** Add a one-line note to `log.md` so the quick change is traceable. Do not add it to the roadmap.
+6. **Log.** Add a one-line note to `LOG.md` so the quick change is traceable. Do not add it to the roadmap.
 
 Keep it fast. The point is to clear small things without ceremony.

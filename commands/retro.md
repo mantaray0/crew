@@ -11,7 +11,7 @@ Make the harness learn from completed work so knowledge compounds across project
 
 ## Steps
 
-1. **Gather.** Review the recent `log.md` entries, the diff(s) of completed phases, and `PROJECT.md` decisions.
+1. **Gather.** Review the recent `LOG.md` entries, the diff(s) of completed phases, and `PROJECT.md` decisions.
 2. **Distill.** Identify recurring patterns, decisions, and gotchas worth reusing: a new **skill** (a reusable procedure/knowledge), a new **tag** (a capability that should activate certain skills/rules), or an update to `PROJECT.md`'s decisions.
 3. **Propose, don't impose.** Present concrete proposals: "Add skill `X` (here's the draft)", "Add tag `Y` mapping to skills `[…]`", "Record decision Z in PROJECT.md". The user confirms each.
 4. **Apply on approval.** Write approved skills/tags into the global registry (`~/.claude/crew/` — `project-types.json` for tags, the skills directory for skills) and/or update `PROJECT.md`.

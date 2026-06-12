@@ -18,7 +18,7 @@ Concurrency cap: `config.execution.maxConcurrent`.
 ## Collision-safe state
 
 - One `plans/<slug>.md` per feature (different files → no conflict).
-- `log.md` is append-only (or per-feature `log/<feature>.md`).
+- `LOG.md` is append-only (or per-feature files under a `logs/` directory).
 - Snapshots under `sessions/<worktree-id>/`.
 - `claims.json` records which worktree owns which phase; the roadmap shows `[>] @worktree-id`.
 
