@@ -13,3 +13,7 @@ export { resolveModel } from "./models/resolve.js";
 export type { TaskType } from "./models/resolve.js";
 export { parseRoadmap, topoWaves, readyPhases } from "./planning/dag.js";
 export { readClaims, claimPhase, releasePhase } from "./planning/claims.js";
+export { localList, getProvider } from "./tasks/provider.js";
+export type { WorkItem } from "./tasks/provider.js";
+export { aggregateLog } from "./report/aggregate.js";
+export type { ReportTotals } from "./report/aggregate.js";
