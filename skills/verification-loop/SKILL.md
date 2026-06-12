@@ -22,5 +22,5 @@ Every implemented phase passes through a verification pipeline before it is trus
 - **Findings loop:** Critical/Important findings → fix → re-verify the affected stage. Do not proceed with open Critical/Important findings.
 - **Fresh context:** dispatch each stage as its own sub-agent with only the diff + the relevant convention; don't inherit the implementer's context.
 - **Model selection:** pick the model per `model-management` (review → strong, simplify → mid, trivial → cheap; `auto` decides, `manual` uses the configured map).
-- **Record:** write the outcome (and token/cost if `observability.trackCost`) to `log.md`.
+- **Record:** write the outcome (and token/cost if `observability.trackCost`) to `LOG.md`.
 - **Block the commit** until the pipeline is green or findings are consciously waived by the user.

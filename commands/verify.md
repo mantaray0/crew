@@ -20,4 +20,4 @@ Explicitly run the verification pipeline (it also runs automatically inside `/cr
    - **simplify** — dispatch `code-simplifier`.
 4. **Security (conditional).** If the change touches sensitive areas (auth/payments/tokens) and the user approved a security pass, dispatch `security-reviewer`. Never run it automatically (`config.security.auto` is false by default).
 5. **Resolve findings.** Critical/Important findings are fixed (re-dispatch the implementer or fix), then re-verified, before the phase can be committed. Minor findings are listed.
-6. **Summarize.** Report per-step results and the final state (green/blocked). Record the outcome in `log.md`.
+6. **Summarize.** Report per-step results and the final state (green/blocked). Record the outcome in `LOG.md`.
