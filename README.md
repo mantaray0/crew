@@ -1,5 +1,9 @@
 # crew
 
+[![CI](https://github.com/mantaray0/crew/actions/workflows/ci.yml/badge.svg)](https://github.com/mantaray0/crew/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-7C3AED.svg)](https://www.claude.com/product/claude-code)
+
 A config-driven agentic workflow harness for **Claude Code** — distributed as a pure plugin
 (commands, agents, skills, hooks). Lightweight planning, strong cross-session context handling,
 a configurable verify pipeline, model management, parallel dispatch, and self-learning. Project
@@ -34,3 +38,14 @@ Behavior is controlled by `.planning/config.json` (project) layered over
 `~/.claude/crew/config.json` (global) over built-in defaults. The full schema and the
 starter project-type/tag registry live in the **`crew-config`** skill. See also
 `docs/specs/2026-06-12-crew-harness-core-design.md`.
+
+## Contributing
+
+Contributions are welcome — most changes are just editing a markdown command, agent, or skill.
+See [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md). Releases
+follow the changesets flow in [docs/RELEASING.md](docs/RELEASING.md). Found a security issue?
+See [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE) © Daniel Baumert
