@@ -29,18 +29,27 @@ One file, two layers (no separate spec file unless `clarify.specArtifact: "separ
 # <Feature/Phase/Ticket>
 
 ## Spec          ← the what/why (from /crew:brief or an external ticket)
-- Ziel / Problem
-- Anforderungen
-- Akzeptanzkriterien
-- Out of Scope
+- Goal / problem
+- Requirements
+- Acceptance criteria
+- Out of scope
 - externalRef: <ticket-id>   ← only when pulled via /crew:pull
 
 ## Plan          ← the how
-- betroffene Dateien
-- Tasks: Action / Muster zum Spiegeln / Validierungsbefehl
-- Risiken
-- Verify-Konfiguration dieser Phase
+- affected files
+- Tasks: action / pattern to mirror / validation command
+- Risks
+- Verify configuration for this phase
 ```
+
+### Plan file naming
+
+`plans/<id>-<kebab-title>.md`, lowercase:
+
+- **Phase plan:** roadmap phase id + short title — `1.2-db-schema.md`, `2.1-auth-middleware.md`. Sorts naturally and ties straight to the roadmap id.
+- **Ticket plan** (`/crew:pull`): external ticket id + title — `LIN-42-realtime-notifications.md`.
+
+The filename slug stays ASCII/kebab even when the file *content* is written in another language (`config.language.files`).
 
 ## Principles
 
