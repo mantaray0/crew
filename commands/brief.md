@@ -19,4 +19,10 @@ Turn a raw idea into a clarified brief before any planning. This is the entry po
    - **Feature in an existing project:** create `.planning/plans/<slug>.md` with the **Spec** head only (Ziel/Problem, Anforderungen, Akzeptanzkriterien, Out of Scope). Honour `clarify.specArtifact` (`section` = spec head in the plan, `separate` = own file, `off` = skip). The Plan body is filled by `/crew:plan`.
 5. **Confirm.** Show the brief and wait for the user's OK before suggesting `/crew:plan`.
 
-Do not write implementation code in this command. End by pointing to `/crew:plan`.
+Do not write implementation code in this command.
+
+## Hand-off
+
+When you're done, end your reply **in the user's language** by prompting a clean context before the next step:
+
+> **Done?** Run `/clear` to reset the context, then `/crew:plan` to turn this brief into a roadmap.

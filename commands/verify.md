@@ -5,7 +5,7 @@ argument-hint: "[phase id or 'diff', optional]"
 
 # /crew:verify
 
-Explicitly run the verification pipeline (it also runs automatically inside `/crew:next` per `config.verify`). Uses the `verification-loop` skill.
+Explicitly run the verification pipeline (it also runs automatically inside `/crew:execute` per `config.verify`). Uses the `verification-loop` skill.
 
 **Follow `crew-conventions`:** respond in the user’s language; when a decision is needed, ask it explicitly (single-select / multi-select / free-text) rather than assuming.
 

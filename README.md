@@ -22,7 +22,7 @@ state lives in a committed `.planning/` directory; behavior is driven by a layer
 - [Commands](#commands) — all 16, in detail
   - [Setup & onboarding](#setup--onboarding): `setup` · `init`
   - [Shaping work](#shaping-work): `brief` · `plan` · `backlog` · `adjust` · `pull`
-  - [Execution](#execution): `next` · `dispatch` · `quick`
+  - [Execution](#execution): `execute` · `dispatch` · `quick`
   - [Quality](#quality): `verify` · `rollback`
   - [Orientation](#orientation): `status` · `resume` · `report`
   - [Learning](#learning): `retro`
@@ -80,13 +80,13 @@ only for maintainers: changesets-based releases. Users never install anything bu
 /crew:init      # per project: pick a project type, capture the stack, scaffold .planning/
 /crew:brief     # clarify an idea or feature (Roast-Me questioning)
 /crew:plan      # turn the brief into a roadmap + detailed plan files
-/crew:next      # execute the next phase (verify pipeline + atomic commit)
+/crew:execute      # execute the next phase (verify pipeline + atomic commit)
 /crew:status    # where are we?
 /crew:resume    # orient a fresh session
 ```
 
 `/crew:setup` is run once per machine. `/crew:init` is run once per repository. After that, your
-day-to-day is mostly `brief → plan → next`, with `status`/`resume` to orient and `adjust`/`backlog`
+day-to-day is mostly `brief → plan → execute`, with `status`/`resume` to orient and `adjust`/`backlog`
 to stay fluid.
 
 ---
@@ -94,25 +94,25 @@ to stay fluid.
 ## The core loop
 
 ```
-        ┌─────────────┐
-        │ /crew:brief │  clarify intent (Roast-Me)
-        └──────┬──────┘
-               ▼
-        ┌─────────────┐
-        │ /crew:plan  │  roadmap (milestones → phases) + plan files
-        └──────┬──────┘
-               ▼
-        ┌─────────────┐      independent phases?
-        │ /crew:next  │ ───────────────────────────▶ /crew:dispatch (parallel worktrees)
-        └──────┬──────┘
-               ▼
-   verify → review → harden → simplify   (/crew:verify, runs inside next)
-               ▼
+        ┌───────────────┐
+        │  /crew:brief  │  clarify intent (Roast-Me)
+        └───────┬───────┘
+                ▼
+        ┌───────────────┐
+        │  /crew:plan   │  roadmap (milestones → phases) + plan files
+        └───────┬───────┘
+                ▼
+        ┌───────────────┐      independent phases?
+        │ /crew:execute │ ──────────────────────▶ /crew:dispatch (parallel worktrees)
+        └───────┬───────┘
+                ▼
+   verify → review → harden → simplify   (/crew:verify, runs inside execute)
+                ▼
         atomic commit + LOG.md update
-               ▼
-        ┌─────────────┐
-        │ /crew:retro │  distill learnings into the global registry
-        └─────────────┘
+                ▼
+        ┌───────────────┐
+        │ /crew:retro   │  distill learnings into the global registry
+        └───────────────┘
 ```
 
 `status`, `resume`, `report`, `adjust`, `backlog`, `rollback`, `quick`, and `pull` orbit this loop
@@ -212,7 +212,7 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
 
 ### Execution
 
-#### `/crew:next` &nbsp;`[phase id, optional]`
+#### `/crew:execute` &nbsp;`[phase id, optional]`
 > The core execution loop. Runs **one** phase to completion: load context → implement → verify →
 > commit.
 
@@ -244,10 +244,10 @@ to `/crew:dispatch`. Backed by `crew-context` + `crew-planning`.
    with intent-aware conflict resolution.
 
 Backed by `crew-planning` (DAG) + `git-merge`, plus the `merge-coordinator` agent. Also triggered
-automatically (with confirmation) from `/crew:next`.
+automatically (with confirmation) from `/crew:execute`.
 
 #### `/crew:quick` &nbsp;`<what to do>`
-> The quick lane: a small fix or chore that shouldn't go through the full brief→plan→next flow and
+> The quick lane: a small fix or chore that shouldn't go through the full brief→plan→execute flow and
 > shouldn't disturb in-flight work.
 
 - **Scope check** — if it's actually a feature, it says so and routes you to `/crew:brief`.
@@ -258,7 +258,7 @@ automatically (with confirmation) from `/crew:next`.
 ### Quality
 
 #### `/crew:verify` &nbsp;`[phase id or 'diff', optional]`
-> Explicitly run the verification pipeline (it also runs automatically inside `/crew:next`).
+> Explicitly run the verification pipeline (it also runs automatically inside `/crew:execute`).
 
 1. **Scope** — the current uncommitted diff, or a named phase's change.
 2. **Resolve steps** — from `config.verify.default`, default `["verify","review","harden","simplify"]`,
@@ -411,9 +411,9 @@ The reusable knowledge the commands lean on:
 |---|---|
 | `crew-conventions` | **Every** command — the one-decision-at-a-time interaction + language rules |
 | `crew-config` | `setup`, `init` — config schema + project-type/tag registry |
-| `crew-context` | `next`, `resume` — the `.planning/` state model + session-snapshot format |
-| `crew-planning` | `plan`, `next`, `dispatch`, `adjust` — roadmap/phase/spec conventions + DAG |
-| `verification-loop` | `verify`, `next` — the verify→review→harden→simplify pipeline |
+| `crew-context` | `execute`, `resume` — the `.planning/` state model + session-snapshot format |
+| `crew-planning` | `plan`, `execute`, `dispatch`, `adjust` — roadmap/phase/spec conventions + DAG |
+| `verification-loop` | `verify`, `execute` — the verify→review→harden→simplify pipeline |
 | `model-management` | dispatch + pipeline — task-types and model selection |
 | `git-merge` | `dispatch` — worktree isolation, claims, rolling integration |
 | `roast-me` | `brief`, `init` — bounded clarifying questions with recommended answers |

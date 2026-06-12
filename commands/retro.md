@@ -18,3 +18,9 @@ Make the harness learn from completed work so knowledge compounds across project
 5. **Summarize** what was learned and what was promoted.
 
 Keep proposals high-signal — only things genuinely worth reusing. Don't manufacture learnings.
+
+## Hand-off
+
+When you're done, end your reply **in the user's language** by prompting a clean context before the next step:
+
+> **Done?** Run `/clear` to reset the context, then `/crew:brief` to start the next feature.
