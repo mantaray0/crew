@@ -11,7 +11,7 @@ Parallelize the phases that can safely run at once. Uses `crew-planning` (DAG) a
 
 ## Steps
 
-1. **Build the DAG.** Parse the active milestone's phases and their `depends:` edges from `roadmap.md`. Compute waves of independent phases.
+1. **Build the DAG.** Parse the active milestone's phases and their `depends:` edges from `ROADMAP.md`. Compute waves of independent phases.
 2. **Confirm the plan.** Show which phases will run in parallel and which are sequential; wait for OK (or proceed if explicitly invoked).
 3. **Dispatch a wave.** For each independent phase in the current wave, up to `config.execution.maxConcurrent` at a time:
    - Create a worktree + branch per `config.git.isolation` (default `worktree-per-feature`).
@@ -19,6 +19,6 @@ Parallelize the phases that can safely run at once. Uses `crew-planning` (DAG) a
    - Run the phase as a sub-agent (implement + the verify pipeline, in isolation).
 4. **Rolling integration.** As soon as a phase finishes **and verifies**, hand it to the `merge-coordinator` to integrate per `config.git.mergeStrategy` (`integration-branch` rolling · `pr` per phase · `ask-each`). Verify after each merge. In-flight worktrees rebase onto the new integration state to minimize drift.
 5. **Next wave.** When a wave's phases are integrated, unlock the dependent phases (their deps are now done) and dispatch the next wave.
-6. **Finish.** Report integrated phases, update `roadmap.md`/`log.md`, release claims, and clean up worktrees.
+6. **Finish.** Report integrated phases, update `ROADMAP.md`/`LOG.md`, release claims, and clean up worktrees.
 
 If a merge conflict is genuinely ambiguous, the `merge-coordinator` asks (`config.git.conflictPolicy`). On a real problem in any phase, stop and ask.

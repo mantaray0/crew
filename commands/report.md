@@ -1,5 +1,5 @@
 ---
-description: Show a token/cost and progress report aggregated from .planning/log.md.
+description: Show a token/cost and progress report aggregated from .planning/LOG.md.
 ---
 
 # /crew:report
@@ -10,8 +10,8 @@ Summarize effort and progress from the log.
 
 ## Steps
 
-1. Read `.planning/log.md`.
-2. Aggregate from `log.md`: count completed phases and sum the `~<n>k tok` and `$<x>` entries → total tokens and total cost.
+1. Read `.planning/LOG.md`.
+2. Aggregate from `LOG.md`: count completed phases and sum the `~<n>k tok` and `$<x>` entries → total tokens and total cost.
 3. Show a compact report:
    - phases completed (and which milestones)
    - total tokens (and per-phase average)

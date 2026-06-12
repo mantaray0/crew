@@ -10,7 +10,7 @@ Pick up exactly where the last session left off, in a clean context.
 
 ## Steps
 
-1. **Load.** Read `.planning/PROJECT.md`, the most recent snapshot in `.planning/sessions/` (newest file across any `<worktree-id>/` subdir), the active phase in `.planning/roadmap.md`, and the tail of `.planning/log.md`.
+1. **Load.** Read `.planning/PROJECT.md`, the most recent snapshot in `.planning/sessions/` (newest file across any `<worktree-id>/` subdir), the active phase in `.planning/ROADMAP.md`, and the tail of `.planning/LOG.md`.
 2. **Brief.** Output a structured briefing:
    - **PROJECT** — name + what we're building (2–3 sentences).
    - **STATE** — done / in-progress / not-started phases.

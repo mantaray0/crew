@@ -54,6 +54,7 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
   "state": { "commitSessions": true },
   "loop": { "maxIterations": 6 },
   "observability": { "trackCost": true },
+  "language": { "files": "en" },
   "projectType": null,
   "tags": [],
   "stack": {}
@@ -61,6 +62,14 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
 ```
 
 Auto model tiers: planning/review → strongest, execution/simplify → mid, trivial → cheap. `manual` uses the per-type ids. Override precedence: ad-hoc > project > global > built-in default.
+
+**`language.files`** sets the language of the project files crew writes (`PROJECT.md`, `ROADMAP.md`, `LOG.md`, `BACKLOG.md`, `plans/`). Default `"en"`; ask the user at `/crew:setup` (global) or `/crew:init` (per project). This is separate from the *conversation* language (see `crew-conventions`): the plugin repo and config keys stay English, but the user's own project files may be written in their language.
+
+## File naming in `.planning/`
+
+- **Documents are UPPERCASE:** `PROJECT.md`, `ROADMAP.md`, `LOG.md`, `BACKLOG.md` (like `README`/`CHANGELOG`).
+- **Data files are lowercase:** `config.json`, `claims.json`.
+- **Directories are lowercase:** `plans/`, `sessions/`.
 
 ## `project-types.json` (starter registry — global layer)
 
@@ -94,7 +103,10 @@ A **tag** is atomic and activates skills/rules; a **project type (archetype)** i
       "defaults": { "testing": "tests-required" } },
     { "name": "marketing-site", "tags": ["nextjs", "tailwind"],
       "stack": { "language": "TypeScript", "app": "Next.js", "styling": "Tailwind CSS" },
-      "defaults": { "testing": "optional" } }
+      "defaults": { "testing": "optional" } },
+    { "name": "monorepo", "tags": ["nextjs", "hono", "drizzle", "postgres", "tailwind", "shadcn-baseui", "tanstack", "bullmq-redis", "bun", "auth", "payments", "realtime"],
+      "stack": { "language": "TypeScript", "app": "Next.js", "api": "Hono", "runtime": "Bun", "db": "Postgres", "orm": "Drizzle", "ui": "shadcn + Base UI", "styling": "Tailwind CSS", "queue": "BullMQ + Redis" },
+      "defaults": { "testing": "tests-required" } }
   ]
 }
 ```

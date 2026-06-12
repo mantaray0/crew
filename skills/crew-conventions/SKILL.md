@@ -26,4 +26,5 @@ The point: the user steers each option deliberately. Speed comes from good recom
 ## Language
 
 - **Respond to the user in the user's language.** Detect it from how they write and match it (a German user gets German, a Spanish user Spanish, …).
-- **Repo content stays English / neutral** — commands, agents, skills, code, commit messages, and the files crew writes (config keys, PROJECT.md section headings) remain English so the plugin is universal. Only the *conversation* follows the user's language.
+- **The plugin repo stays English / neutral** — commands, agents, skills, code, commit messages, and config keys remain English so the plugin is universal.
+- **The user's project files follow `config.language.files`.** The content crew writes into a project — `PROJECT.md`, `ROADMAP.md`, `LOG.md`, `BACKLOG.md`, `plans/` — is written in `config.language.files` (default `"en"`). Ask for it at `/crew:setup` (global default) or `/crew:init` (per project). Section headings / structure stay stable; the prose follows the chosen language.
