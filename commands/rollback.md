@@ -7,6 +7,8 @@ argument-hint: "[phase id or commit, optional — defaults to the last verified 
 
 Undo a botched phase. Atomic per-phase commits make this cheap.
 
+**Follow `crew-conventions`:** respond in the user’s language; when a decision is needed, ask it explicitly (single-select / multi-select / free-text) rather than assuming.
+
 ## Steps
 
 1. **Identify the target.** From `log.md`/git history, find the last verified phase commit (or the one the user names). Show what will be undone (commits, files).

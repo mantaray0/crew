@@ -7,6 +7,8 @@ argument-hint: "<task id>"
 
 Bring a work item into the crew workflow. The internal `.planning/` stays the working layer; an external ticket is the north-star + sync boundary.
 
+**Follow `crew-conventions`:** respond in the user’s language; when a decision is needed, ask it explicitly (single-select / multi-select / free-text) rather than assuming.
+
 ## Steps
 
 1. **Resolve the provider.** Read `config.tasks.provider` (`local` · `mcp:linear` · `mcp:jira` · `mcp:clickup` · `crew-pm`). For `local`, the source is `roadmap.md`. For an `mcp:*` provider, call the corresponding MCP connector to fetch the ticket by id.

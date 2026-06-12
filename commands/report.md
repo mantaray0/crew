@@ -6,6 +6,8 @@ description: Show a token/cost and progress report aggregated from .planning/log
 
 Summarize effort and progress from the log.
 
+**Follow `crew-conventions`:** respond in the user’s language; when a decision is needed, ask it explicitly (single-select / multi-select / free-text) rather than assuming.
+
 ## Steps
 
 1. Read `.planning/log.md`.
