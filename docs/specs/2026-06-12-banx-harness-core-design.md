@@ -383,6 +383,10 @@ Trennt **„woher die Arbeit kommt"** von **„wie sie abgearbeitet wird"**.
 3. **Eigenes PM-Tool** (Thema 3) als `banx-pm`-Provider.
 4. **Boilerplate-Monorepo** (Thema 1).
 
+### Offene Ideen (nicht eingeplant, nur geparkt)
+
+- **SQLite-Read-Model + Dashboard-UI:** Falls je eine UI/Cross-Projekt-Auswertung gewünscht wird — als *abgeleitetes* Read-Model (CQRS) aus den `.planning/`-Dateien, niemals als Quelle der Wahrheit. Bewusst zurückgestellt.
+
 ---
 
 ## 16. Risiken & offene Punkte
