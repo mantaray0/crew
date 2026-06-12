@@ -10,7 +10,9 @@ const event = process.argv[2] ?? "completion";
 
 async function readConfig(root) {
   try {
-    return JSON.parse(await fs.readFile(path.join(root, ".planning", "config.json"), "utf8"));
+    return JSON.parse(
+      await fs.readFile(path.join(root, ".planning", "config.json"), "utf8"),
+    );
   } catch {
     return null;
   }
@@ -30,14 +32,22 @@ async function main() {
   const message = titleFor(event);
   if (n.channel === "os") {
     if (process.platform === "darwin") {
-      execFile("osascript", ["-e", `display notification "${message}" with title "crew"`], () => {});
+      execFile(
+        "osascript",
+        ["-e", `display notification "${message}" with title "crew"`],
+        () => {},
+      );
     } else if (process.platform === "linux") {
       execFile("notify-send", ["crew", message], () => {});
     }
     return;
   }
   if (n.channel === "push:ntfy" && process.env.CREW_NTFY_TOPIC) {
-    execFile("curl", ["-fsS", "-d", message, `https://ntfy.sh/${process.env.CREW_NTFY_TOPIC}`], () => {});
+    execFile(
+      "curl",
+      ["-fsS", "-d", message, `https://ntfy.sh/${process.env.CREW_NTFY_TOPIC}`],
+      () => {},
+    );
   }
   // push:pushover and other channels: configured by the user's own integration; no-op here.
 }
