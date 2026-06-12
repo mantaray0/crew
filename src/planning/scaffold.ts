@@ -54,7 +54,9 @@ export async function scaffoldPlanning(
     projectType: answers.projectType,
     tags: answers.tags,
     stack: answers.stack,
-    ...(answers.testingPolicy ? { testing: { policy: answers.testingPolicy } } : {}),
+    ...(answers.testingPolicy
+      ? { testing: { policy: answers.testingPolicy } }
+      : {}),
   });
 
   await fs.writeFile(

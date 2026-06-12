@@ -2,7 +2,11 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { loadRegistry, resolveArchetype, writeStarterRegistry } from "../../src/registry/load.js";
+import {
+  loadRegistry,
+  resolveArchetype,
+  writeStarterRegistry,
+} from "../../src/registry/load.js";
 import { STARTER_REGISTRY } from "../../src/registry/starter.js";
 
 describe("registry load", () => {
@@ -21,7 +25,10 @@ describe("registry load", () => {
 
   it("loads a registry file when present", async () => {
     const p = path.join(dir, "project-types.json");
-    await fs.writeFile(p, JSON.stringify({ archetypes: [{ name: "custom", tags: ["x"] }] }));
+    await fs.writeFile(
+      p,
+      JSON.stringify({ archetypes: [{ name: "custom", tags: ["x"] }] }),
+    );
     const reg = await loadRegistry({ path: p });
     expect(reg.archetypes.map((a) => a.name)).toEqual(["custom"]);
   });
