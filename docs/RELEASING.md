@@ -33,5 +33,5 @@ first version will be `0.1.0`.
 
 ```
 /plugin marketplace add mantaray0/crew
-/plugin install crew
+/plugin install crew@mantaray0
 ```

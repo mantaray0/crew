@@ -14,8 +14,8 @@ No CLI, no build, no npm — Claude runs everything through the plugin.
 ## Install
 
 ```
-/plugin marketplace add <repo-or-path>
-/plugin install crew
+/plugin marketplace add mantaray0/crew
+/plugin install crew@mantaray0
 ```
 
 ## Use
