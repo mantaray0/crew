@@ -1,5 +1,11 @@
 # @mantaray0/crew
 
+## 0.2.0
+
+### Minor Changes
+
+- [#5](https://github.com/mantaray0/crew/pull/5) [`ed5b1fe`](https://github.com/mantaray0/crew/commit/ed5b1fe73fd6fc43a8d150df1bf89643f212b826) Thanks [@mantaray0](https://github.com/mantaray0)! - Rename `/crew:next` to `/crew:execute` (no alias — `/crew:next` no longer exists) so the core execution command reads unambiguously, and update every cross-reference in commands, skills, the README, and the design spec. Add a **Hand-off** section to the main-chain commands (`setup`, `init`, `brief`, `plan`, `execute`, `pull`, `retro`): each now ends by prompting the user, in their language, to `/clear` the context and run the next logical command.
+
 ## 0.1.1
 
 ### Patch Changes
