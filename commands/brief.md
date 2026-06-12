@@ -7,6 +7,8 @@ argument-hint: "[free-form idea or feature description]"
 
 Turn a raw idea into a clarified brief before any planning. This is the entry point of the crew workflow.
 
+**Follow `crew-conventions`:** one question at a time (each with a recommended answer), never silently assume; respond in the user's language.
+
 ## Steps
 
 1. **Read context.** If `.planning/PROJECT.md` exists, read it (this is a feature inside an existing project). If not, this is a new project.

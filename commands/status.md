@@ -6,6 +6,8 @@ description: Show the current project status from .planning/ (roadmap + log).
 
 Read and summarize the current project state. Do not modify anything.
 
+**Follow `crew-conventions`:** respond in the user’s language; when a decision is needed, ask it explicitly (single-select / multi-select / free-text) rather than assuming.
+
 ## Steps
 
 1. If `.planning/` does not exist, tell the user to run `/crew:init` and stop.

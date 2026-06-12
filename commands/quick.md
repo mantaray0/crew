@@ -7,6 +7,8 @@ argument-hint: "<what to do>"
 
 For small fixes/chores that shouldn't go through the full brief→plan→next flow and shouldn't disturb in-flight work.
 
+**Follow `crew-conventions`:** respond in the user’s language; when a decision is needed, ask it explicitly (single-select / multi-select / free-text) rather than assuming.
+
 ## Steps
 
 1. **Scope check.** Confirm the task is genuinely small and self-contained. If it's actually a feature, say so and route to `/crew:brief`.

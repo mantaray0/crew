@@ -7,6 +7,8 @@ argument-hint: "[phase id, optional — defaults to the active/next pending phas
 
 The core execution loop. Runs ONE phase to completion. Uses `crew-context` and `crew-planning` skills.
 
+**Follow `crew-conventions`:** respond in the user’s language; when a decision is needed, ask it explicitly (single-select / multi-select / free-text) rather than assuming.
+
 ## Steps
 
 1. **Load context.** Read `.planning/PROJECT.md`, `.planning/roadmap.md` (find the active `[>]` phase, else the next `[ ]`), its `.planning/plans/<slug>.md`, and the last entries of `.planning/log.md`. From these the **exact next step** must be unambiguous. If it is not, ask.
