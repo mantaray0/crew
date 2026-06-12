@@ -9,7 +9,7 @@ Summarize effort and progress from the log.
 ## Steps
 
 1. Read `.planning/log.md`.
-2. Aggregate (use `aggregateLog` from `src/report/aggregate.ts`): number of completed phases, total tokens, total cost.
+2. Aggregate from `log.md`: count completed phases and sum the `~<n>k tok` and `$<x>` entries → total tokens and total cost.
 3. Show a compact report:
    - phases completed (and which milestones)
    - total tokens (and per-phase average)

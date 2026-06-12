@@ -1,52 +1,16 @@
 {
   "name": "@mantaray0/crew",
   "version": "0.0.0",
-  "description": "Config-driven agentic workflow harness for Claude Code",
+  "private": true,
+  "description": "Config-driven agentic workflow harness for Claude Code (plugin)",
   "type": "module",
-  "publishConfig": {
-    "access": "public"
-  },
-  "bin": {
-    "crew": "./bin/crew.mjs"
-  },
-  "exports": {
-    ".": "./dist/index.js"
-  },
-  "files": [
-    "dist",
-    "bin",
-    "commands",
-    "agents",
-    "skills",
-    "hooks",
-    ".claude-plugin",
-    "README.md"
-  ],
   "scripts": {
-    "build": "tsup",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "typecheck": "tsc --noEmit",
-    "lint": "biome check .",
-    "format": "biome check --write .",
     "changeset": "changeset",
-    "version": "changeset version",
-    "release": "pnpm build && pnpm publish --access public --no-git-checks"
-  },
-  "dependencies": {
-    "commander": "^12.1.0",
-    "prompts": "^2.4.2",
-    "zod": "^3.23.8"
+    "version": "changeset version"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
     "@changesets/changelog-github": "^0.5.0",
-    "@changesets/cli": "^2.27.9",
-    "@types/node": "^22.7.0",
-    "@types/prompts": "^2.4.9",
-    "tsup": "^8.5.1",
-    "typescript": "^5.6.0",
-    "vitest": "^2.1.0"
+    "@changesets/cli": "^2.27.9"
   },
   "engines": {
     "node": ">=18"
