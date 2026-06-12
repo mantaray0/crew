@@ -7,6 +7,8 @@ argument-hint: "[idea text to add | empty to list/triage]"
 
 A frictionless place to offload ideas so the current plan stays undisturbed and nothing gets lost.
 
+**Follow `crew-conventions`:** respond in the user’s language; when a decision is needed, ask it explicitly (single-select / multi-select / free-text) rather than assuming.
+
 ## Steps
 
 - **With text (add):** append the idea to `.planning/backlog.md` as a dated bullet (`- [YYYY-MM-DD] <idea>`). Do nothing else — do not plan, do not interrupt the active phase. Confirm in one line.

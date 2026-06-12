@@ -83,7 +83,7 @@ A **tag** is atomic and activates skills/rules; a **project type (archetype)** i
     { "name": "realtime", "skills": [], "rules": [] }
   ],
   "archetypes": [
-    { "name": "saas-app", "tags": ["nextjs", "drizzle", "postgres", "tailwind", "shadcn-baseui", "tanstack", "auth"],
+    { "name": "app", "tags": ["nextjs", "drizzle", "postgres", "tailwind", "shadcn-baseui", "tanstack", "auth"],
       "stack": { "language": "TypeScript", "app": "Next.js", "db": "Postgres", "orm": "Drizzle", "ui": "shadcn + Base UI", "styling": "Tailwind CSS" },
       "defaults": { "testing": "tests-required" } },
     { "name": "api-service", "tags": ["hono", "drizzle", "postgres", "bun"],
