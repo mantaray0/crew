@@ -10,13 +10,13 @@ Set up `.planning/` for this project. Uses the `crew-config` skill (config schem
 
 ## Steps
 
-1. **Guard.** If `.planning/` already exists, stop and tell the user (offer to overwrite only if they ask).
+1. **Detect the mode.** If `.planning/config.json` already exists, this is a **re-run → reconcile mode**, *not* a re-scaffold: bring the project config up to date with the installed plugin (see `crew-config` → **Config versioning & migration**). Read the current plugin version from `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`; schema-diff the existing `config.json` (classify keys new / removed / unchanged); **ask per new field** using its purpose + recommended default from the `crew-config` schema (single-select for enums like `responseStyle`, free-text for open values); offer to drop removed keys; then stamp `crewVersion` to the current plugin version. Do **not** overwrite `PROJECT.md` / `ROADMAP.md` / `LOG.md` or re-run the archetype interview. Skip the steps below. — Otherwise (`.planning/` absent), continue with the first-run scaffold.
 2. **Pick a project type.** Read the global registry `~/.claude/crew/project-types.json` if present, else use the starter archetypes documented in the `crew-config` skill. Ask the user to pick one (`app` / `api-service` / `cli` / `marketing-site` / …) or "decide later". Seed `tags`, `stack`, and `testing.policy` from the chosen archetype.
 3. **Stack interview.** Confirm or adjust DB / frontend / UI / backend-API / queue / deploy — pre-filled from the archetype and the user's defaults. Offer the escape "you decide → I propose → you approve".
 4. **File language.** Single-select: which language should crew write this project's files in (`PROJECT.md`, `ROADMAP.md`, `LOG.md`, `BACKLOG.md`, `plans/`)? Options: **English** (default) · **the user's language** · **inherit the global** `config.language.files`. Store the choice in `config.language.files`.
 5. **Commit or ignore `.planning/`.** Single-select: **commit** `.planning/` (recommended — shareable, part of project history, readable by PM integrations) or **gitignore** it (local-only)? If **gitignore**, add a `.planning/` line to the project's `.gitignore` (create the file if missing). If **commit**, make sure `.planning/` is not ignored.
 6. **Scaffold `.planning/`:**
-   - `config.json` — the full default config from the `crew-config` skill, with `projectType`, `tags`, `stack`, `testing.policy`, and `language.files` seeded.
+   - `config.json` — the full default config from the `crew-config` skill, with `projectType`, `tags`, `stack`, `testing.policy`, `language.files`, and `responseStyle` seeded, plus `crewVersion` set to the current plugin version (from `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`).
    - `PROJECT.md` — stack, architecture decisions (the *why*), current state, constraints — written in `config.language.files`.
    - `ROADMAP.md` — an empty first milestone.
    - `LOG.md`, `BACKLOG.md`, `claims.json` (`{}`), and empty `plans/` and `sessions/` directories.

@@ -44,12 +44,13 @@ One file, two layers (no separate spec file unless `clarify.specArtifact: "separ
 
 ### Plan file naming
 
-`plans/<id>-<kebab-title>.md`, lowercase:
+All files live in `plans/`, lowercase, ASCII/kebab slug (even when the *content* is written in another language via `config.language.files`). Two kinds, told apart by the filename:
 
-- **Phase plan:** roadmap phase id + short title — `1.2-db-schema.md`, `2.1-auth-middleware.md`. Sorts naturally and ties straight to the roadmap id.
+- **Brief / initiative spec** (`/crew:brief`): underscore-prefixed, **un-numbered** — `_<slug>.md`, e.g. `_multisport-platform-refactor.md`. The phase number does not exist yet (it's assigned at `/crew:plan`), so a brief must not fake one. The leading `_` sorts briefs together and makes them visually distinct from numbered phase plans in the same directory — at a glance you see what's still a raw initiative vs. a planned phase. A brief holds the **Spec** head only; its **Plan** body is filled later.
+- **Phase plan** (`/crew:plan`): roadmap phase id + short title — `1.2-db-schema.md`, `2.1-auth-middleware.md`. Sorts naturally and ties straight to the roadmap id.
 - **Ticket plan** (`/crew:pull`): external ticket id + title — `LIN-42-realtime-notifications.md`.
 
-The filename slug stays ASCII/kebab even when the file *content* is written in another language (`config.language.files`).
+When `/crew:plan` breaks a brief into phases, it creates the numbered phase plans (`<id>-<title>.md`); the originating `_<slug>.md` brief stays as the initiative's spec root (delete it only once every phase it spawned is captured).
 
 ## Principles
 

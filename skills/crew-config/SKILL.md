@@ -12,6 +12,7 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
 
 ```jsonc
 {
+  "crewVersion": null,                 // crew plugin version this config was last reconciled with; set by /crew:init & /crew:setup, checked on session start
   "git": {
     "autoCommitPerPhase": true,        // atomic commit after a verified phase
     "autoPush": false,                 // never touch the remote without approval
@@ -55,6 +56,7 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
   "loop": { "maxIterations": 6 },
   "observability": { "trackCost": true },
   "language": { "files": "en" },
+  "responseStyle": "concise",          // "concise" | "detailed" | "auto" — verbosity/format of the assistant's command replies (see crew-conventions)
   "projectType": null,
   "tags": [],
   "stack": {}
@@ -64,6 +66,30 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
 Auto model tiers: planning/review → strongest, execution/simplify → mid, trivial → cheap. `manual` uses the per-type ids. Override precedence: ad-hoc > project > global > built-in default.
 
 **`language.files`** sets the language of the project files crew writes (`PROJECT.md`, `ROADMAP.md`, `LOG.md`, `BACKLOG.md`, `plans/`). Default `"en"`; ask the user at `/crew:setup` (global) or `/crew:init` (per project). This is separate from the *conversation* language (see `crew-conventions`): the plugin repo and config keys stay English, but the user's own project files may be written in their language.
+
+**`responseStyle`** controls how verbose and how formatted the assistant's command replies are. `crew-conventions` enforces it. Default `"concise"`.
+
+| value | behavior |
+|---|---|
+| `concise` (default) | Short answers. Lead with the conclusion. Use a **table** for comparisons, findings, trade-offs, or option lists; keep prose to a few lines. |
+| `detailed` | Full prose explanations — narrative findings, reasoning shown, longer walkthroughs. |
+| `auto` | Pick per content: table for structured comparisons/findings, prose for narrative explanation. |
+
+Resolved through the normal layering — a project's `.planning/config.json` overrides the global default (e.g. global `concise`, one project `detailed`).
+
+## Config versioning & migration
+
+`crewVersion` records the crew plugin version this config was last reconciled with. The **current** plugin version lives in `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` (`version`).
+
+- **On scaffold** (`/crew:init`, `/crew:setup` first run): write `crewVersion` = the current plugin version.
+- **On session start:** the `session-start` hook compares the project's `config.crewVersion` against the plugin version and, if they differ (or `crewVersion` is missing), prints a one-line "config may be out of date — run `/crew:init` to reconcile" notice.
+- **On re-run** of `/crew:setup` (global config) or `/crew:init` (project config): if the config already exists, enter **reconcile mode** instead of scaffolding:
+  1. **Schema-diff.** Compare the existing config's keys against this schema (the contract). Classify each: **new** (in the schema, missing from the config), **removed** (in the config, no longer in the schema), **unchanged**.
+  2. **Ask per new field.** For every new key, show the user its purpose and recommended default (from this schema) and ask what they want — as the fitting question type (single-select for enums like `responseStyle`, free-text for open values), following `crew-conventions`. Never silently apply a default.
+  3. **Flag removed fields.** List keys that no longer exist in the schema; offer to drop them.
+  4. **Stamp the version.** After applying confirmed changes, set `crewVersion` to the current plugin version.
+
+  This is a procedure, not a coded migration: there is no compiled migrator — diff the live config against this schema and drive the questions from it.
 
 ## File naming in `.planning/`
 
