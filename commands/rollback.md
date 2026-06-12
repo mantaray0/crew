@@ -16,6 +16,6 @@ Undo a botched phase. Atomic per-phase commits make this cheap.
 3. **Revert.** Prefer `git revert` of the phase's commit(s) to preserve history (use reset only if the user explicitly wants history rewritten and the commits aren't shared). Keep the working tree clean.
 4. **Restore planning state.** Set the phase back to `[ ]`/`[>]` in `ROADMAP.md`, append a `LOG.md` note recording the rollback and why, and release any stale claim in `claims.json`.
 5. **Verify.** Run tests/build to confirm the reverted state is green.
-6. **Report.** What was rolled back, the resulting commit, and the suggested next step (re-plan via `/crew:adjust`, or retry via `/crew:next`).
+6. **Report.** What was rolled back, the resulting commit, and the suggested next step (re-plan via `/crew:adjust`, or retry via `/crew:execute`).
 
 Never rewrite shared/pushed history without explicit instruction.

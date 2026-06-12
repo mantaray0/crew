@@ -16,6 +16,6 @@ Pick up exactly where the last session left off, in a clean context.
    - **STATE** — done / in-progress / not-started phases.
    - **DO NOT RETRY** — failed approaches from the snapshot (critical — always show, even if "none").
    - **NEXT STEP** — the exact next step from the snapshot/roadmap, or, if undefined, propose one from the plan.
-3. **Wait.** Do not touch files or start work. Wait for the user. If they say "continue" and the next step is defined, proceed with that exact step (typically by invoking `/crew:next`).
+3. **Wait.** Do not touch files or start work. Wait for the user. If they say "continue" and the next step is defined, proceed with that exact step (typically by invoking `/crew:execute`).
 
 Never modify the snapshot — it is a read-only historical record. If a referenced file is missing, warn in the briefing.
