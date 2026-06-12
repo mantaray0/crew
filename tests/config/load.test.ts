@@ -22,7 +22,10 @@ describe("loadConfig", () => {
 
   beforeEach(async () => {
     root = await fs.mkdtemp(path.join(os.tmpdir(), "crew-root-"));
-    globalPath = path.join(await fs.mkdtemp(path.join(os.tmpdir(), "crew-glob-")), "config.json");
+    globalPath = path.join(
+      await fs.mkdtemp(path.join(os.tmpdir(), "crew-glob-")),
+      "config.json",
+    );
   });
   afterEach(async () => {
     await fs.rm(root, { recursive: true, force: true });
@@ -34,7 +37,10 @@ describe("loadConfig", () => {
   });
 
   it("layers project over global over defaults", async () => {
-    await fs.writeFile(globalPath, JSON.stringify({ git: { autoPush: true }, models: { mode: "manual" } }));
+    await fs.writeFile(
+      globalPath,
+      JSON.stringify({ git: { autoPush: true }, models: { mode: "manual" } }),
+    );
     await fs.mkdir(path.join(root, ".planning"), { recursive: true });
     await fs.writeFile(
       path.join(root, ".planning", "config.json"),

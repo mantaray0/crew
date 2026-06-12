@@ -10,9 +10,13 @@ const Git = z
     isolation: z
       .enum(["worktree-per-feature", "branch-per-feature", "linear"])
       .default("worktree-per-feature"),
-    mergeStrategy: z.enum(["integration-branch", "pr", "ask-each"]).default("integration-branch"),
+    mergeStrategy: z
+      .enum(["integration-branch", "pr", "ask-each"])
+      .default("integration-branch"),
     askBeforeMerge: z.boolean().default(false),
-    conflictPolicy: z.enum(["resolve-or-ask", "always-ask", "autonomous"]).default("resolve-or-ask"),
+    conflictPolicy: z
+      .enum(["resolve-or-ask", "always-ask", "autonomous"])
+      .default("resolve-or-ask"),
   })
   .default({});
 
@@ -65,7 +69,9 @@ const Tasks = z
 const Notifications = z
   .object({
     enabled: z.boolean().default(true),
-    events: z.array(z.enum(["blocker", "completion"])).default(["blocker", "completion"]),
+    events: z
+      .array(z.enum(["blocker", "completion"]))
+      .default(["blocker", "completion"]),
     channel: z.enum(["os", "push:ntfy", "push:pushover", "off"]).default("os"),
   })
   .default({});
@@ -80,15 +86,21 @@ export const CrewConfig = z
     tasks: Tasks,
     testing: z
       .object({
-        policy: z.enum(["from-archetype", "tdd", "tests-required", "optional"]).default("from-archetype"),
+        policy: z
+          .enum(["from-archetype", "tdd", "tests-required", "optional"])
+          .default("from-archetype"),
       })
       .default({}),
     security: z.object({ auto: z.boolean().default(false) }).default({}),
     notifications: Notifications,
     learn: z.object({ enabled: z.boolean().default(true) }).default({}),
     state: z.object({ commitSessions: z.boolean().default(true) }).default({}),
-    loop: z.object({ maxIterations: z.number().int().positive().default(6) }).default({}),
-    observability: z.object({ trackCost: z.boolean().default(true) }).default({}),
+    loop: z
+      .object({ maxIterations: z.number().int().positive().default(6) })
+      .default({}),
+    observability: z
+      .object({ trackCost: z.boolean().default(true) })
+      .default({}),
     projectType: z.string().nullable().default(null),
     tags: z.array(z.string()).default([]),
     stack: z.record(z.string(), z.string()).default({}),
