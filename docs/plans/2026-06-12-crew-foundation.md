@@ -1,8 +1,8 @@
-# banx Foundation — Implementation Plan
+# crew Foundation — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the installable foundation of the `banx` Claude Code plugin: a typed config system (global + project merge), the `.planning/` project-state scaffolder, a working `banx init` CLI, and a minimal plugin manifest with one command — i.e. a plugin you can install and use to initialize a project and read its config.
+**Goal:** Build the installable foundation of the `crew` Claude Code plugin: a typed config system (global + project merge), the `.planning/` project-state scaffolder, a working `crew init` CLI, and a minimal plugin manifest with one command — i.e. a plugin you can install and use to initialize a project and read its config.
 
 **Architecture:** A single TypeScript package. Pure, testable core modules (`config`, `planning`) are covered by Vitest with TDD; the CLI (`cli`) is a thin wrapper that wires prompts to the core; Claude Code surfaces (`commands/`, `.claude-plugin/`) are markdown/JSON validated by a smoke install. Config is validated with Zod so runtime parsing and TypeScript types come from one source.
 
@@ -14,12 +14,12 @@
 
 This plan is **Plan 1 of 6**. Each plan ships working, testable software on its own.
 
-1. **Foundation** (this plan) — package scaffold, config schema+loader, `.planning` scaffolder, `banx init`, plugin manifest, `/banx:status`.
-2. **Project types & setup** — `banx setup`, archetype/tag registry, `init` seeds from a chosen archetype.
-3. **Core loop** — `/banx:new` (roast-me + stack interview), `/banx:plan`, `/banx:next`, SessionStart/PreCompact hooks, `/banx:resume`, `/banx:adjust`.
+1. **Foundation** (this plan) — package scaffold, config schema+loader, `.planning` scaffolder, `crew init`, plugin manifest, `/crew:status`.
+2. **Project types & setup** — `crew setup`, archetype/tag registry, `init` seeds from a chosen archetype.
+3. **Core loop** — `/crew:new` (roast-me + stack interview), `/crew:plan`, `/crew:next`, SessionStart/PreCompact hooks, `/crew:resume`, `/crew:adjust`.
 4. **Verify pipeline & agents** — reviewer/simplifier/security agents, verify pipeline, model management.
-5. **Parallelism & merge** — DAG dispatch, worktrees, `claims.json`, `merge-coordinator`, `/banx:dispatch`, `/banx:aside`, `/banx:rollback`.
-6. **Providers, learn, notifications, report** — `local` task provider + `/banx:pull`, `/banx:learn`, notification hooks, `/banx:report`.
+5. **Parallelism & merge** — DAG dispatch, worktrees, `claims.json`, `merge-coordinator`, `/crew:dispatch`, `/crew:aside`, `/crew:rollback`.
+6. **Providers, learn, notifications, report** — `local` task provider + `/crew:pull`, `/crew:learn`, notification hooks, `/crew:report`.
 
 ---
 
@@ -32,13 +32,13 @@ This plan is **Plan 1 of 6**. Each plan ships working, testable software on its 
 | `biome.json` | lint/format |
 | `vitest.config.ts` | test runner config |
 | `tsdown.config.ts` | bundle config for `dist/` |
-| `src/config/schema.ts` | Zod schema for `config.json` + inferred `BanxConfig` type |
+| `src/config/schema.ts` | Zod schema for `config.json` + inferred `CrewConfig` type |
 | `src/config/load.ts` | `deepMerge`, `loadConfig` (defaults < global < project) |
 | `src/planning/scaffold.ts` | create `.planning/` structure + render `PROJECT.md` |
-| `src/cli/index.ts` | Commander entry, `banx init` command |
-| `bin/banx.mjs` | executable shim → `dist/cli/index.js` |
+| `src/cli/index.ts` | Commander entry, `crew init` command |
+| `bin/crew.mjs` | executable shim → `dist/cli/index.js` |
 | `.claude-plugin/plugin.json` | Claude Code plugin manifest |
-| `commands/status.md` | `/banx:status` command (reads roadmap+log) |
+| `commands/status.md` | `/crew:status` command (reads roadmap+log) |
 | `tests/config/schema.test.ts` | schema defaults/validation tests |
 | `tests/config/load.test.ts` | merge/load tests |
 | `tests/planning/scaffold.test.ts` | scaffolder tests |
@@ -55,11 +55,11 @@ This plan is **Plan 1 of 6**. Each plan ships working, testable software on its 
 
 ```json
 {
-  "name": "banx",
+  "name": "crew",
   "version": "0.0.0",
   "description": "Config-driven agentic workflow harness for Claude Code",
   "type": "module",
-  "bin": { "banx": "./bin/banx.mjs" },
+  "bin": { "crew": "./bin/crew.mjs" },
   "exports": { ".": "./dist/index.js" },
   "files": ["dist", "bin", "commands", ".claude-plugin", "README.md"],
   "scripts": {
@@ -145,7 +145,7 @@ export default defineConfig({
 
 ```ts
 export { loadConfig } from "./config/load.js";
-export { BanxConfig } from "./config/schema.js";
+export { CrewConfig } from "./config/schema.js";
 export { scaffoldPlanning } from "./planning/scaffold.js";
 ```
 
@@ -166,7 +166,7 @@ Expected: install succeeds; `tsc --noEmit` fails ONLY on missing `src/config/*` 
 
 ```bash
 git add package.json tsconfig.json biome.json vitest.config.ts tsdown.config.ts src/index.ts .gitignore pnpm-lock.yaml
-git commit -m "chore: scaffold banx package (ts, zod, vitest, biome)"
+git commit -m "chore: scaffold crew package (ts, zod, vitest, biome)"
 ```
 
 ---
@@ -182,11 +182,11 @@ git commit -m "chore: scaffold banx package (ts, zod, vitest, biome)"
 ```ts
 // tests/config/schema.test.ts
 import { describe, expect, it } from "vitest";
-import { BanxConfig } from "../../src/config/schema.js";
+import { CrewConfig } from "../../src/config/schema.js";
 
-describe("BanxConfig", () => {
+describe("CrewConfig", () => {
   it("produces full defaults from an empty object", () => {
-    const c = BanxConfig.parse({});
+    const c = CrewConfig.parse({});
     expect(c.git.autoCommitPerPhase).toBe(true);
     expect(c.git.autoPush).toBe(false);
     expect(c.git.mergeStrategy).toBe("integration-branch");
@@ -201,11 +201,11 @@ describe("BanxConfig", () => {
   });
 
   it("rejects an invalid enum value", () => {
-    expect(() => BanxConfig.parse({ git: { mergeStrategy: "nope" } })).toThrow();
+    expect(() => CrewConfig.parse({ git: { mergeStrategy: "nope" } })).toThrow();
   });
 
   it("keeps user overrides while filling the rest with defaults", () => {
-    const c = BanxConfig.parse({ git: { autoPush: true }, tags: ["nextjs"] });
+    const c = CrewConfig.parse({ git: { autoPush: true }, tags: ["nextjs"] });
     expect(c.git.autoPush).toBe(true);
     expect(c.git.autoCommitPerPhase).toBe(true); // still defaulted
     expect(c.tags).toEqual(["nextjs"]);
@@ -293,7 +293,7 @@ const Notifications = z
   })
   .default({});
 
-export const BanxConfig = z
+export const CrewConfig = z
   .object({
     git: Git,
     execution: Execution,
@@ -318,7 +318,7 @@ export const BanxConfig = z
   })
   .default({});
 
-export type BanxConfig = z.infer<typeof BanxConfig>;
+export type CrewConfig = z.infer<typeof CrewConfig>;
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -367,8 +367,8 @@ describe("loadConfig", () => {
   let globalPath: string;
 
   beforeEach(async () => {
-    root = await fs.mkdtemp(path.join(os.tmpdir(), "banx-root-"));
-    globalPath = path.join(await fs.mkdtemp(path.join(os.tmpdir(), "banx-glob-")), "config.json");
+    root = await fs.mkdtemp(path.join(os.tmpdir(), "crew-root-"));
+    globalPath = path.join(await fs.mkdtemp(path.join(os.tmpdir(), "crew-glob-")), "config.json");
   });
   afterEach(async () => {
     await fs.rm(root, { recursive: true, force: true });
@@ -405,9 +405,9 @@ Expected: FAIL — cannot find module `../../src/config/load.js`.
 import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { BanxConfig } from "./schema.js";
+import { CrewConfig } from "./schema.js";
 
-export const GLOBAL_CONFIG_PATH = path.join(os.homedir(), ".claude", "banx", "config.json");
+export const GLOBAL_CONFIG_PATH = path.join(os.homedir(), ".claude", "crew", "config.json");
 
 export function projectConfigPath(root: string): string {
   return path.join(root, ".planning", "config.json");
@@ -438,11 +438,11 @@ export function deepMerge<T>(a: T, b: unknown): T {
 export async function loadConfig(
   root: string,
   opts?: { globalPath?: string },
-): Promise<BanxConfig> {
+): Promise<CrewConfig> {
   const globalRaw = await readJsonIfExists(opts?.globalPath ?? GLOBAL_CONFIG_PATH);
   const projectRaw = await readJsonIfExists(projectConfigPath(root));
   const merged = deepMerge(globalRaw, projectRaw);
-  return BanxConfig.parse(merged);
+  return CrewConfig.parse(merged);
 }
 ```
 
@@ -474,7 +474,7 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { BanxConfig } from "../../src/config/schema.js";
+import { CrewConfig } from "../../src/config/schema.js";
 import { scaffoldPlanning } from "../../src/planning/scaffold.js";
 
 describe("scaffoldPlanning", () => {
@@ -487,7 +487,7 @@ describe("scaffoldPlanning", () => {
   };
 
   beforeEach(async () => {
-    root = await fs.mkdtemp(path.join(os.tmpdir(), "banx-scaffold-"));
+    root = await fs.mkdtemp(path.join(os.tmpdir(), "crew-scaffold-"));
   });
   afterEach(async () => {
     await fs.rm(root, { recursive: true, force: true });
@@ -502,7 +502,7 @@ describe("scaffoldPlanning", () => {
     await expect(fs.access(path.join(dir, "sessions"))).resolves.toBeUndefined();
 
     const raw = JSON.parse(await fs.readFile(path.join(dir, "config.json"), "utf8"));
-    const cfg = BanxConfig.parse(raw);
+    const cfg = CrewConfig.parse(raw);
     expect(cfg.projectType).toBe("saas-app");
     expect(cfg.tags).toEqual(["nextjs", "drizzle"]);
     expect(cfg.stack.db).toBe("postgres");
@@ -530,7 +530,7 @@ Expected: FAIL — cannot find module `../../src/planning/scaffold.js`.
 ```ts
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { BanxConfig } from "../config/schema.js";
+import { CrewConfig } from "../config/schema.js";
 
 export interface InitAnswers {
   projectName: string;
@@ -553,7 +553,7 @@ ${stackLines}
 - (werden hier festgehalten — das Warum, nicht nur das Was)
 
 ## Aktueller Stand
-- Projekt initialisiert. Nächster Schritt: \`/banx:brief\` oder \`/banx:plan\`.
+- Projekt initialisiert. Nächster Schritt: \`/crew:brief\` oder \`/crew:plan\`.
 
 ## Constraints
 - (immer geltende Leitplanken hier)
@@ -577,7 +577,7 @@ export async function scaffoldPlanning(
   await fs.mkdir(path.join(dir, "plans"), { recursive: true });
   await fs.mkdir(path.join(dir, "sessions"), { recursive: true });
 
-  const config = BanxConfig.parse({
+  const config = CrewConfig.parse({
     projectType: answers.projectType,
     tags: answers.tags,
     stack: answers.stack,
@@ -591,7 +591,7 @@ export async function scaffoldPlanning(
   );
   await fs.writeFile(path.join(dir, "log.md"), "# Log\n");
   await fs.writeFile(path.join(dir, "claims.json"), "{}\n");
-  await fs.writeFile(path.join(dir, "backlog.md"), "# Backlog\n\n_Ideen hier ablegen; Triage bei /banx:plan oder /banx:adjust._\n");
+  await fs.writeFile(path.join(dir, "backlog.md"), "# Backlog\n\n_Ideen hier ablegen; Triage bei /crew:plan oder /crew:adjust._\n");
 
   return dir;
 }
@@ -616,10 +616,10 @@ git commit -m "feat(planning): .planning scaffolder with overwrite guard"
 
 ---
 
-## Task 5: CLI `banx init`
+## Task 5: CLI `crew init`
 
 **Files:**
-- Create: `src/cli/index.ts`, `bin/banx.mjs`
+- Create: `src/cli/index.ts`, `bin/crew.mjs`
 
 - [ ] **Step 1: Write `src/cli/index.ts`**
 
@@ -645,7 +645,7 @@ const STACK_DEFAULTS: Record<string, string> = {
 
 export function buildProgram(): Command {
   const program = new Command();
-  program.name("banx").description("Config-driven agentic workflow harness").version("0.0.0");
+  program.name("crew").description("Config-driven agentic workflow harness").version("0.0.0");
 
   program
     .command("init")
@@ -683,8 +683,8 @@ export function buildProgram(): Command {
         { force: opts.force },
       );
       const cfg = await loadConfig(root);
-      console.log(`banx: initialized ${path.relative(root, dir) || ".planning"}`);
-      console.log(`banx: provider=${cfg.tasks.provider} models=${cfg.models.mode} parallel=${cfg.execution.parallel}`);
+      console.log(`crew: initialized ${path.relative(root, dir) || ".planning"}`);
+      console.log(`crew: provider=${cfg.tasks.provider} models=${cfg.models.mode} parallel=${cfg.execution.parallel}`);
     });
 
   return program;
@@ -696,12 +696,12 @@ export async function run(argv: string[]): Promise<void> {
 
 // Executed via bin shim.
 run(process.argv).catch((e) => {
-  console.error(`banx: ${(e as Error).message}`);
+  console.error(`crew: ${(e as Error).message}`);
   process.exitCode = 1;
 });
 ```
 
-- [ ] **Step 2: Write `bin/banx.mjs`**
+- [ ] **Step 2: Write `bin/crew.mjs`**
 
 ```js
 #!/usr/bin/env node
@@ -713,27 +713,27 @@ import "../dist/cli/index.js";
 Run:
 ```bash
 pnpm build
-mkdir -p /tmp/banx-smoke && cd /tmp/banx-smoke && node /Users/daniel/Sites/banx/bin/banx.mjs init --yes
+mkdir -p /tmp/crew-smoke && cd /tmp/crew-smoke && node /Users/daniel/Sites/crew/bin/crew.mjs init --yes
 ls -a .planning && cat .planning/config.json | head -5
 cd - >/dev/null
 ```
-Expected: `.planning/` created with `config.json`, `PROJECT.md`, `roadmap.md`, `log.md`, `claims.json`, `plans/`, `sessions/`; console prints `banx: initialized .planning` and a config summary line.
+Expected: `.planning/` created with `config.json`, `PROJECT.md`, `roadmap.md`, `log.md`, `claims.json`, `plans/`, `sessions/`; console prints `crew: initialized .planning` and a config summary line.
 
 - [ ] **Step 4: Verify the overwrite guard**
 
-Run: `cd /tmp/banx-smoke && node /Users/daniel/Sites/banx/bin/banx.mjs init && cd - >/dev/null`
-Expected: exits non-zero with `banx: .planning already exists ...`.
+Run: `cd /tmp/crew-smoke && node /Users/daniel/Sites/crew/bin/crew.mjs init && cd - >/dev/null`
+Expected: exits non-zero with `crew: .planning already exists ...`.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/cli/index.ts bin/banx.mjs
-git commit -m "feat(cli): banx init with stack-default interview"
+git add src/cli/index.ts bin/crew.mjs
+git commit -m "feat(cli): crew init with stack-default interview"
 ```
 
 ---
 
-## Task 6: Plugin manifest + `/banx:status`
+## Task 6: Plugin manifest + `/crew:status`
 
 **Files:**
 - Create: `.claude-plugin/plugin.json`, `commands/status.md`
@@ -742,7 +742,7 @@ git commit -m "feat(cli): banx init with stack-default interview"
 
 ```json
 {
-  "name": "banx",
+  "name": "crew",
   "version": "0.0.0",
   "description": "Config-driven agentic workflow harness",
   "commands": "./commands",
@@ -764,13 +764,13 @@ Expected: dirs exist; `hooks/hooks.json` is valid empty JSON.
 description: Show the current project status from .planning/ (roadmap + log).
 ---
 
-# /banx:status
+# /crew:status
 
 Read and summarize the current project state. Do not modify anything.
 
 ## Steps
 
-1. If `.planning/` does not exist, tell the user to run `banx init` and stop.
+1. If `.planning/` does not exist, tell the user to run `crew init` and stop.
 2. Read `.planning/roadmap.md` and report, per milestone: phases done (`[x]`), active (`[>]`), pending (`[ ]`), deferred (`[~]`), including any `@worktree` claim markers.
 3. Read the last 5 lines of `.planning/log.md` and show recent progress (incl. token/cost notes if present).
 4. Read `.planning/claims.json`; if any phase is claimed, list which instance/worktree holds it.
@@ -781,18 +781,18 @@ Keep it read-only and concise.
 
 - [ ] **Step 4: Smoke-test plugin load in Claude Code**
 
-Run (manual): install the local plugin and confirm `/banx:status` is listed.
+Run (manual): install the local plugin and confirm `/crew:status` is listed.
 ```
-/plugin marketplace add /Users/daniel/Sites/banx
-/plugin install banx
+/plugin marketplace add /Users/daniel/Sites/crew
+/plugin install crew
 ```
-Expected: `/banx:status` appears in the command list; running it in `/tmp/banx-smoke` reports the empty roadmap without errors.
+Expected: `/crew:status` appears in the command list; running it in `/tmp/crew-smoke` reports the empty roadmap without errors.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add .claude-plugin/plugin.json commands/status.md hooks/hooks.json agents/.gitkeep skills/.gitkeep
-git commit -m "feat(plugin): manifest + /banx:status command"
+git commit -m "feat(plugin): manifest + /crew:status command"
 ```
 
 ---
@@ -805,7 +805,7 @@ git commit -m "feat(plugin): manifest + /banx:status command"
 - [ ] **Step 1: Write `README.md`**
 
 ```markdown
-# banx
+# crew
 
 Config-driven agentic workflow harness for Claude Code. Lightweight planning,
 strong cross-session context handling, configurable verify pipeline and model
@@ -815,13 +815,13 @@ management. Project state lives in a committed `.planning/` directory.
 
 ```
 /plugin marketplace add <repo-or-path>
-/plugin install banx
+/plugin install crew
 ```
 
 ## Initialize a project
 
 ```
-npx banx init        # or: pnpm dlx banx init / bunx banx init
+npx crew init        # or: pnpm dlx crew init / bunx crew init
 ```
 
 Creates `.planning/` with `config.json`, `PROJECT.md`, `roadmap.md`, `log.md`,
@@ -830,14 +830,14 @@ Creates `.planning/` with `config.json`, `PROJECT.md`, `roadmap.md`, `log.md`,
 ## Status
 
 ```
-/banx:status
+/crew:status
 ```
 
 ## Configuration
 
 Behavior is controlled by `.planning/config.json` (project) layered over
-`~/.claude/banx/config.json` (global) over built-in defaults. See
-`docs/specs/2026-06-12-banx-harness-core-design.md` for the full schema.
+`~/.claude/crew/config.json` (global) over built-in defaults. See
+`docs/specs/2026-06-12-crew-harness-core-design.md` for the full schema.
 ```
 
 - [ ] **Step 2: Final verification**
@@ -860,12 +860,12 @@ git commit -m "docs: add README with install and usage"
 - Plugin manifest + install → Task 6. ✅
 - `.planning/` committed state model (config, PROJECT.md, roadmap, log, claims, plans/, sessions/) → Task 4, Task 6. ✅
 - `config.json` schema + project/global layering → Task 2, Task 3. ✅
-- `banx init` + stack interview with "use defaults" path → Task 5. ✅
-- `/banx:status` → Task 6. ✅
+- `crew init` + stack interview with "use defaults" path → Task 5. ✅
+- `/crew:status` → Task 6. ✅
 - Out-of-scope-for-now (archetypes, core loop, verify, parallelism, providers, learn, notifications, rollback) → Plans 2–6. Documented in Plan Sequence. ✅
 
 **Placeholder scan:** No "TBD"/"handle edge cases"; every code step has complete code. `agents/`, `skills/`, `hooks/` are intentionally empty shells in Plan 1 (filled in later plans) — created explicitly in Task 6 Step 2, not left implicit.
 
-**Type consistency:** `BanxConfig` (Zod object) is reused identically in schema/load/scaffold tasks. `InitAnswers` shape (`projectName, projectType, tags, stack`) matches between `scaffold.ts` and `cli/index.ts`. `scaffoldPlanning(root, answers, opts?)` signature consistent across Task 4 and Task 5. `loadConfig(root, { globalPath? })` consistent across Task 3 and Task 5.
+**Type consistency:** `CrewConfig` (Zod object) is reused identically in schema/load/scaffold tasks. `InitAnswers` shape (`projectName, projectType, tags, stack`) matches between `scaffold.ts` and `cli/index.ts`. `scaffoldPlanning(root, answers, opts?)` signature consistent across Task 4 and Task 5. `loadConfig(root, { globalPath? })` consistent across Task 3 and Task 5.
 
 **Note for executor:** `tsdown`/`tsdown.config.ts` API and exact dep versions should be confirmed against the registry at execution time; if `tsdown` differs, `tsup` is a drop-in (`entry`, `format`, `dts`, `clean`). Lockfile is committed in Task 1.
