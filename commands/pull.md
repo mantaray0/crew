@@ -1,0 +1,18 @@
+---
+description: Pull a task from the configured provider (local roadmap or an external PM tool) into a crew plan.
+argument-hint: "<task id>"
+---
+
+# /crew:pull
+
+Bring a work item into the crew workflow. The internal `.planning/` stays the working layer; an external ticket is the north-star + sync boundary.
+
+## Steps
+
+1. **Resolve the provider.** Read `config.tasks.provider` (`local` · `mcp:linear` · `mcp:jira` · `mcp:clickup` · `crew-pm`). For `local`, the source is `roadmap.md`. For an `mcp:*` provider, call the corresponding MCP connector to fetch the ticket by id.
+2. **Fetch the work item.** Normalize to `{ id, title, description, acceptanceCriteria, status, externalRef }`.
+3. **Create the plan.** Write `.planning/plans/<id>.md` with the **Spec** head filled from the ticket (title/description → goal/requirements, acceptance criteria), and `externalRef: <id>`. Add a roadmap entry referencing it. The ticket IS the spec — do not re-run roast-me unless the ticket is too thin.
+4. **Work it.** Hand off to `/crew:plan` (if it needs phase breakdown) then `/crew:next`.
+5. **Write-back (if `config.tasks.writeBack`).** At phase/milestone boundaries, comment progress and update status on the external ticket via the provider. Sync only at boundaries, not on every edit.
+
+If `config.tasks.provider` is `local`, "pull" just promotes a roadmap/backlog item into an active plan. External providers (linear/jira/clickup/crew-pm) require their MCP connector to be configured.
