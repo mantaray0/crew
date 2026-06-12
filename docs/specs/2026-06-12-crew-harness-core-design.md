@@ -131,6 +131,7 @@ Bewusst **eine** Datei mit zwei Ebenen (keine getrennte Spec-/Plan-Datei, außer
 - **Spec-Quelle:** Bei `/crew:brief`/`/crew:plan` füllt Roast-Me den Spec-Kopf. Bei `/crew:pull <id>` kommt der Spec-Kopf aus dem externen Ticket (Titel/Beschreibung/Akzeptanzkriterien) — **keine Doppelung**.
 - **`clarify.specArtifact`:** `"section"` (Default, Spec-Kopf im Plan) · `"separate"` (eigene `specs/<id>.md`, Superpowers-Stil) · `"off"` (Quick-Tasks ohne formale Spec).
 - **Neues Projekt** braucht keinen Spec-Kopf je Feature für die Gesamtvision — die lebt in `PROJECT.md`.
+- **Dateinamen** (verschärft seit diesem Entwurf, siehe `crew-planning`): Briefs aus `/crew:brief` heißen `plans/_<slug>.md` (unterstrich-präfixiert, un-nummeriert) — `/crew:plan` erzeugt daraus die nummerierten Phasen-Pläne `plans/<id>-<titel>.md`. Das `_` trennt rohe Initiativen optisch von geplanten Phasen.
 
 ### 4.4 `log.md` — Fortschritt
 
