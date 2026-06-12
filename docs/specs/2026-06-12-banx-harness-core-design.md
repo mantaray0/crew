@@ -132,7 +132,9 @@ Bewusst **eine** Datei mit zwei Ebenen (keine getrennte Spec-/Plan-Datei, außer
 
 ### 4.4 `log.md` — Fortschritt
 
-Append-only: `2026-06-12 14:30 · M1.2 erledigt · commit abc1234 · Verify: pass`.
+Append-only, inkl. leichtgewichtigem Token-/Kosten-Tracking pro Phase:
+`2026-06-12 14:30 · M1.2 erledigt · commit abc1234 · Verify: pass · ~38k tok / $0.42`.
+`/banx:report` aggregiert daraus eine Übersicht.
 
 ### 4.5 `sessions/` — Snapshots
 
@@ -241,6 +243,8 @@ Jeder Command: liest definierten Zustand, schreibt definierten Zustand, respekti
 | `/banx:aside` | **Quick-Lane** für Kleinkram/Bugfix außerhalb der Roadmap | – | Code, optional Commit | stört aktive Phase/Claims nicht |
 | `/banx:loop` | **Opt-in** „iterieren bis Ziel" auf einer Phase | plan | Code, log | maxIterations |
 | `/banx:learn` | Muster/Entscheidungen aus fertiger Arbeit destillieren → Skill/Tag-Vorschlag fürs globale Registry | log, Diff, PROJECT | Skill/Tag-Vorschlag (Core) | du bestätigst Übernahme |
+| `/banx:rollback` | Revert auf letzten verifizierten Phasen-Commit | log, git | revertet Code, Roadmap/Log zurück | Bestätigung |
+| `/banx:report` | Token-/Kosten-Übersicht über Phasen | log | – | – |
 
 ### 6.1 `/banx:new` — Roast-Me + Stack-Interview
 
@@ -409,4 +413,6 @@ Trennt **„woher die Arbeit kommt"** von **„wie sie abgearbeitet wird"**.
 - [ ] `/banx:learn` schlägt aus fertiger Arbeit Skills/Tags fürs globale Registry vor (du bestätigst).
 - [ ] Test-Politik aus Projektart/Tag ableitbar (`testing.policy`); Security-Pass nur auf Empfehlung+Freigabe.
 - [ ] Notifications über `Notification`/`Stop`-Hooks (Blocker + Abschluss), config-getriebener Channel.
+- [ ] `/banx:rollback` setzt sicher auf den letzten verifizierten Phasen-Commit zurück.
+- [ ] Token-/Kosten-Tracking pro Phase im `log.md`; `/banx:report`-Übersicht.
 - [ ] Keine Fremd-Harness-Referenzen/Branding im Repo.
