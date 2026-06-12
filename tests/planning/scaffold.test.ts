@@ -24,13 +24,24 @@ describe("scaffoldPlanning", () => {
 
   it("creates the .planning structure with a valid config", async () => {
     const dir = await scaffoldPlanning(root, answers);
-    for (const f of ["config.json", "PROJECT.md", "roadmap.md", "log.md", "claims.json", "backlog.md"]) {
+    for (const f of [
+      "config.json",
+      "PROJECT.md",
+      "roadmap.md",
+      "log.md",
+      "claims.json",
+      "backlog.md",
+    ]) {
       await expect(fs.access(path.join(dir, f))).resolves.toBeUndefined();
     }
     await expect(fs.access(path.join(dir, "plans"))).resolves.toBeUndefined();
-    await expect(fs.access(path.join(dir, "sessions"))).resolves.toBeUndefined();
+    await expect(
+      fs.access(path.join(dir, "sessions")),
+    ).resolves.toBeUndefined();
 
-    const raw = JSON.parse(await fs.readFile(path.join(dir, "config.json"), "utf8"));
+    const raw = JSON.parse(
+      await fs.readFile(path.join(dir, "config.json"), "utf8"),
+    );
     const cfg = CrewConfig.parse(raw);
     expect(cfg.projectType).toBe("saas-app");
     expect(cfg.tags).toEqual(["nextjs", "drizzle"]);
@@ -43,7 +54,11 @@ describe("scaffoldPlanning", () => {
 
   it("refuses to overwrite an existing .planning unless force=true", async () => {
     await scaffoldPlanning(root, answers);
-    await expect(scaffoldPlanning(root, answers)).rejects.toThrow(/already exists/);
-    await expect(scaffoldPlanning(root, answers, { force: true })).resolves.toContain(".planning");
+    await expect(scaffoldPlanning(root, answers)).rejects.toThrow(
+      /already exists/,
+    );
+    await expect(
+      scaffoldPlanning(root, answers, { force: true }),
+    ).resolves.toContain(".planning");
   });
 });

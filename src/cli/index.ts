@@ -19,7 +19,10 @@ const STACK_DEFAULTS: Record<string, string> = {
 
 export function buildProgram(): Command {
   const program = new Command();
-  program.name("crew").description("Config-driven agentic workflow harness").version("0.0.0");
+  program
+    .name("crew")
+    .description("Config-driven agentic workflow harness")
+    .version("0.0.0");
 
   program
     .command("init")
@@ -57,8 +60,12 @@ export function buildProgram(): Command {
         { force: opts.force },
       );
       const cfg = await loadConfig(root);
-      console.log(`crew: initialized ${path.relative(root, dir) || ".planning"}`);
-      console.log(`crew: provider=${cfg.tasks.provider} models=${cfg.models.mode} parallel=${cfg.execution.parallel}`);
+      console.log(
+        `crew: initialized ${path.relative(root, dir) || ".planning"}`,
+      );
+      console.log(
+        `crew: provider=${cfg.tasks.provider} models=${cfg.models.mode} parallel=${cfg.execution.parallel}`,
+      );
     });
 
   return program;
