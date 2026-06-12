@@ -72,10 +72,11 @@ Von `banx init` pro Projekt angelegt:
 .planning/
 ├── config.json          # Steuerzentrum (§5)
 ├── PROJECT.md            # lebende Projekt-Wahrheit ("Tech-Deck")
-├── roadmap.md            # Meilensteine → Phasen, Status + Zeitstempel
+├── roadmap.md            # Meilensteine → Phasen, Status + Zeitstempel + Claims
 ├── plans/<id>.md         # detaillierter Plan je Feature/Phase/Ticket
-├── log.md                # append-only Fortschritts-Log
-├── sessions/             # Session-Snapshots (exakter nächster Schritt)
+├── claims.json           # welche Instanz/Worktree bearbeitet welche Phase (§6.3)
+├── log.md (oder log/<feature>.md) # append-only Fortschritts-Log
+├── sessions/<worktree-id>/ # Session-Snapshots je Instanz (kollisionsfrei)
 └── .gitignore            # schließt volatile Snapshots aus, falls config das will
 ```
 
@@ -150,7 +151,16 @@ Defaults aus dem Plugin; pro Projekt überschreibbar; einzelne Phasen dürfen im
     "autoPush": false,              // Remote nie ohne Freigabe
     "autoPR": false,
     "commitStyle": "conventional",
-    "branchPattern": "feat/{slug}"
+    "branchPattern": "feat/{slug}",
+    "isolation": "worktree-per-feature", // "worktree-per-feature" | "branch-per-feature" | "linear"
+    "mergeStrategy": "integration-branch", // "integration-branch" | "pr" | "ask-each"
+    "askBeforeMerge": false,        // true erzwingt Rückfrage vor jedem Merge
+    "conflictPolicy": "resolve-or-ask" // Coordinator löst Eindeutiges, fragt bei Unklarheit
+  },
+  "execution": {
+    "parallel": "auto",             // "auto" (erkennen + bestätigen) | "manual" (/banx:dispatch) | "off"
+    "maxConcurrent": 3,             // Cap gleichzeitiger Worktrees/Sub-Agents
+    "onDeviation": "small-self-major-ask" // kleine Abweichung selbst, echtes Problem → fragen
   },
   "verify": {
     "default": ["verify", "review", "harden", "simplify"],
@@ -215,10 +225,12 @@ Jeder Command: liest definierten Zustand, schreibt definierten Zustand, respekti
 | `/banx:next` | Nächste Phase ausführen (Kern-Loop) | PROJECT, roadmap, plan, log | Code, `log.md`, ggf. Commit | Verify + Commit per config |
 | `/banx:verify` | Verify→Review→Härten→Simplify explizit | plan, Diff | Review-Bericht, `log.md` | – |
 | `/banx:adjust` | Roadmap mitten im Flow ändern | roadmap | `roadmap.md` | – |
-| `/banx:status` | Stand zeigen | roadmap, log | – | – |
+| `/banx:status` | Stand zeigen | roadmap, log, claims | – | – |
 | `/banx:resume` | Frische Session orientieren | PROJECT, letzter Snapshot, log | – | wartet auf „weiter" |
 | `/banx:ship` | Commit/Push/PR gemäß config | config, Diff | Git-Remote/PR | Freigabe-Gates |
 | `/banx:pull <id>` | Externes Ticket → interner Plan | Provider (MCP) | `plans/<id>.md`, roadmap-Eintrag | – |
+| `/banx:dispatch` | Unabhängige Phasen parallel ausführen (DAG, Worktrees, Sub-Agents) + rollend integrieren | roadmap, plans | Worktrees, Branches, claims, log | Parallel-Plan-Bestätigung |
+| `/banx:aside` | **Quick-Lane** für Kleinkram/Bugfix außerhalb der Roadmap | – | Code, optional Commit | stört aktive Phase/Claims nicht |
 | `/banx:loop` | **Opt-in** „iterieren bis Ziel" auf einer Phase | plan | Code, log | maxIterations |
 
 ### 6.1 `/banx:new` — Roast-Me + Stack-Interview
@@ -233,6 +245,21 @@ Jeder Command: liest definierten Zustand, schreibt definierten Zustand, respekti
 3. **Verify-Pipeline** gemäß `verify` (Phase-Override beachtet), in **frischen Subagent-Kontexten** (§8).
 4. Bei Erfolg: atomarer Commit (falls `git.autoCommitPerPhase`), `roadmap.md` Status + Zeitstempel, `log.md` Eintrag.
 5. Bericht an Nutzer.
+
+**Abweichungs-Handling (`execution.onDeviation`):** Kleine Abweichungen innerhalb der Plan-Absicht entscheidet der Agent selbst und vermerkt sie im Log. Bei echtem Problem, Mehrdeutigkeit oder Scope-Änderung wird **angehalten und gefragt**.
+
+### 6.3 Parallelität, Worktrees & Merge
+
+Adressiert „mehrere Aufgaben eines Plans gleichzeitig, ohne Kollision, mit sauberem Merge" — innerhalb einer Instanz (Sub-Agent-driven) oder über mehrere Instanzen.
+
+1. **DAG aus dem Plan:** Phasen/Tasks tragen Abhängigkeiten. Der Harness baut den Graphen; nur **unabhängige** Knoten laufen parallel, abhängige sequenziell.
+2. **Isolation:** Jede parallele Phase läuft in eigenem **Worktree + Branch** (`git.isolation`), als Sub-Agent (implementieren + verifizieren in Isolation). Cap: `execution.maxConcurrent`.
+3. **Kollisionsschutz im State:** `plans/<id>.md` pro Feature · Logs append-only bzw. `log/<feature>.md` · Snapshots in `sessions/<worktree-id>/` · `claims.json` hält fest, welche Instanz welche Phase bearbeitet (`[>] @worktree-a` in `roadmap.md`).
+4. **Rolling Integration:** Sobald eine Phase fertig **und verifiziert** ist, integriert der `merge-coordinator` sie gemäß `git.mergeStrategy` (`integration-branch` rollend · `pr` je Feature · `ask-each` jeder Merge gefragt). Nach jedem Merge Verify. Laufende Worktrees rebasen auf den neuen Stand → minimaler Drift.
+5. **Konflikte (`git.conflictPolicy`):** Coordinator löst Eindeutiges (Muster/Tests entscheiden); bei echter Mehrdeutigkeit → Rückfrage.
+6. **Auslösung:** `execution.parallel:"auto"` → Harness erkennt unabhängige Phasen, schlägt den Parallel-Plan vor, startet nach Bestätigung. Zusätzlich jederzeit explizit per `/banx:dispatch`.
+
+Merge-Orchestrierung ist Teil des **Skill-/Rulesets** (`git-merge`-Skill + Rules), nicht ad-hoc.
 
 ---
 
@@ -280,6 +307,7 @@ Kuratiert, an den Stack angepasst, ohne Fremdreferenzen:
 - **silent-failure-hunter**, **type-design-analyzer** — Härten.
 - **code-simplifier** — Simplify.
 - **build-error-resolver** — Build-Fixes.
+- **merge-coordinator** — integriert parallele Feature-Branches gemäß `git.mergeStrategy`, Verify nach jedem Merge, Konfliktlösung per `git.conflictPolicy` (§6.3).
 - **loop-operator** (optional) — opt-in Iterations-Loop.
 
 Jeder Agent: Frontmatter `name, description, tools, model` (+ Task-Typ). Default-Model gemäß §7.
@@ -288,7 +316,7 @@ Jeder Agent: Frontmatter `name, description, tools, model` (+ Task-Typ). Default
 
 ## 11. Skills, Rules, Contexts
 
-- **Meta-Skills jetzt:** `roast-me` (Befragung), `banx-planning` (Fahrplan/Phasen-Konventionen), `banx-context` (Zustands-/Session-Handling), `git-conventions`, `verification-loop`, `tdd-workflow`.
+- **Meta-Skills jetzt:** `roast-me` (Befragung), `banx-planning` (Fahrplan/Phasen-Konventionen inkl. Abhängigkeits-DAG), `banx-context` (Zustands-/Session-Handling), `git-conventions`, `git-merge` (Worktree-/Branch-Integration & Konfliktlösung, §6.3), `verification-loop`, `tdd-workflow`.
 - **Stack-Skills (Folge-Spec):** hono-api, drizzle-postgres, shadcn-baseui, tanstack-query/form/table, bullmq-redis, bun-scripts, nextjs, react-patterns/testing/performance, coolify-deploy (optional).
 - **Rules:** immer geltende Leitplanken (Sicherheit, Validierung, Muster-vor-Neuerfindung, fokussierte Änderungen) — adaptiert, rebranded.
 - **Contexts:** `dev`, `review`, `research` — Verhaltensmodi.
@@ -363,4 +391,7 @@ Trennt **„woher die Arbeit kommt"** von **„wie sie abgearbeitet wird"**.
 - [ ] Model-Management mit `auto`- und `manual`-Modus + Override-Präzedenz.
 - [ ] Task-Provider-Abstraktion vorhanden; `local`-Provider voll funktionsfähig.
 - [ ] Globaler Layer mit Projektarten/Tags-Registry; `banx init` wählt Archetyp und seedet das Projekt; Tag-Set steuert aktive Rules/Skills.
+- [ ] Parallel-Dispatch unabhängiger Phasen (DAG) in Worktrees mit `claims.json`-Kollisionsschutz; `execution.parallel='auto'` + `/banx:dispatch`.
+- [ ] Rolling Integration via `merge-coordinator` gemäß `git.mergeStrategy`; Konflikte per `conflictPolicy` (lösen-oder-fragen).
+- [ ] `/banx:aside` Quick-Lane stört aktive Phasen/Claims nicht.
 - [ ] Keine Fremd-Harness-Referenzen/Branding im Repo.
