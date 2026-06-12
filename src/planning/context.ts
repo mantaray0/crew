@@ -4,7 +4,10 @@ import path from "node:path";
 const planningDir = (root: string) => path.join(root, ".planning");
 
 /** Read .planning/PROJECT.md, bounded to maxChars. Returns null if absent. */
-export async function readProjectContext(root: string, maxChars: number): Promise<string | null> {
+export async function readProjectContext(
+  root: string,
+  maxChars: number,
+): Promise<string | null> {
   const file = path.join(planningDir(root), "PROJECT.md");
   let content: string;
   try {
@@ -34,7 +37,8 @@ export async function latestSnapshotPath(root: string): Promise<string | null> {
     const subPath = path.join(base, sub);
     const stat = await fs.stat(subPath);
     if (stat.isDirectory()) {
-      for (const f of await fs.readdir(subPath)) files.push(path.join(subPath, f));
+      for (const f of await fs.readdir(subPath))
+        files.push(path.join(subPath, f));
     } else if (stat.isFile()) {
       files.push(subPath);
     }
