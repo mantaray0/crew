@@ -17,13 +17,26 @@ async function readJson(p) {
 }
 
 // 1. JSON files parse.
-for (const f of [".claude-plugin/plugin.json", "hooks/hooks.json"]) {
+for (const f of [".claude-plugin/plugin.json", ".claude-plugin/marketplace.json", "hooks/hooks.json"]) {
   try {
     await readJson(f);
     ok(`${f} valid JSON`);
   } catch (e) {
     fail(`${f}: ${e.message}`);
   }
+}
+
+// 1b. Marketplace lists at least one plugin, each with name + source.
+try {
+  const market = await readJson(".claude-plugin/marketplace.json");
+  if (!Array.isArray(market.plugins) || market.plugins.length === 0) {
+    fail("marketplace.json: plugins array is empty");
+  }
+  for (const p of market.plugins ?? []) {
+    if (!p.name || !p.source) fail(`marketplace.json: plugin missing name or source: ${JSON.stringify(p)}`);
+  }
+} catch {
+  /* parse error already reported above */
 }
 
 // 2. Commands and agents have YAML frontmatter.
