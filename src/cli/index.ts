@@ -1,3 +1,4 @@
+import { promises as fs } from "node:fs";
 import path from "node:path";
 import { Command } from "commander";
 import prompts from "prompts";
@@ -32,6 +33,21 @@ export function buildProgram(): Command {
     .action(async (opts: { force?: boolean; yes?: boolean }) => {
       const root = process.cwd();
       const projectName = path.basename(root);
+
+      if (!opts.force) {
+        const planningDir = path.join(root, ".planning");
+        const exists = await fs
+          .access(planningDir)
+          .then(() => true)
+          .catch(() => false);
+        if (exists) {
+          process.stderr.write(
+            `crew: .planning already exists at ${planningDir} (use --force to overwrite)\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
+      }
 
       let stack = { ...STACK_DEFAULTS };
       if (!opts.yes) {
