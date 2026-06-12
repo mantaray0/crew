@@ -1,8 +1,9 @@
 # crew — Meta-Agent-Harness (Core Engine) · Design-Spec
 
 - **Datum:** 2026-06-12
-- **Status:** Entwurf zur Freigabe
-- **Arbeitsname:** `crew` (Plugin + CLI + Command-Namespace) — provisorisch, vor Veröffentlichung bestätigen
+- **Status:** Umgesetzt (Core Engine), danach auf *pures Plugin* umgestellt — siehe Update.
+- **Update 2026-06-12:** Architektur auf **reines Claude-Code-Plugin** umgestellt (wie Superpowers/GSD): **keine CLI, kein npm, kein TS-Build**. `crew init`/`crew setup` sind jetzt die Slash-Commands `/crew:init` / `/crew:setup`; das Config-Schema + die Archetypen leben im `crew-config`-Skill; Distribution über die Plugin-Marketplace, Releases als `x.x.x`-GitHub-Tags ohne npm. Abschnitte zu CLI/`src`/`dist`/`tsup` unten sind historisch.
+- **Name:** `crew` (Plugin + Command-Namespace `/crew:`).
 - **Scope dieser Spec:** Core Engine. Stack-spezifische Skills, externe PM-Adapter, das PM-Tool (eigenes) und die Boilerplate sind eigene Folge-Specs.
 
 ---
