@@ -3,12 +3,24 @@
   "version": "0.0.0",
   "description": "Config-driven agentic workflow harness for Claude Code",
   "type": "module",
-  "publishConfig": { "access": "public" },
-  "bin": { "crew": "./bin/crew.mjs" },
-  "exports": { ".": "./dist/index.js" },
-  "files": ["dist", "bin", "commands", ".claude-plugin", "README.md"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "crew": "./bin/crew.mjs"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "commands",
+    ".claude-plugin",
+    "README.md"
+  ],
   "scripts": {
-    "build": "tsdown",
+    "build": "tsup",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
@@ -25,8 +37,11 @@
     "@types/node": "^22.7.0",
     "@types/prompts": "^2.4.9",
     "tsdown": "^0.6.0",
+    "tsup": "^8.5.1",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  }
 }
