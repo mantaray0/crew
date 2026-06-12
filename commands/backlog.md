@@ -1,0 +1,15 @@
+---
+description: Idea inbox — capture a thought instantly without disturbing the active plan, or list and triage the backlog.
+argument-hint: "[idea text to add | empty to list/triage]"
+---
+
+# /crew:backlog
+
+A frictionless place to offload ideas so the current plan stays undisturbed and nothing gets lost.
+
+## Steps
+
+- **With text (add):** append the idea to `.planning/backlog.md` as a dated bullet (`- [YYYY-MM-DD] <idea>`). Do nothing else — do not plan, do not interrupt the active phase. Confirm in one line.
+- **Without text (list/triage):** show the backlog. If the user wants to triage, for each item offer: plan now (hand to `/crew:plan`/`/crew:adjust`), keep parked, or drop. Apply choices and update `backlog.md`.
+
+Keep this command fast and side-effect-free beyond `backlog.md`. It exists so a stream of ideas has a home — capture first, decide later.
