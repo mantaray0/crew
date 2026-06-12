@@ -16,7 +16,7 @@ Turn a raw idea into a clarified brief before any planning. This is the entry po
 3. **Capture the stack (new project only).** Ask for DB / frontend / UI / backend-API / queue / deploy, pre-filled with the user's defaults. Offer the escape "you decide → I propose → you approve". If `/crew:init` already seeded `config.stack`/`tags` from an archetype, confirm rather than re-ask.
 4. **Write the brief.**
    - **New project:** write/refresh `.planning/PROJECT.md` — Stack, Architektur-Entscheidungen (the *why*), Aktueller Stand, Constraints.
-   - **Feature in an existing project:** create `.planning/plans/<slug>.md` with the **Spec** head only (Ziel/Problem, Anforderungen, Akzeptanzkriterien, Out of Scope). Honour `clarify.specArtifact` (`section` = spec head in the plan, `separate` = own file, `off` = skip). The Plan body is filled by `/crew:plan`.
+   - **Feature in an existing project:** create `.planning/plans/_<slug>.md` — **underscore-prefixed and un-numbered** (see `crew-planning` file naming) — with the **Spec** head only (Ziel/Problem, Anforderungen, Akzeptanzkriterien, Out of Scope). The phase number is assigned later by `/crew:plan`, so the brief must not invent one; the `_` keeps it visually distinct from numbered phase plans. Honour `clarify.specArtifact` (`section` = spec head in the plan, `separate` = own file, `off` = skip). The Plan body is filled by `/crew:plan`.
 5. **Confirm.** Show the brief and wait for the user's OK before suggesting `/crew:plan`.
 
 Do not write implementation code in this command.

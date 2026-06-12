@@ -331,8 +331,9 @@ UPPERCASE** (like `README`/`CHANGELOG`), **data files and directories are lowerc
 ├── BACKLOG.md        # dated idea inbox (/crew:backlog)
 ├── config.json       # project-layer config (overrides global + defaults)
 ├── claims.json       # which phase is claimed by which worktree (parallel safety)
-├── plans/            # per-feature plan files; each starts with a Spec head
-│   └── <slug>.md
+├── plans/            # plan files; each starts with a Spec head
+│   ├── _<slug>.md            # brief: un-numbered initiative (from /crew:brief)
+│   └── <id>-<title>.md       # numbered phase plan (from /crew:plan), e.g. 1.2-db-schema.md
 └── sessions/         # session snapshots for resume (per worktree id)
     └── <worktree-id>/<snapshot>.md
 ```
@@ -365,9 +366,16 @@ the source of truth in the **`crew-config`** skill; here are the groups and thei
 | `notifications` | `enabled: true`, `events: ["blocker","completion"]`, `channel: "os"` | Desktop/push notifications (see hooks) |
 | `learn` | `enabled: true` | `/crew:retro` self-learning |
 | `language` | `files: "en"` | Language of generated project files (separate from conversation language) |
+| `responseStyle` | `"concise"` | Verbosity/format of replies: `concise` (short, tables) · `detailed` (full prose) · `auto` |
+| `crewVersion` | set on init | Plugin version the config was last reconciled with — drives the update flow |
 
 **Model auto tiers:** planning/review → strongest, execution/simplify → mid, trivial → cheap.
 Override precedence: ad-hoc > project > global > built-in default.
+
+**Staying current.** `crewVersion` records the plugin version a config was reconciled with. On session
+start crew warns if a project's config is behind the installed plugin; re-running `/crew:init`
+(project) or `/crew:setup` (global) enters a **reconcile mode** that schema-diffs the existing config
+and asks you about each new field rather than silently applying defaults.
 
 **Registry (`project-types.json`, global layer):** a **tag** is atomic and activates skills/rules; a
 **project type (archetype)** is a curated tag bundle + defaults. Picked at `/crew:init`; the resolved

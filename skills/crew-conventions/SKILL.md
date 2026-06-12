@@ -28,3 +28,13 @@ The point: the user steers each option deliberately. Speed comes from good recom
 - **Respond to the user in the user's language.** Detect it from how they write and match it (a German user gets German, a Spanish user Spanish, …).
 - **The plugin repo stays English / neutral** — commands, agents, skills, code, commit messages, and config keys remain English so the plugin is universal.
 - **The user's project files follow `config.language.files`.** The content crew writes into a project — `PROJECT.md`, `ROADMAP.md`, `LOG.md`, `BACKLOG.md`, `plans/` — is written in `config.language.files` (default `"en"`). Ask for it at `/crew:setup` (global default) or `/crew:init` (per project). Section headings / structure stay stable; the prose follows the chosen language.
+
+## Response style
+
+Honour `config.responseStyle` (resolved project-over-global; default `"concise"`) in every command reply:
+
+- **`concise`** — lead with the conclusion. Prefer a **table** for comparisons, findings, option lists, and trade-offs; keep surrounding prose to a few lines. No preamble, no restating the question.
+- **`detailed`** — full narrative prose: show reasoning, walk through findings, explain trade-offs at length.
+- **`auto`** — choose per content: a table when the content is a structured comparison/finding list, prose when it's a narrative explanation.
+
+This governs *format and length only*. It never changes the interaction flow above — you still ask one decision at a time and never skip questions, whatever the style. If no config is present (e.g. outside a crew project), default to `concise`.
