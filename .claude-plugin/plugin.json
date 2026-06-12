@@ -2,12 +2,11 @@
   "name": "crew",
   "version": "0.0.0",
   "description": "Config-driven agentic workflow harness",
-  "author": "Daniel Baumert",
+  "author": {
+    "name": "Daniel Baumert"
+  },
   "license": "MIT",
   "homepage": "https://github.com/mantaray0/crew#readme",
   "repository": "https://github.com/mantaray0/crew",
-  "commands": "./commands",
-  "agents": "./agents",
-  "skills": "./skills",
-  "hooks": "./hooks/hooks.json"
+  "keywords": ["claude-code", "agent-harness", "workflow"]
 }
