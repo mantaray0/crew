@@ -1,15 +1,15 @@
-# banx — Meta-Agent-Harness (Core Engine) · Design-Spec
+# crew — Meta-Agent-Harness (Core Engine) · Design-Spec
 
 - **Datum:** 2026-06-12
 - **Status:** Entwurf zur Freigabe
-- **Arbeitsname:** `banx` (Plugin + CLI + Command-Namespace) — provisorisch, vor Veröffentlichung bestätigen
+- **Arbeitsname:** `crew` (Plugin + CLI + Command-Namespace) — provisorisch, vor Veröffentlichung bestätigen
 - **Scope dieser Spec:** Core Engine. Stack-spezifische Skills, externe PM-Adapter, das PM-Tool (eigenes) und die Boilerplate sind eigene Folge-Specs.
 
 ---
 
 ## 1. Ziel & Leitprinzip
 
-`banx` ist ein **Claude-Code-Plugin** mit begleitendem **CLI**, das einen schlanken, **config-getriebenen** agentischen Workflow liefert, zugeschnitten auf den Stack und die Arbeitsweise des Nutzers.
+`crew` ist ein **Claude-Code-Plugin** mit begleitendem **CLI**, das einen schlanken, **config-getriebenen** agentischen Workflow liefert, zugeschnitten auf den Stack und die Arbeitsweise des Nutzers.
 
 Es löst die Schmerzpunkte bestehender Ansätze:
 
@@ -34,11 +34,11 @@ Adaptierte Inhalte stammen aus öffentlichen, MIT-lizenzierten Quellen, werden a
 ## 2. Architektur-Überblick
 
 ```
-Control-Surface   commands/        →  /banx:* Slash-Commands (die Steuerung)
+Control-Surface   commands/        →  /crew:* Slash-Commands (die Steuerung)
 Spezialisten      agents/          →  Reviewer, Architect, Simplifier, …
 Wissen            skills/ rules/ contexts/
 Automatik         hooks/           →  Session-Lifecycle (Kontext laden/sichern)
-CLI               cli/             →  banx init / banx update  (Bun-first, Node-kompatibel)
+CLI               cli/             →  crew init / crew update  (Bun-first, Node-kompatibel)
 Zustand (Projekt) .planning/       →  committed im Ziel-Repo
 ```
 
@@ -49,16 +49,16 @@ Der **Harness lebt zentral** (Plugin, einmal installiert, zentral aktualisierbar
 ## 3. Repo-Layout
 
 ```
-banx/
+crew/
 ├── .claude-plugin/plugin.json     # Manifest: name, version, commands/agents/skills/hooks
-├── commands/                      # /banx:brief, /banx:plan, /banx:next, …
+├── commands/                      # /crew:brief, /crew:plan, /crew:next, …
 ├── agents/                        # planner, code-explorer, *-reviewer, simplifier, …
 ├── skills/                        # Meta-Skills jetzt; Stack-Skills = Folge-Spec
 ├── rules/                         # immer geltende Leitplanken (adaptiert, rebranded)
 ├── contexts/                      # Modi: dev / review / research
 ├── hooks/                         # hooks.json + scripts/
-├── cli/                           # TS-Quelle des banx-CLI
-├── templates/.planning/           # Vorlage des Projekt-Zustands (von banx init kopiert)
+├── cli/                           # TS-Quelle des crew-CLI
+├── templates/.planning/           # Vorlage des Projekt-Zustands (von crew init kopiert)
 └── docs/specs/                    # Design-Specs (diese Datei)
 ```
 
@@ -66,7 +66,7 @@ banx/
 
 ## 4. Projekt-Zustand: `.planning/` (committed)
 
-Von `banx init` pro Projekt angelegt:
+Von `crew init` pro Projekt angelegt:
 
 ```
 .planning/
@@ -104,7 +104,7 @@ Plain Markdown, Meilensteine → Phasen, jede Phase mit Status-Marker und (bei A
 ## Meilenstein 2: …
 ```
 
-Marker: `[ ]` offen · `[>]` aktiv · `[x]` erledigt · `[~]` zurückgestellt. **Einschieben/Umsortieren/Streichen** ist reine Textänderung (per `/banx:adjust` oder direkt). Keine Nummerierungs-Zwänge.
+Marker: `[ ]` offen · `[>]` aktiv · `[x]` erledigt · `[~]` zurückgestellt. **Einschieben/Umsortieren/Streichen** ist reine Textänderung (per `/crew:adjust` oder direkt). Keine Nummerierungs-Zwänge.
 
 ### 4.3 `plans/<id>.md` — Spec-Kopf + Detailplan in einer Datei
 
@@ -118,7 +118,7 @@ Bewusst **eine** Datei mit zwei Ebenen (keine getrennte Spec-/Plan-Datei, außer
 - Anforderungen
 - Akzeptanzkriterien
 - Out of Scope
-- externalRef: <ticket-id>   ← nur bei /banx:pull
+- externalRef: <ticket-id>   ← nur bei /crew:pull
 
 ## Plan   ← das "Wie"
 - betroffene Dateien
@@ -127,7 +127,7 @@ Bewusst **eine** Datei mit zwei Ebenen (keine getrennte Spec-/Plan-Datei, außer
 - Verify-Konfiguration dieser Phase
 ```
 
-- **Spec-Quelle:** Bei `/banx:brief`/`/banx:plan` füllt Roast-Me den Spec-Kopf. Bei `/banx:pull <id>` kommt der Spec-Kopf aus dem externen Ticket (Titel/Beschreibung/Akzeptanzkriterien) — **keine Doppelung**.
+- **Spec-Quelle:** Bei `/crew:brief`/`/crew:plan` füllt Roast-Me den Spec-Kopf. Bei `/crew:pull <id>` kommt der Spec-Kopf aus dem externen Ticket (Titel/Beschreibung/Akzeptanzkriterien) — **keine Doppelung**.
 - **`clarify.specArtifact`:** `"section"` (Default, Spec-Kopf im Plan) · `"separate"` (eigene `specs/<id>.md`, Superpowers-Stil) · `"off"` (Quick-Tasks ohne formale Spec).
 - **Neues Projekt** braucht keinen Spec-Kopf je Feature für die Gesamtvision — die lebt in `PROJECT.md`.
 
@@ -135,7 +135,7 @@ Bewusst **eine** Datei mit zwei Ebenen (keine getrennte Spec-/Plan-Datei, außer
 
 Append-only, inkl. leichtgewichtigem Token-/Kosten-Tracking pro Phase:
 `2026-06-12 14:30 · M1.2 erledigt · commit abc1234 · Verify: pass · ~38k tok / $0.42`.
-`/banx:report` aggregiert daraus eine Übersicht.
+`/crew:report` aggregiert daraus eine Übersicht.
 
 ### 4.5 `sessions/` — Snapshots
 
@@ -145,7 +145,7 @@ Format mit: Was wird gebaut · Was funktioniert (mit Beleg) · Was NICHT funktio
 
 ## 5. `config.json` — Steuerzentrum
 
-Defaults aus dem Plugin; pro Projekt überschreibbar; einzelne Phasen dürfen im Setup-Flow abweichen. Globaler Layer in `~/.claude/banx/config.json` für Defaults über alle Projekte.
+Defaults aus dem Plugin; pro Projekt überschreibbar; einzelne Phasen dürfen im Setup-Flow abweichen. Globaler Layer in `~/.claude/crew/config.json` für Defaults über alle Projekte.
 
 ```jsonc
 {
@@ -161,7 +161,7 @@ Defaults aus dem Plugin; pro Projekt überschreibbar; einzelne Phasen dürfen im
     "conflictPolicy": "resolve-or-ask" // Coordinator löst Eindeutiges, fragt bei Unklarheit
   },
   "execution": {
-    "parallel": "auto",             // "auto" (erkennen + bestätigen) | "manual" (/banx:dispatch) | "off"
+    "parallel": "auto",             // "auto" (erkennen + bestätigen) | "manual" (/crew:dispatch) | "off"
     "maxConcurrent": 3,             // Cap gleichzeitiger Worktrees/Sub-Agents
     "onDeviation": "small-self-major-ask" // kleine Abweichung selbst, echtes Problem → fragen
   },
@@ -183,7 +183,7 @@ Defaults aus dem Plugin; pro Projekt überschreibbar; einzelne Phasen dürfen im
     "specArtifact": "section"       // "section" (Spec-Kopf im Plan) | "separate" (eigene Datei) | "off"
   },
   "tasks": {
-    "provider": "local",            // "local" | "mcp:linear" | "mcp:jira" | "mcp:clickup" | "banx-pm"
+    "provider": "local",            // "local" | "mcp:linear" | "mcp:jira" | "mcp:clickup" | "crew-pm"
     "writeBack": false,             // Status/Kommentar zurück ins externe Tool
     "projectKey": null              // externe Projekt-/Board-ID
   },
@@ -194,12 +194,12 @@ Defaults aus dem Plugin; pro Projekt überschreibbar; einzelne Phasen dürfen im
     "events": ["blocker", "completion"], // Blocker (braucht dich) + Abschluss längerer Läufe
     "channel": "os"                 // "os" (macOS osascript/terminal-notifier) | "push:ntfy" | "push:pushover" | "off"
   },
-  "learn": { "enabled": true },     // /banx:retro aktiv (Self-Learn in Core)
+  "learn": { "enabled": true },     // /crew:retro aktiv (Self-Learn in Core)
   "state": { "commitSessions": true },
   "loop": { "maxIterations": 6 },
   "projectType": "saas-app",        // gewählter Archetyp aus dem globalen Registry (§5.1)
   "tags": ["nextjs", "hono", "drizzle", "auth"], // aktive Tags → aktivieren Rules/Skills
-  "stack": { /* vom banx-init-Interview befüllt, aus Archetyp vorgeseedet */ }
+  "stack": { /* vom crew-init-Interview befüllt, aus Archetyp vorgeseedet */ }
 }
 ```
 
@@ -207,10 +207,10 @@ Harte Grenze bleibt immer `settings.json` (welche Tools/Commands überhaupt erla
 
 ### 5.1 Globaler Layer: Projektarten (Archetypen) & Tags
 
-Globaler, vom Nutzer kuratierbarer Layer in `~/.claude/banx/`:
+Globaler, vom Nutzer kuratierbarer Layer in `~/.claude/crew/`:
 
 ```
-~/.claude/banx/
+~/.claude/crew/
 ├── config.json        # globale Defaults (z.B. default-PM-Provider, Modelle)
 ├── tags/              # atomare Capability-/Stack-Marker
 └── project-types.json # Archetypen = kuratierte Tag-Bündel + Defaults
@@ -219,7 +219,7 @@ Globaler, vom Nutzer kuratierbarer Layer in `~/.claude/banx/`:
 - **Tag** = atomare Einheit, aktiviert zugehörige **Rules + Skills** (z.B. `hono` → API-Regeln + `hono-api`-Skill; `nextjs` → React/SSR-Regeln + react/next-Skills; `drizzle`, `bullmq`, `auth`, `payments`, `realtime`).
 - **Projektart (Archetyp)** = benanntes, vordefiniertes Tag-Bündel + Defaults (Stack, Verify-Schritte, Modelle, ggf. PM-Provider). Beispiele: `saas-app`, `api-service`, `cli`, `marketing-site`, `mobile`.
 - **Einrichtung:** Beim ersten Aufsetzen des Harness wird der Nutzer nach seinen Projektarten gefragt; das Registry ist jederzeit erweiterbar/änderbar. Der Harness liefert Starter-Archetypen passend zum Default-Stack.
-- **Bei `banx init`:** „Welche Projektart?" → Auswahl aus dem Registry → seedet `projectType`, `tags`, `stack`, Verify-/Model-Defaults in die Projekt-`config.json`. Ein Projekt darf danach Tags zusätzlich an-/abwählen, ohne neue Projektart.
+- **Bei `crew init`:** „Welche Projektart?" → Auswahl aus dem Registry → seedet `projectType`, `tags`, `stack`, Verify-/Model-Defaults in die Projekt-`config.json`. Ein Projekt darf danach Tags zusätzlich an-/abwählen, ohne neue Projektart.
 - **Auflösung zur Laufzeit:** Der **Tag-Set des Projekts** bestimmt, welche Rules/Skills aktiv sind → kontextsensitives Verhalten ohne manuelles Zuschalten.
 - **PM-Provider:** global setzbar (Default + ggf. mehrere bekannte); pro Projekt in `config.tasks.provider` konkretisiert.
 
@@ -231,29 +231,29 @@ Jeder Command: liest definierten Zustand, schreibt definierten Zustand, respekti
 
 | Command | Zweck | Liest | Schreibt | Gates |
 |---|---|---|---|---|
-| `/banx:brief` | Idee/Feature starten: **Roast-Me-Klärung** (Teil der Planungsphase) + **Stack-Interview** | – | `PROJECT.md`, initiale Spec | wartet auf Zusammenfassung-OK |
-| `/banx:backlog` | Ideen-Inbox: jederzeit (auch mitten in der Umsetzung) Idee ablegen; anzeigen/triagieren | backlog | `backlog.md` | – |
-| `/banx:plan` | Klarheit → Fahrplan + Detailpläne | PROJECT.md, Spec | `roadmap.md`, `plans/<id>.md` | wartet auf Plan-OK |
-| `/banx:next` | Nächste Phase ausführen (Kern-Loop) | PROJECT, roadmap, plan, log | Code, `log.md`, ggf. Commit | Verify + Commit per config |
-| `/banx:verify` | Verify→Review→Härten→Simplify explizit | plan, Diff | Review-Bericht, `log.md` | – |
-| `/banx:adjust` | Roadmap mitten im Flow ändern | roadmap | `roadmap.md` | – |
-| `/banx:status` | Stand zeigen | roadmap, log, claims | – | – |
-| `/banx:resume` | Frische Session orientieren | PROJECT, letzter Snapshot, log | – | wartet auf „weiter" |
-| `/banx:ship` | Commit/Push/PR gemäß config | config, Diff | Git-Remote/PR | Freigabe-Gates |
-| `/banx:pull <id>` | Externes Ticket → interner Plan | Provider (MCP) | `plans/<id>.md`, roadmap-Eintrag | – |
-| `/banx:dispatch` | Unabhängige Phasen parallel ausführen (DAG, Worktrees, Sub-Agents) + rollend integrieren | roadmap, plans | Worktrees, Branches, claims, log | Parallel-Plan-Bestätigung |
-| `/banx:quick` | **Quick-Lane** für Kleinkram/Bugfix außerhalb der Roadmap | – | Code, optional Commit | stört aktive Phase/Claims nicht |
-| `/banx:loop` | **Opt-in** „iterieren bis Ziel" auf einer Phase | plan | Code, log | maxIterations |
-| `/banx:retro` | Muster/Entscheidungen aus fertiger Arbeit destillieren → Skill/Tag-Vorschlag fürs globale Registry | log, Diff, PROJECT | Skill/Tag-Vorschlag (Core) | du bestätigst Übernahme |
-| `/banx:rollback` | Revert auf letzten verifizierten Phasen-Commit | log, git | revertet Code, Roadmap/Log zurück | Bestätigung |
-| `/banx:report` | Token-/Kosten-Übersicht über Phasen | log | – | – |
+| `/crew:brief` | Idee/Feature starten: **Roast-Me-Klärung** (Teil der Planungsphase) + **Stack-Interview** | – | `PROJECT.md`, initiale Spec | wartet auf Zusammenfassung-OK |
+| `/crew:backlog` | Ideen-Inbox: jederzeit (auch mitten in der Umsetzung) Idee ablegen; anzeigen/triagieren | backlog | `backlog.md` | – |
+| `/crew:plan` | Klarheit → Fahrplan + Detailpläne | PROJECT.md, Spec | `roadmap.md`, `plans/<id>.md` | wartet auf Plan-OK |
+| `/crew:next` | Nächste Phase ausführen (Kern-Loop) | PROJECT, roadmap, plan, log | Code, `log.md`, ggf. Commit | Verify + Commit per config |
+| `/crew:verify` | Verify→Review→Härten→Simplify explizit | plan, Diff | Review-Bericht, `log.md` | – |
+| `/crew:adjust` | Roadmap mitten im Flow ändern | roadmap | `roadmap.md` | – |
+| `/crew:status` | Stand zeigen | roadmap, log, claims | – | – |
+| `/crew:resume` | Frische Session orientieren | PROJECT, letzter Snapshot, log | – | wartet auf „weiter" |
+| `/crew:ship` | Commit/Push/PR gemäß config | config, Diff | Git-Remote/PR | Freigabe-Gates |
+| `/crew:pull <id>` | Externes Ticket → interner Plan | Provider (MCP) | `plans/<id>.md`, roadmap-Eintrag | – |
+| `/crew:dispatch` | Unabhängige Phasen parallel ausführen (DAG, Worktrees, Sub-Agents) + rollend integrieren | roadmap, plans | Worktrees, Branches, claims, log | Parallel-Plan-Bestätigung |
+| `/crew:quick` | **Quick-Lane** für Kleinkram/Bugfix außerhalb der Roadmap | – | Code, optional Commit | stört aktive Phase/Claims nicht |
+| `/crew:loop` | **Opt-in** „iterieren bis Ziel" auf einer Phase | plan | Code, log | maxIterations |
+| `/crew:retro` | Muster/Entscheidungen aus fertiger Arbeit destillieren → Skill/Tag-Vorschlag fürs globale Registry | log, Diff, PROJECT | Skill/Tag-Vorschlag (Core) | du bestätigst Übernahme |
+| `/crew:rollback` | Revert auf letzten verifizierten Phasen-Commit | log, git | revertet Code, Roadmap/Log zurück | Bestätigung |
+| `/crew:report` | Token-/Kosten-Übersicht über Phasen | log | – | – |
 
-### 6.1 `/banx:brief` — Roast-Me + Stack-Interview
+### 6.1 `/crew:brief` — Roast-Me + Stack-Interview
 
 - **Roast-Me-Klärung** (Teil der Planungsphase): unerbittlich-aber-begrenztes Befragen entlang des Entscheidungsbaums; **jede Frage trägt eine empfohlene Antwort** (Nutzer nickt ab statt zu tippen); wenn eine Frage aus dem Code beantwortbar ist, wird recherchiert statt gefragt; Abschluss mit Zusammenfassung. Tiefe via `clarify.depth`.
 - **Stack-Interview:** fragt DB / Frontend / UI / Backend-API / Queue / Deploy — **mit den Defaults des Nutzers vorbefüllt**. Option „**du entscheidest** → schlag vor → ich segne ab". Ergebnis → `config.stack` + `PROJECT.md`.
 
-### 6.2 `/banx:next` — Kern-Loop
+### 6.2 `/crew:next` — Kern-Loop
 
 1. Kontext laden: `PROJECT.md` + aktive Phase aus `roadmap.md` + zugehöriger `plans/<id>.md` + letzter Eintrag in `log.md` → **exakter nächster Schritt** steht fest.
 2. Umsetzen (Model = `models.execution` bzw. auto).
@@ -272,7 +272,7 @@ Adressiert „mehrere Aufgaben eines Plans gleichzeitig, ohne Kollision, mit sau
 3. **Kollisionsschutz im State:** `plans/<id>.md` pro Feature · Logs append-only bzw. `log/<feature>.md` · Snapshots in `sessions/<worktree-id>/` · `claims.json` hält fest, welche Instanz welche Phase bearbeitet (`[>] @worktree-a` in `roadmap.md`).
 4. **Rolling Integration:** Sobald eine Phase fertig **und verifiziert** ist, integriert der `merge-coordinator` sie gemäß `git.mergeStrategy` (`integration-branch` rollend · `pr` je Feature · `ask-each` jeder Merge gefragt). Nach jedem Merge Verify. Laufende Worktrees rebasen auf den neuen Stand → minimaler Drift.
 5. **Konflikte (`git.conflictPolicy`):** Coordinator löst Eindeutiges (Muster/Tests entscheiden); bei echter Mehrdeutigkeit → Rückfrage.
-6. **Auslösung:** `execution.parallel:"auto"` → Harness erkennt unabhängige Phasen, schlägt den Parallel-Plan vor, startet nach Bestätigung. Zusätzlich jederzeit explizit per `/banx:dispatch`.
+6. **Auslösung:** `execution.parallel:"auto"` → Harness erkennt unabhängige Phasen, schlägt den Parallel-Plan vor, startet nach Bestätigung. Zusätzlich jederzeit explizit per `/crew:dispatch`.
 
 Merge-Orchestrierung ist Teil des **Skill-/Rulesets** (`git-merge`-Skill + Rules), nicht ad-hoc.
 
@@ -285,7 +285,7 @@ Merge-Orchestrierung ist Teil des **Skill-/Rulesets** (`git-merge`-Skill + Rules
 - `mode:"auto"` → Heuristik: Planen/Review → Opus, Ausführen/Simplify → Sonnet, Triviales → Haiku.
 - Commands **überschreiben das Model des Subagents pro Aufruf** (statt es in jeder Agent-Datei zu verdrahten).
 - **Override-Präzedenz:** ad-hoc (Nutzer im Lauf) > Projekt-`config.json` > globaler Default > Plugin-Default.
-- *Umsetzungs-Risiko:* Agent-Dateien tragen ein `model`-Frontmatter; die config-getriebene Übersteuerung erfolgt über den Subagent-Start mit Model-Override. In Phase 1 verifizieren, dass die Laufzeit das zuverlässig erlaubt; sonst Fallback: `banx init` generiert agent-Varianten je Profil.
+- *Umsetzungs-Risiko:* Agent-Dateien tragen ein `model`-Frontmatter; die config-getriebene Übersteuerung erfolgt über den Subagent-Start mit Model-Override. In Phase 1 verifizieren, dass die Laufzeit das zuverlässig erlaubt; sonst Fallback: `crew init` generiert agent-Varianten je Profil.
 
 ---
 
@@ -293,7 +293,7 @@ Merge-Orchestrierung ist Teil des **Skill-/Rulesets** (`git-merge`-Skill + Rules
 
 - **SessionStart-Hook:** lädt `PROJECT.md` gebündelt (zeichenbegrenzt) → Claude orientiert sich automatisch, ohne Erklärung.
 - **PreCompact-Hook:** sichert aktuellen Zustand in `sessions/` → kein Kontextverlust beim Komprimieren.
-- **`/banx:resume`:** liest `PROJECT.md` + neuesten Snapshot + `log.md` → strukturiertes Briefing (Stand, „nicht erneut versuchen", nächster Schritt) → wartet auf „weiter".
+- **`/crew:resume`:** liest `PROJECT.md` + neuesten Snapshot + `log.md` → strukturiertes Briefing (Stand, „nicht erneut versuchen", nächster Schritt) → wartet auf „weiter".
 - **Frischer Kontext pro Schritt:** Umsetzung und Verifikation laufen als getrennte Subagent-Durchläufe; der Plan + Log halten den Faden, nicht das Kontextfenster.
 
 ---
@@ -333,7 +333,7 @@ Jeder Agent: Frontmatter `name, description, tools, model` (+ Task-Typ). Default
 
 ## 11. Skills, Rules, Contexts
 
-- **Meta-Skills jetzt:** `roast-me` (Befragung), `banx-planning` (Fahrplan/Phasen-Konventionen inkl. Abhängigkeits-DAG), `banx-context` (Zustands-/Session-Handling), `git-conventions`, `git-merge` (Worktree-/Branch-Integration & Konfliktlösung, §6.3), `verification-loop`, `tdd-workflow`.
+- **Meta-Skills jetzt:** `roast-me` (Befragung), `crew-planning` (Fahrplan/Phasen-Konventionen inkl. Abhängigkeits-DAG), `crew-context` (Zustands-/Session-Handling), `git-conventions`, `git-merge` (Worktree-/Branch-Integration & Konfliktlösung, §6.3), `verification-loop`, `tdd-workflow`.
 - **Stack-Skills (Folge-Spec):** hono-api, drizzle-postgres, shadcn-baseui, tanstack-query/form/table, bullmq-redis, bun-scripts, nextjs, react-patterns/testing/performance, coolify-deploy (optional).
 - **Rules:** immer geltende Leitplanken (Sicherheit, Validierung, Muster-vor-Neuerfindung, fokussierte Änderungen) — adaptiert, rebranded.
 - **Contexts:** `dev`, `review`, `research` — Verhaltensmodi.
@@ -353,13 +353,13 @@ Jeder Agent: Frontmatter `name, description, tools, model` (+ Task-Typ). Default
 
 ---
 
-## 13. CLI (`banx`)
+## 13. CLI (`crew`)
 
 - In TypeScript geschrieben, **Bun-first**, lauffähig auch unter **Node/npx/pnpmx** (keine Bun-only-APIs im Entrypoint).
-- `banx init` — fragt zuerst die **Projektart** ab (Archetyp aus globalem Registry, §5.1), seedet daraus Tags/Stack/Defaults, führt das (vorbefüllte) Stack-Interview, legt `.planning/` aus `templates/` an, schreibt `config.json` + `PROJECT.md`.
-- `banx setup` — einmalige globale Einrichtung: Projektarten & Tags definieren, globale Defaults (PM-Provider, Modelle) setzen.
-- `banx update` — zieht zentrale Harness-Updates.
-- Install global: `/plugin marketplace add <repo>` → `/plugin install banx`.
+- `crew init` — fragt zuerst die **Projektart** ab (Archetyp aus globalem Registry, §5.1), seedet daraus Tags/Stack/Defaults, führt das (vorbefüllte) Stack-Interview, legt `.planning/` aus `templates/` an, schreibt `config.json` + `PROJECT.md`.
+- `crew setup` — einmalige globale Einrichtung: Projektarten & Tags definieren, globale Defaults (PM-Provider, Modelle) setzen.
+- `crew update` — zieht zentrale Harness-Updates.
+- Install global: `/plugin marketplace add <repo>` → `/plugin install crew`.
 
 ---
 
@@ -371,10 +371,10 @@ Trennt **„woher die Arbeit kommt"** von **„wie sie abgearbeitet wird"**.
 - **Provider:**
   - `local` (Default, zero-config) → interne `roadmap.md`. **Wird jetzt gebaut.**
   - `mcp:linear` / `mcp:jira` / `mcp:clickup` → über die jeweils existierenden MCP-Connectors. **Folge-Spec.**
-  - `banx-pm` → eigenes PM-Tool (Thema 3). **Folge-Spec.**
-- **Pro Projekt *und* global wählbar:** `config.tasks.provider` (Projekt) + globaler Default in `~/.claude/banx/`. Der Provider bestimmt, welcher Skill/MCP für Pull/Write-Back gerufen wird.
+  - `crew-pm` → eigenes PM-Tool (Thema 3). **Folge-Spec.**
+- **Pro Projekt *und* global wählbar:** `config.tasks.provider` (Projekt) + globaler Default in `~/.claude/crew/`. Der Provider bestimmt, welcher Skill/MCP für Pull/Write-Back gerufen wird.
 - **Kollisionsfrei:** Internes `.planning/` ist **immer die Arbeitsebene** (Detail); das externe Ticket ist **Nordstern + Sync-Grenze** (grob). 1 Ticket → 1 Plan (ggf. mehrere Phasen). Sync nur an Phasen-/Meilenstein-Grenzen.
-- `/banx:pull <id>` importiert ein Ticket → `plans/<id>.md` + roadmap-Eintrag mit `externalRef`. Bei Abschluss (falls `writeBack`) Kommentar + Status zurück ins externe Tool.
+- `/crew:pull <id>` importiert ein Ticket → `plans/<id>.md` + roadmap-Eintrag mit `externalRef`. Bei Abschluss (falls `writeBack`) Kommentar + Status zurück ins externe Tool.
 
 ---
 
@@ -382,7 +382,7 @@ Trennt **„woher die Arbeit kommt"** von **„wie sie abgearbeitet wird"**.
 
 1. **Stack-spezifische Skills** (hono/drizzle/tanstack/bullmq/…).
 2. **Externe PM-Adapter** (Linear/Jira/ClickUp) inkl. Write-Back.
-3. **Eigenes PM-Tool** (Thema 3) als `banx-pm`-Provider.
+3. **Eigenes PM-Tool** (Thema 3) als `crew-pm`-Provider.
 4. **Boilerplate-Monorepo** (Thema 1).
 
 ### Offene Ideen (nicht eingeplant, nur geparkt)
@@ -395,7 +395,7 @@ Trennt **„woher die Arbeit kommt"** von **„wie sie abgearbeitet wird"**.
 
 | Risiko | Mitigation |
 |---|---|
-| Config-getriebener Model-Override evtl. nicht zuverlässig zur Laufzeit | In Phase 1 verifizieren; Fallback: profil-spezifische Agent-Varianten via `banx init` |
+| Config-getriebener Model-Override evtl. nicht zuverlässig zur Laufzeit | In Phase 1 verifizieren; Fallback: profil-spezifische Agent-Varianten via `crew init` |
 | `sessions/` committed erzeugt Rauschen | `config.state.commitSessions=false` → gitignore |
 | Verify-Pipeline in frischem Kontext kann Faden verlieren | Plan + Log als externes Gedächtnis; Briefing-Format erzwingen |
 | MIT-Attribution vs. „keine Referenz" | Substanzielles Umschreiben → eigenständiges Derivat; keine Fremdmarken |
@@ -404,22 +404,22 @@ Trennt **„woher die Arbeit kommt"** von **„wie sie abgearbeitet wird"**.
 
 ## 17. Akzeptanzkriterien (Core Engine)
 
-- [ ] `banx` als installierbares Claude-Code-Plugin (Manifest, Commands, Agents, Skills, Rules, Contexts, Hooks).
-- [ ] `banx init` legt `.planning/` an und führt das Stack-Interview (inkl. „du entscheidest"-Option).
+- [ ] `crew` als installierbares Claude-Code-Plugin (Manifest, Commands, Agents, Skills, Rules, Contexts, Hooks).
+- [ ] `crew init` legt `.planning/` an und führt das Stack-Interview (inkl. „du entscheidest"-Option).
 - [ ] `config.json` steuert Git-, Verify-, Model-, Clarify- und Tasks-Verhalten; Projekt- + globaler Layer.
-- [ ] Voller Zyklus lauffähig: `/banx:brief` → `/banx:plan` → `/banx:next` (mit Verify-Pipeline) → Commit + Log.
-- [ ] Context-Handling über Sessions: SessionStart lädt PROJECT.md, `/banx:resume` brieft korrekt, „mach weiter" trifft den exakten nächsten Schritt.
-- [ ] `/banx:adjust` schiebt/sortiert/streicht Phasen ohne Renumbering-Bruch.
+- [ ] Voller Zyklus lauffähig: `/crew:brief` → `/crew:plan` → `/crew:next` (mit Verify-Pipeline) → Commit + Log.
+- [ ] Context-Handling über Sessions: SessionStart lädt PROJECT.md, `/crew:resume` brieft korrekt, „mach weiter" trifft den exakten nächsten Schritt.
+- [ ] `/crew:adjust` schiebt/sortiert/streicht Phasen ohne Renumbering-Bruch.
 - [ ] Model-Management mit `auto`- und `manual`-Modus + Override-Präzedenz.
 - [ ] Task-Provider-Abstraktion vorhanden; `local`-Provider voll funktionsfähig.
-- [ ] Globaler Layer mit Projektarten/Tags-Registry; `banx init` wählt Archetyp und seedet das Projekt; Tag-Set steuert aktive Rules/Skills.
-- [ ] Parallel-Dispatch unabhängiger Phasen (DAG) in Worktrees mit `claims.json`-Kollisionsschutz; `execution.parallel='auto'` + `/banx:dispatch`.
+- [ ] Globaler Layer mit Projektarten/Tags-Registry; `crew init` wählt Archetyp und seedet das Projekt; Tag-Set steuert aktive Rules/Skills.
+- [ ] Parallel-Dispatch unabhängiger Phasen (DAG) in Worktrees mit `claims.json`-Kollisionsschutz; `execution.parallel='auto'` + `/crew:dispatch`.
 - [ ] Rolling Integration via `merge-coordinator` gemäß `git.mergeStrategy`; Konflikte per `conflictPolicy` (lösen-oder-fragen).
-- [ ] `/banx:quick` Quick-Lane stört aktive Phasen/Claims nicht.
-- [ ] `/banx:backlog` legt Ideen reibungslos in `backlog.md` ab; Triage bei `/banx:plan`/`/banx:adjust`.
-- [ ] `/banx:retro` schlägt aus fertiger Arbeit Skills/Tags fürs globale Registry vor (du bestätigst).
+- [ ] `/crew:quick` Quick-Lane stört aktive Phasen/Claims nicht.
+- [ ] `/crew:backlog` legt Ideen reibungslos in `backlog.md` ab; Triage bei `/crew:plan`/`/crew:adjust`.
+- [ ] `/crew:retro` schlägt aus fertiger Arbeit Skills/Tags fürs globale Registry vor (du bestätigst).
 - [ ] Test-Politik aus Projektart/Tag ableitbar (`testing.policy`); Security-Pass nur auf Empfehlung+Freigabe.
 - [ ] Notifications über `Notification`/`Stop`-Hooks (Blocker + Abschluss), config-getriebener Channel.
-- [ ] `/banx:rollback` setzt sicher auf den letzten verifizierten Phasen-Commit zurück.
-- [ ] Token-/Kosten-Tracking pro Phase im `log.md`; `/banx:report`-Übersicht.
+- [ ] `/crew:rollback` setzt sicher auf den letzten verifizierten Phasen-Commit zurück.
+- [ ] Token-/Kosten-Tracking pro Phase im `log.md`; `/crew:report`-Übersicht.
 - [ ] Keine Fremd-Harness-Referenzen/Branding im Repo.
