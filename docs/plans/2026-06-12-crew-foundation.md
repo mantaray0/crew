@@ -55,10 +55,11 @@ This plan is **Plan 1 of 6**. Each plan ships working, testable software on its 
 
 ```json
 {
-  "name": "crew",
+  "name": "@mantaray0/crew",
   "version": "0.0.0",
   "description": "Config-driven agentic workflow harness for Claude Code",
   "type": "module",
+  "publishConfig": { "access": "public" },
   "bin": { "crew": "./bin/crew.mjs" },
   "exports": { ".": "./dist/index.js" },
   "files": ["dist", "bin", "commands", ".claude-plugin", "README.md"],
@@ -821,7 +822,7 @@ management. Project state lives in a committed `.planning/` directory.
 ## Initialize a project
 
 ```
-npx crew init        # or: pnpm dlx crew init / bunx crew init
+npx @mantaray0/crew init        # or: pnpm dlx @mantaray0/crew init / bunx @mantaray0/crew init
 ```
 
 Creates `.planning/` with `config.json`, `PROJECT.md`, `roadmap.md`, `log.md`,
