@@ -1,0 +1,36 @@
+name: Bug report
+description: Something in crew doesn't work as expected
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, and what went wrong?
+      placeholder: Running /crew:next did X, but I expected Y.
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command / area
+      description: Which command, agent, skill, or hook is involved?
+      placeholder: /crew:dispatch
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. /crew:init
+        2. /crew:plan
+        3. ...
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Claude Code version, OS, crew version/commit
+      placeholder: Claude Code x.y, macOS, crew 0.1.0
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
