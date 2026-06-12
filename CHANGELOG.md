@@ -1,5 +1,11 @@
 # @mantaray0/crew
 
+## 0.3.1
+
+### Patch Changes
+
+- [#10](https://github.com/mantaray0/crew/pull/10) [`385628b`](https://github.com/mantaray0/crew/commit/385628beb01cb3e4b7e5a83a54cb62f469e3741d) Thanks [@mantaray0](https://github.com/mantaray0)! - Documentation/flow follow-ups for the brief-naming change: note the `_<slug>.md` brief convention in the design spec, and have `/crew:init` reconcile mode offer to rename legacy un-prefixed briefs in `plans/` to the `_<slug>.md` form.
+
 ## 0.3.0
 
 ### Minor Changes
