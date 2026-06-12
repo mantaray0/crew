@@ -9,6 +9,7 @@ concurrency: release-${{ github.ref }}
 permissions:
   contents: write
   pull-requests: write
+  statuses: write
 
 jobs:
   # Opens / updates the "version packages" PR when changesets are present.
@@ -30,6 +31,31 @@ jobs:
           title: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # The version PR is authored by GITHUB_TOKEN, so GitHub will not auto-run CI on
+      # it and the required `validate` check would never report — blocking the merge.
+      # Provide it from this (non-suppressed) workflow: check out the version branch,
+      # run the same validator ci.yml runs, and post a matching commit status so the
+      # PR can merge without an admin override. SHA comes from git, not from PR text.
+      - name: Provide `validate` status for the version PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          SHA="$(git ls-remote origin refs/heads/changeset-release/main | cut -f1 || true)"
+          if [ -z "${SHA:-}" ]; then
+            echo "No version PR branch open — nothing to validate."
+            exit 0
+          fi
+          git fetch --depth=1 origin changeset-release/main
+          git checkout -q "${SHA}"
+          if node scripts/validate-plugin.mjs; then STATE=success; else STATE=failure; fi
+          gh api "repos/${REPO}/statuses/${SHA}" \
+            -f state="${STATE}" \
+            -f context=validate \
+            -f description="plugin structure (version PR, auto)" >/dev/null
+          echo "Posted validate=${STATE} for ${SHA}"
 
   # Tags + creates a GitHub Release as x.x.x (no npm publish — distribution is the
   # plugin marketplace) once package.json holds a version that has not been tagged yet.
