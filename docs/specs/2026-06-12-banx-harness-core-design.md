@@ -176,11 +176,31 @@ Defaults aus dem Plugin; pro Projekt überschreibbar; einzelne Phasen dürfen im
   },
   "state": { "commitSessions": true },
   "loop": { "maxIterations": 6 },
-  "stack": { /* vom banx-init-Interview befüllt */ }
+  "projectType": "saas-app",        // gewählter Archetyp aus dem globalen Registry (§5.1)
+  "tags": ["nextjs", "hono", "drizzle", "auth"], // aktive Tags → aktivieren Rules/Skills
+  "stack": { /* vom banx-init-Interview befüllt, aus Archetyp vorgeseedet */ }
 }
 ```
 
 Harte Grenze bleibt immer `settings.json` (welche Tools/Commands überhaupt erlaubt sind). `config.json` steuert *Verhalten innerhalb* dieser Grenzen.
+
+### 5.1 Globaler Layer: Projektarten (Archetypen) & Tags
+
+Globaler, vom Nutzer kuratierbarer Layer in `~/.claude/banx/`:
+
+```
+~/.claude/banx/
+├── config.json        # globale Defaults (z.B. default-PM-Provider, Modelle)
+├── tags/              # atomare Capability-/Stack-Marker
+└── project-types.json # Archetypen = kuratierte Tag-Bündel + Defaults
+```
+
+- **Tag** = atomare Einheit, aktiviert zugehörige **Rules + Skills** (z.B. `hono` → API-Regeln + `hono-api`-Skill; `nextjs` → React/SSR-Regeln + react/next-Skills; `drizzle`, `bullmq`, `auth`, `payments`, `realtime`).
+- **Projektart (Archetyp)** = benanntes, vordefiniertes Tag-Bündel + Defaults (Stack, Verify-Schritte, Modelle, ggf. PM-Provider). Beispiele: `saas-app`, `api-service`, `cli`, `marketing-site`, `mobile`.
+- **Einrichtung:** Beim ersten Aufsetzen des Harness wird der Nutzer nach seinen Projektarten gefragt; das Registry ist jederzeit erweiterbar/änderbar. Der Harness liefert Starter-Archetypen passend zum Default-Stack.
+- **Bei `banx init`:** „Welche Projektart?" → Auswahl aus dem Registry → seedet `projectType`, `tags`, `stack`, Verify-/Model-Defaults in die Projekt-`config.json`. Ein Projekt darf danach Tags zusätzlich an-/abwählen, ohne neue Projektart.
+- **Auflösung zur Laufzeit:** Der **Tag-Set des Projekts** bestimmt, welche Rules/Skills aktiv sind → kontextsensitives Verhalten ohne manuelles Zuschalten.
+- **PM-Provider:** global setzbar (Default + ggf. mehrere bekannte); pro Projekt in `config.tasks.provider` konkretisiert.
 
 ---
 
@@ -290,7 +310,8 @@ Lokal per Default; nichts wird ohne explizite Integration an externe Dienste ges
 ## 13. CLI (`banx`)
 
 - In TypeScript geschrieben, **Bun-first**, lauffähig auch unter **Node/npx/pnpmx** (keine Bun-only-APIs im Entrypoint).
-- `banx init` — legt `.planning/` aus `templates/` an, führt Stack-Interview, schreibt `config.json` + `PROJECT.md`.
+- `banx init` — fragt zuerst die **Projektart** ab (Archetyp aus globalem Registry, §5.1), seedet daraus Tags/Stack/Defaults, führt das (vorbefüllte) Stack-Interview, legt `.planning/` aus `templates/` an, schreibt `config.json` + `PROJECT.md`.
+- `banx setup` — einmalige globale Einrichtung: Projektarten & Tags definieren, globale Defaults (PM-Provider, Modelle) setzen.
 - `banx update` — zieht zentrale Harness-Updates.
 - Install global: `/plugin marketplace add <repo>` → `/plugin install banx`.
 
@@ -341,4 +362,5 @@ Trennt **„woher die Arbeit kommt"** von **„wie sie abgearbeitet wird"**.
 - [ ] `/banx:adjust` schiebt/sortiert/streicht Phasen ohne Renumbering-Bruch.
 - [ ] Model-Management mit `auto`- und `manual`-Modus + Override-Präzedenz.
 - [ ] Task-Provider-Abstraktion vorhanden; `local`-Provider voll funktionsfähig.
+- [ ] Globaler Layer mit Projektarten/Tags-Registry; `banx init` wählt Archetyp und seedet das Projekt; Tag-Set steuert aktive Rules/Skills.
 - [ ] Keine Fremd-Harness-Referenzen/Branding im Repo.
