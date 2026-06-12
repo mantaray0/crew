@@ -16,4 +16,4 @@ The core execution loop. Runs ONE phase to completion. Uses `crew-context` and `
 5. **Commit & record.** If `config.git.autoCommitPerPhase`: make one atomic conventional commit. Update `roadmap.md` (`[x]` + timestamp), append to `log.md` (phase, commit, verify result, and a token/cost note if `observability.trackCost`). Release the claim in `claims.json`.
 6. **Report.** Summarize what shipped and name the next pending phase. Do not auto-continue to the next phase unless the user asks.
 
-Never push or open a PR here (that is `/crew:ship`, gated by config).
+Never push or open a PR here — pushing and PRs require explicit approval and are out of this command's scope (`config.git.autoPush`/`autoPR` stay false by default).
