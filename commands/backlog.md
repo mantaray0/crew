@@ -11,7 +11,7 @@ A frictionless place to offload ideas so the current plan stays undisturbed and 
 
 ## Steps
 
-- **With text (add):** append the idea to `.planning/backlog.md` as a dated bullet (`- [YYYY-MM-DD] <idea>`). Do nothing else — do not plan, do not interrupt the active phase. Confirm in one line.
-- **Without text (list/triage):** show the backlog. If the user wants to triage, for each item offer: plan now (hand to `/crew:plan`/`/crew:adjust`), keep parked, or drop. Apply choices and update `backlog.md`.
+- **With text (add):** append the idea to `.planning/BACKLOG.md` as a dated bullet (`- [YYYY-MM-DD] <idea>`). Do nothing else — do not plan, do not interrupt the active phase. Confirm in one line.
+- **Without text (list/triage):** show the backlog. If the user wants to triage, for each item offer: plan now (hand to `/crew:plan`/`/crew:adjust`), keep parked, or drop. Apply choices and update `BACKLOG.md`.
 
-Keep this command fast and side-effect-free beyond `backlog.md`. It exists so a stream of ideas has a home — capture first, decide later.
+Keep this command fast and side-effect-free beyond `BACKLOG.md`. It exists so a stream of ideas has a home — capture first, decide later.
