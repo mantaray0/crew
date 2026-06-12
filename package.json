@@ -30,7 +30,6 @@
     "@biomejs/biome": "^1.9.4",
     "@types/node": "^22.7.0",
     "@types/prompts": "^2.4.9",
-    "tsdown": "^0.6.0",
     "tsup": "^8.5.1",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
