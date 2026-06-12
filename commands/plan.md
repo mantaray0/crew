@@ -16,6 +16,12 @@ Produce the executable plan from a brief. Uses the `crew-planning` and `crew-con
 3. **Draft the roadmap.** Write/extend `.planning/ROADMAP.md` as milestones → phases using markers `[ ]` open · `[>]` active · `[x]` done · `[~]` deferred. Keep phases independently mergeable. Record inter-phase **dependencies** (for later parallel dispatch).
 4. **Write the plan.** For each phase/feature, write `.planning/plans/<slug>.md` with a **Spec** head (carried from `/crew:brief` or the source ticket) followed by a **Plan** body: affected files, tasks (Action / pattern to mirror / validation command), risks, and this phase's verify configuration. Follow `clarify.specArtifact`.
 5. **Ground in the codebase.** Mirror existing patterns; reference real files. Use the relevant stack skills based on the project's `tags`.
-6. **Present and wait.** Show the roadmap + plan summary and **wait for explicit approval**. Do not start implementation here — that is `/crew:next` (or `/crew:dispatch` for parallel phases).
+6. **Present and wait.** Show the roadmap + plan summary and **wait for explicit approval**. Do not start implementation here — that is `/crew:execute` (or `/crew:dispatch` for parallel phases).
 
 If a security-sensitive area appears (auth, payments, tokens), note it and recommend a security pass in verify — do not enable it automatically (`security.auto` stays false).
+
+## Hand-off
+
+When you're done, end your reply **in the user's language** by prompting a clean context before the next step:
+
+> **Done?** Run `/clear` to reset the context, then `/crew:execute` to build the first phase — or `/crew:dispatch` to run independent phases in parallel.

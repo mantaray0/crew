@@ -3,7 +3,7 @@ description: Execute the next phase — load context, implement, run the verify 
 argument-hint: "[phase id, optional — defaults to the active/next pending phase]"
 ---
 
-# /crew:next
+# /crew:execute
 
 The core execution loop. Runs ONE phase to completion. Uses `crew-context` and `crew-planning` skills.
 
@@ -19,3 +19,9 @@ The core execution loop. Runs ONE phase to completion. Uses `crew-context` and `
 6. **Report.** Summarize what shipped and name the next pending phase. Do not auto-continue to the next phase unless the user asks.
 
 Never push or open a PR here — pushing and PRs require explicit approval and are out of this command's scope (`config.git.autoPush`/`autoPR` stay false by default).
+
+## Hand-off
+
+When you're done, end your reply **in the user's language** by prompting a clean context before the next step:
+
+> **Done?** Run `/clear` to reset the context, then `/crew:execute` again for the next phase — or `/crew:retro` once the milestone is done.

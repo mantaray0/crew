@@ -23,3 +23,9 @@ Set up `.planning/` for this project. Uses the `crew-config` skill (config schem
 7. **Confirm** and point to `/crew:brief` (new feature) or `/crew:plan`.
 
 Write the files with your file tools — deterministic content, no guessing. Keep `config.json` complete so behavior is fully config-driven from the start.
+
+## Hand-off
+
+When you're done, end your reply **in the user's language** by prompting a clean context before the next step:
+
+> **Done?** Run `/clear` to reset the context, then `/crew:brief` to clarify your first idea — or `/crew:plan` if the work is already clear.

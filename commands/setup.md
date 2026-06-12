@@ -16,3 +16,9 @@ Establish the global layer that applies across all your projects. Uses the `crew
 4. **Confirm** what was written. These are the **global** layer — every project inherits them, and each project's `.planning/config.json` overrides them.
 
 Never overwrite an existing global registry or config without explicit confirmation (offer to merge instead).
+
+## Hand-off
+
+When you're done, end your reply **in the user's language** by prompting a clean context before the next step:
+
+> **Done?** Run `/clear` to reset the context, then `/crew:init` inside a project to scaffold its `.planning/`.

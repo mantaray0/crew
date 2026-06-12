@@ -52,7 +52,7 @@ Der **Harness lebt zentral** (Plugin, einmal installiert, zentral aktualisierbar
 ```
 crew/
 ├── .claude-plugin/plugin.json     # Manifest: name, version, commands/agents/skills/hooks
-├── commands/                      # /crew:brief, /crew:plan, /crew:next, …
+├── commands/                      # /crew:brief, /crew:plan, /crew:execute, …
 ├── agents/                        # planner, code-explorer, *-reviewer, simplifier, …
 ├── skills/                        # Meta-Skills jetzt; Stack-Skills = Folge-Spec
 ├── rules/                         # immer geltende Leitplanken (adaptiert, rebranded)
@@ -235,7 +235,7 @@ Jeder Command: liest definierten Zustand, schreibt definierten Zustand, respekti
 | `/crew:brief` | Idee/Feature starten: **Roast-Me-Klärung** (Teil der Planungsphase) + **Stack-Interview** | – | `PROJECT.md`, initiale Spec | wartet auf Zusammenfassung-OK |
 | `/crew:backlog` | Ideen-Inbox: jederzeit (auch mitten in der Umsetzung) Idee ablegen; anzeigen/triagieren | backlog | `backlog.md` | – |
 | `/crew:plan` | Klarheit → Fahrplan + Detailpläne | PROJECT.md, Spec | `roadmap.md`, `plans/<id>.md` | wartet auf Plan-OK |
-| `/crew:next` | Nächste Phase ausführen (Kern-Loop) | PROJECT, roadmap, plan, log | Code, `log.md`, ggf. Commit | Verify + Commit per config |
+| `/crew:execute` | Nächste Phase ausführen (Kern-Loop) | PROJECT, roadmap, plan, log | Code, `log.md`, ggf. Commit | Verify + Commit per config |
 | `/crew:verify` | Verify→Review→Härten→Simplify explizit | plan, Diff | Review-Bericht, `log.md` | – |
 | `/crew:adjust` | Roadmap mitten im Flow ändern | roadmap | `roadmap.md` | – |
 | `/crew:status` | Stand zeigen | roadmap, log, claims | – | – |
@@ -254,7 +254,7 @@ Jeder Command: liest definierten Zustand, schreibt definierten Zustand, respekti
 - **Roast-Me-Klärung** (Teil der Planungsphase): unerbittlich-aber-begrenztes Befragen entlang des Entscheidungsbaums; **jede Frage trägt eine empfohlene Antwort** (Nutzer nickt ab statt zu tippen); wenn eine Frage aus dem Code beantwortbar ist, wird recherchiert statt gefragt; Abschluss mit Zusammenfassung. Tiefe via `clarify.depth`.
 - **Stack-Interview:** fragt DB / Frontend / UI / Backend-API / Queue / Deploy — **mit den Defaults des Nutzers vorbefüllt**. Option „**du entscheidest** → schlag vor → ich segne ab". Ergebnis → `config.stack` + `PROJECT.md`.
 
-### 6.2 `/crew:next` — Kern-Loop
+### 6.2 `/crew:execute` — Kern-Loop
 
 1. Kontext laden: `PROJECT.md` + aktive Phase aus `roadmap.md` + zugehöriger `plans/<id>.md` + letzter Eintrag in `log.md` → **exakter nächster Schritt** steht fest.
 2. Umsetzen (Model = `models.execution` bzw. auto).
@@ -409,7 +409,7 @@ Trennt **„woher die Arbeit kommt"** von **„wie sie abgearbeitet wird"**.
 - [ ] `crew` als installierbares Claude-Code-Plugin (Manifest, Commands, Agents, Skills, Rules, Contexts, Hooks).
 - [ ] `crew init` legt `.planning/` an und führt das Stack-Interview (inkl. „du entscheidest"-Option).
 - [ ] `config.json` steuert Git-, Verify-, Model-, Clarify- und Tasks-Verhalten; Projekt- + globaler Layer.
-- [ ] Voller Zyklus lauffähig: `/crew:brief` → `/crew:plan` → `/crew:next` (mit Verify-Pipeline) → Commit + Log.
+- [ ] Voller Zyklus lauffähig: `/crew:brief` → `/crew:plan` → `/crew:execute` (mit Verify-Pipeline) → Commit + Log.
 - [ ] Context-Handling über Sessions: SessionStart lädt PROJECT.md, `/crew:resume` brieft korrekt, „mach weiter" trifft den exakten nächsten Schritt.
 - [ ] `/crew:adjust` schiebt/sortiert/streicht Phasen ohne Renumbering-Bruch.
 - [ ] Model-Management mit `auto`- und `manual`-Modus + Override-Präzedenz.

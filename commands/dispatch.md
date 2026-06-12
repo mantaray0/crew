@@ -5,7 +5,7 @@ argument-hint: "[milestone or phase ids, optional]"
 
 # /crew:dispatch
 
-Parallelize the phases that can safely run at once. Uses `crew-planning` (DAG) and `git-merge` skills, and the `merge-coordinator` agent. Also runs automatically (with confirmation) from `/crew:next` when `config.execution.parallel` is `auto` and independent phases are detected.
+Parallelize the phases that can safely run at once. Uses `crew-planning` (DAG) and `git-merge` skills, and the `merge-coordinator` agent. Also runs automatically (with confirmation) from `/crew:execute` when `config.execution.parallel` is `auto` and independent phases are detected.
 
 **Follow `crew-conventions`:** respond in the user’s language; when a decision is needed, ask it explicitly (single-select / multi-select / free-text) rather than assuming.
 
