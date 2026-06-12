@@ -63,8 +63,13 @@ describe("scaffoldPlanning", () => {
   });
 
   it("seeds config.testing.policy from answers when provided", async () => {
-    const dir = await scaffoldPlanning(root, { ...answers, testingPolicy: "tdd" });
-    const cfg = CrewConfig.parse(JSON.parse(await fs.readFile(path.join(dir, "config.json"), "utf8")));
+    const dir = await scaffoldPlanning(root, {
+      ...answers,
+      testingPolicy: "tdd",
+    });
+    const cfg = CrewConfig.parse(
+      JSON.parse(await fs.readFile(path.join(dir, "config.json"), "utf8")),
+    );
     expect(cfg.testing.policy).toBe("tdd");
   });
 });

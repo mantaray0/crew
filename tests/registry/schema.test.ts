@@ -17,8 +17,13 @@ describe("registry schema", () => {
   });
 
   it("parses a full registry and rejects a bad testing enum", () => {
-    const r = Registry.parse({ tags: [{ name: "hono" }], archetypes: [{ name: "api", tags: ["hono"] }] });
+    const r = Registry.parse({
+      tags: [{ name: "hono" }],
+      archetypes: [{ name: "api", tags: ["hono"] }],
+    });
     expect(r.archetypes[0].tags).toEqual(["hono"]);
-    expect(() => Archetype.parse({ name: "x", defaults: { testing: "nope" } })).toThrow();
+    expect(() =>
+      Archetype.parse({ name: "x", defaults: { testing: "nope" } }),
+    ).toThrow();
   });
 });
