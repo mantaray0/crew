@@ -359,7 +359,8 @@ Jeder Agent: Frontmatter `name, description, tools, model` (+ Task-Typ). Default
 - `crew init` — fragt zuerst die **Projektart** ab (Archetyp aus globalem Registry, §5.1), seedet daraus Tags/Stack/Defaults, führt das (vorbefüllte) Stack-Interview, legt `.planning/` aus `templates/` an, schreibt `config.json` + `PROJECT.md`.
 - `crew setup` — einmalige globale Einrichtung: Projektarten & Tags definieren, globale Defaults (PM-Provider, Modelle) setzen.
 - `crew update` — zieht zentrale Harness-Updates.
-- Install global: `/plugin marketplace add <repo>` → `/plugin install crew`.
+- npm-Package: `@mantaray0/crew` (scoped, public); Bin-Befehl `crew` → `npx @mantaray0/crew init`.
+- Install als Plugin: `/plugin marketplace add <repo>` → `/plugin install crew`.
 
 ---
 
