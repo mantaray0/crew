@@ -7,6 +7,10 @@ on:
 
 jobs:
   validate:
+    # Skip on the changesets "version packages" PR: it is authored by GITHUB_TOKEN,
+    # so GitHub won't auto-run CI on it. Its `validate` status is provided instead by
+    # the release workflow (see release.yml) so the PR can merge without an override.
+    if: github.head_ref != 'changeset-release/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
