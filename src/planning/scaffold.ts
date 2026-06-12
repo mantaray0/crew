@@ -7,6 +7,7 @@ export interface InitAnswers {
   projectType: string | null;
   tags: string[];
   stack: Record<string, string>;
+  testingPolicy?: "from-archetype" | "tdd" | "tests-required" | "optional";
 }
 
 export function renderProjectMd(a: InitAnswers): string {
@@ -53,6 +54,9 @@ export async function scaffoldPlanning(
     projectType: answers.projectType,
     tags: answers.tags,
     stack: answers.stack,
+    ...(answers.testingPolicy
+      ? { testing: { policy: answers.testingPolicy } }
+      : {}),
   });
 
   await fs.writeFile(
