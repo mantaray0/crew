@@ -31,40 +31,28 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Publishes to npm and creates an x.x.x GitHub Release when package.json
-  # holds a version that has not been tagged yet (i.e. the version PR merged).
-  publish:
+  # Tags + creates a GitHub Release as x.x.x (no npm publish — distribution is the
+  # plugin marketplace) once package.json holds a version that has not been tagged yet.
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          registry-url: "https://registry.npmjs.org"
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Publish + tag if version is new
+      - name: Tag + GitHub Release if version is new
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           VERSION="$(node -p "require('./package.json').version")"
-          # Skip if unconsumed changesets remain (the version PR is still pending).
           if find .changeset -name '*.md' ! -name 'README.md' | grep -q .; then
-            echo "Unconsumed changesets present — version PR pending. Skipping publish."
+            echo "Unconsumed changesets present — version PR pending. Skipping release."
             exit 0
           fi
-          # Skip if this version was already released.
           if git rev-parse -q --verify "refs/tags/${VERSION}" >/dev/null; then
-            echo "Tag ${VERSION} already exists. Nothing to publish."
+            echo "Tag ${VERSION} already exists. Nothing to release."
             exit 0
           fi
-          pnpm build
-          pnpm publish --access public --no-git-checks
           git tag "${VERSION}"
           git push origin "${VERSION}"
           gh release create "${VERSION}" --title "${VERSION}" --notes "See CHANGELOG.md for details."

@@ -22,4 +22,4 @@ Each command and agent carries a **task-type**: `planning` · `execution` · `re
 
 ## Use
 
-When a command dispatches a sub-agent (e.g. a reviewer in the verify loop), it resolves the model for that agent's task-type and passes it as the sub-agent's model override — so behavior is config-driven, not hard-wired in each agent file. The resolver lives at `src/models/resolve.ts` (`resolveModel(config, taskType)`).
+When a command dispatches a sub-agent (e.g. a reviewer in the verify loop), it resolves the model for that agent's task-type from `config.models` (manual map, or the auto tier) and passes it as the sub-agent's model override — so behavior is config-driven, not hard-wired in each agent file.
