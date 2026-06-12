@@ -9,3 +9,5 @@ export {
 export { STARTER_REGISTRY } from "./registry/starter.js";
 export { Registry, Archetype, Tag } from "./registry/schema.js";
 export { readProjectContext, latestSnapshotPath } from "./planning/context.js";
+export { resolveModel } from "./models/resolve.js";
+export type { TaskType } from "./models/resolve.js";
