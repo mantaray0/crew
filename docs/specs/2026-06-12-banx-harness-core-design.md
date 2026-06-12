@@ -184,6 +184,14 @@ Defaults aus dem Plugin; pro Projekt überschreibbar; einzelne Phasen dürfen im
     "writeBack": false,             // Status/Kommentar zurück ins externe Tool
     "projectKey": null              // externe Projekt-/Board-ID
   },
+  "testing": { "policy": "from-archetype" }, // Default je Projektart/Tag; "tdd" | "tests-required" | "optional"
+  "security": { "auto": false },    // nie automatisch; Agent empfiehlt bei sensiblen Tags/Plan-Inhalten
+  "notifications": {
+    "enabled": true,                // global + projektweise; Default an
+    "events": ["blocker", "completion"], // Blocker (braucht dich) + Abschluss längerer Läufe
+    "channel": "os"                 // "os" (macOS osascript/terminal-notifier) | "push:ntfy" | "push:pushover" | "off"
+  },
+  "learn": { "enabled": true },     // /banx:learn aktiv (Self-Learn in Core)
   "state": { "commitSessions": true },
   "loop": { "maxIterations": 6 },
   "projectType": "saas-app",        // gewählter Archetyp aus dem globalen Registry (§5.1)
@@ -232,6 +240,7 @@ Jeder Command: liest definierten Zustand, schreibt definierten Zustand, respekti
 | `/banx:dispatch` | Unabhängige Phasen parallel ausführen (DAG, Worktrees, Sub-Agents) + rollend integrieren | roadmap, plans | Worktrees, Branches, claims, log | Parallel-Plan-Bestätigung |
 | `/banx:aside` | **Quick-Lane** für Kleinkram/Bugfix außerhalb der Roadmap | – | Code, optional Commit | stört aktive Phase/Claims nicht |
 | `/banx:loop` | **Opt-in** „iterieren bis Ziel" auf einer Phase | plan | Code, log | maxIterations |
+| `/banx:learn` | Muster/Entscheidungen aus fertiger Arbeit destillieren → Skill/Tag-Vorschlag fürs globale Registry | log, Diff, PROJECT | Skill/Tag-Vorschlag (Core) | du bestätigst Übernahme |
 
 ### 6.1 `/banx:new` — Roast-Me + Stack-Interview
 
@@ -287,10 +296,12 @@ Merge-Orchestrierung ist Teil des **Skill-/Rulesets** (`git-merge`-Skill + Rules
 
 Reihenfolge (config-/phasensteuerbar), je in **frischem Subagent-Kontext**:
 
-1. **verify** — Tests / Build / Typecheck (stack-spezifische Befehle aus `PROJECT.md`).
+1. **verify** — Tests / Build / Typecheck (stack-spezifische Befehle aus `PROJECT.md`). Test-Strenge gemäß `testing.policy` (Default je Projektart/Tag).
 2. **review** — Reviewer-Agents (allgemein + sprach-/domänenspezifisch).
-3. **harden** — Silent-Failure-Jagd, Type-Design, Security-Pass.
+3. **harden** — Silent-Failure-Jagd, Type-Design.
 4. **simplify** — Vereinfachung ohne Funktionsänderung.
+
+**Security-Pass ist nicht automatisch** (`security.auto:false`): Der planende/prüfende Agent **empfiehlt** ihn, wenn der Plan sensible Inhalte trägt (Auth, Payments, Tokens, sensible Tags) — ausgeführt wird er nur nach Freigabe.
 
 Ergebnis wird zusammengefasst; kritische Findings blockieren den Phasen-Commit, bis behoben oder bewusst übergangen.
 
@@ -307,7 +318,7 @@ Kuratiert, an den Stack angepasst, ohne Fremdreferenzen:
 - **silent-failure-hunter**, **type-design-analyzer** — Härten.
 - **code-simplifier** — Simplify.
 - **build-error-resolver** — Build-Fixes.
-- **merge-coordinator** — integriert parallele Feature-Branches gemäß `git.mergeStrategy`, Verify nach jedem Merge, Konfliktlösung per `git.conflictPolicy` (§6.3).
+- **merge-coordinator** — integriert parallele Feature-Branches gemäß `git.mergeStrategy`, Verify nach jedem Merge. Bekommt den **Task-/Phasen-Kontext** mit (was sollte jede Seite tun) → löst Konflikte **absichtsbewusst** statt nach reinem Textdiff; eigenständig wo die Absicht eindeutig ist, Rückfrage nur bei echter Mehrdeutigkeit (`git.conflictPolicy`).
 - **loop-operator** (optional) — opt-in Iterations-Loop.
 
 Jeder Agent: Frontmatter `name, description, tools, model` (+ Task-Typ). Default-Model gemäß §7.
@@ -329,9 +340,10 @@ Jeder Agent: Frontmatter `name, description, tools, model` (+ Task-Typ). Default
 |---|---|---|---|
 | SessionStart | load-project-context | `PROJECT.md` gebündelt laden | nein |
 | PreCompact | snapshot-state | Zustand in `sessions/` sichern | nein |
-| Stop (optional, config) | quality-gate | Format/Typecheck-Quickgate | je nach Ausgang |
+| Notification | notify-blocker | bei „braucht Input/Permission" → Notifier (config) feuern | nein |
+| Stop / SubagentStop | notify-completion + quality-gate | Abschluss-Notification (config) + optional Format/Typecheck-Quickgate | Gate je nach Ausgang |
 
-Lokal per Default; nichts wird ohne explizite Integration an externe Dienste gesendet.
+**Notifications** nutzen die Claude-Code-Events `Notification` (Blocker) und `Stop`/`SubagentStop` (Abschluss). Zustellung per `notifications.channel`: lokal macOS (`osascript`/`terminal-notifier`) oder Push (ntfy/Pushover) für unterwegs. Genaue Zustellung in Phase 1 verifizieren (Terminal-Bell ist unzuverlässig). Lokal per Default; nichts geht ohne explizite Integration an externe Dienste.
 
 ---
 
@@ -394,4 +406,7 @@ Trennt **„woher die Arbeit kommt"** von **„wie sie abgearbeitet wird"**.
 - [ ] Parallel-Dispatch unabhängiger Phasen (DAG) in Worktrees mit `claims.json`-Kollisionsschutz; `execution.parallel='auto'` + `/banx:dispatch`.
 - [ ] Rolling Integration via `merge-coordinator` gemäß `git.mergeStrategy`; Konflikte per `conflictPolicy` (lösen-oder-fragen).
 - [ ] `/banx:aside` Quick-Lane stört aktive Phasen/Claims nicht.
+- [ ] `/banx:learn` schlägt aus fertiger Arbeit Skills/Tags fürs globale Registry vor (du bestätigst).
+- [ ] Test-Politik aus Projektart/Tag ableitbar (`testing.policy`); Security-Pass nur auf Empfehlung+Freigabe.
+- [ ] Notifications über `Notification`/`Stop`-Hooks (Blocker + Abschluss), config-getriebener Channel.
 - [ ] Keine Fremd-Harness-Referenzen/Branding im Repo.
