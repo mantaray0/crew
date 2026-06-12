@@ -1,5 +1,11 @@
 # @mantaray0/crew
 
+## 0.1.1
+
+### Patch Changes
+
+- [#3](https://github.com/mantaray0/crew/pull/3) [`f90c687`](https://github.com/mantaray0/crew/commit/f90c687ab22f15bca621f45e1bbf10257051d7b5) Thanks [@mantaray0](https://github.com/mantaray0)! - Expand the README into full project documentation: a per-command reference for all 16 commands (purpose, arguments, step-by-step behavior), tables of the 12 specialist agents and 9 skills, the four hooks, the committed `.planning/` directory layout, the layered `config.json` schema overview, a core-loop diagram, and a "concepts in depth" section. Adds a table of contents.
+
 ## 0.1.0
 
 ### Minor Changes
