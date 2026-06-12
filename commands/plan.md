@@ -5,7 +5,9 @@ argument-hint: "[feature/plan slug, optional]"
 
 # /crew:plan
 
-Produce the executable plan from a brief. Uses the `crew-planning` skill for conventions.
+Produce the executable plan from a brief. Uses the `crew-planning` and `crew-conventions` skills.
+
+**Follow `crew-conventions`:** surface decisions as explicit questions (which backlog items to fold in = multi-select; approach choices = single-select), don't silently decide; respond in the user's language.
 
 ## Steps
 

@@ -7,6 +7,8 @@ argument-hint: "[what to change, free-form]"
 
 Keep the plan fluid. The roadmap is plain Markdown, so changing it is a text edit — not a renumbering event.
 
+**Follow `crew-conventions`:** ask the change explicitly (what to insert/reorder/defer/drop = select; backlog items to pull in = multi-select); respond in the user's language.
+
 ## Steps
 
 1. **Read** `.planning/roadmap.md` and `.planning/backlog.md`.
