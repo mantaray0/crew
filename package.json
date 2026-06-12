@@ -5,6 +5,12 @@
   "packageManager": "pnpm@11.6.0",
   "description": "Config-driven agentic workflow harness for Claude Code (plugin)",
   "type": "module",
+  "license": "MIT",
+  "author": "Daniel Baumert",
+  "homepage": "https://github.com/mantaray0/crew#readme",
+  "repository": { "type": "git", "url": "git+https://github.com/mantaray0/crew.git" },
+  "bugs": { "url": "https://github.com/mantaray0/crew/issues" },
+  "keywords": ["claude-code", "claude-code-plugin", "agent-harness", "workflow", "ai"],
   "scripts": {
     "changeset": "changeset",
     "version": "changeset version"
