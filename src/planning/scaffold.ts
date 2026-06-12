@@ -41,7 +41,9 @@ export async function scaffoldPlanning(
     .then(() => true)
     .catch(() => false);
   if (exists && !opts?.force) {
-    throw new Error(`.planning already exists at ${dir} (use force to overwrite)`);
+    throw new Error(
+      `.planning already exists at ${dir} (use force to overwrite)`,
+    );
   }
 
   await fs.mkdir(path.join(dir, "plans"), { recursive: true });
@@ -53,7 +55,10 @@ export async function scaffoldPlanning(
     stack: answers.stack,
   });
 
-  await fs.writeFile(path.join(dir, "config.json"), `${JSON.stringify(config, null, 2)}\n`);
+  await fs.writeFile(
+    path.join(dir, "config.json"),
+    `${JSON.stringify(config, null, 2)}\n`,
+  );
   await fs.writeFile(path.join(dir, "PROJECT.md"), renderProjectMd(answers));
   await fs.writeFile(
     path.join(dir, "roadmap.md"),
@@ -61,7 +66,10 @@ export async function scaffoldPlanning(
   );
   await fs.writeFile(path.join(dir, "log.md"), "# Log\n");
   await fs.writeFile(path.join(dir, "claims.json"), "{}\n");
-  await fs.writeFile(path.join(dir, "backlog.md"), "# Backlog\n\n_Ideen hier ablegen; Triage bei /crew:plan oder /crew:adjust._\n");
+  await fs.writeFile(
+    path.join(dir, "backlog.md"),
+    "# Backlog\n\n_Ideen hier ablegen; Triage bei /crew:plan oder /crew:adjust._\n",
+  );
 
   return dir;
 }

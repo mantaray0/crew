@@ -19,7 +19,9 @@ describe("CrewConfig", () => {
   });
 
   it("rejects an invalid enum value", () => {
-    expect(() => CrewConfig.parse({ git: { mergeStrategy: "nope" } })).toThrow();
+    expect(() =>
+      CrewConfig.parse({ git: { mergeStrategy: "nope" } }),
+    ).toThrow();
   });
 
   it("keeps user overrides while filling the rest with defaults", () => {
