@@ -62,6 +62,18 @@ Three file kinds inside a folder, told apart by filename:
 
 **New project:** `/crew:plan` creates one `<milestone-slug>/` folder per roadmap milestone and writes the numbered phase plans into it; the brief itself is `PROJECT.md` (no `_spec.md` in `plans/`). **Feature in an existing project:** the brief's `_spec.md` and its numbered phase plans share one `plans/<milestone-slug>/` folder; once every phase is captured, the `_spec.md` may be removed. All plans-reading commands glob **recursively** (`plans/**/*.md`).
 
+## Archiving completed milestones
+
+When a milestone's phases are **all `[x]`**, `/crew:archive` (or `/crew:complete-milestone`) moves it out of the live state to keep `ROADMAP.md` and `plans/` small:
+
+```
+.planning/archive/
+  roadmap-<milestone-slug>.md   ← the milestone's former ROADMAP.md section
+  plans/<milestone-slug>/       ← the whole plans folder, moved verbatim
+```
+
+The live `ROADMAP.md` keeps a one-liner in place of the section: `## Meilenstein N: <title> — ✓ archiviert YYYY-MM-DD → archive/roadmap-<slug>.md`. A pure `mv` (the milestone-folder structure makes it content-free). `LOG.md` is never archived — it stays append-only.
+
 ## Principles
 
 - Mirror existing codebase patterns; reference real files. Activate stack skills from the project's `tags`.

@@ -17,7 +17,9 @@ origin: crew
 | `LOG.md` | Append-only history: phase, commit, verify result, token/cost. |
 | `claims.json` | Which instance/worktree holds which phase (parallel-safe). |
 | `sessions/<worktree-id>/` | Per-instance session snapshots. |
-| `config.json` | Behavior config (git, verify, models, clarify, tasks, …). |
+| `config.json` | Behavior config (git, deploy, verify, models, clarify, tasks, …). |
+| `DEPLOY.md` | Release knowledge (optional): release strategy, branch/tag conventions, environments, secrets *policy*, rollback, deploy command(s). Used by `/crew:ship`; offered at `/crew:init` when `deploy.mode ≠ off`. |
+| `archive/` | Completed milestones moved out of live state (`/crew:archive`): `roadmap-<slug>.md` + `plans/<slug>/`. Keeps `ROADMAP.md`/`plans/` small. |
 
 `PROJECT.md` is the always-true source; `ROADMAP.md` is the plan; `plans/` is detail; `LOG.md` is history. The plan + log are the external memory — the work survives a fresh context, not the context window.
 
