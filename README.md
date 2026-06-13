@@ -384,6 +384,8 @@ UPPERCASE** (like `README`/`CHANGELOG`), **data files and directories are lowerc
 ├── archive/          # completed milestones moved out of live state (/crew:archive)
 │   ├── roadmap-<slug>.md     # the archived milestone's roadmap section
 │   └── plans/<slug>/         # its plan folder, moved verbatim
+├── reference/        # load-on-demand knowledge docs (indexed in PROJECT.md ## Reference)
+│   └── <topic-slug>.md       # runbooks, domain maps, deep-dives — never auto-loaded
 └── sessions/         # session snapshots for resume (per worktree id)
     └── <worktree-id>/<snapshot>.md
 ```
