@@ -389,7 +389,7 @@ UPPERCASE** (like `README`/`CHANGELOG`), **data files and directories are lowerc
 ├── plans/            # one folder per milestone
 │   └── <n>_<milestone-slug>/ # the milestone's plan files (number-prefixed, e.g. 1_fundament/)
 │       ├── _spec.md          # spec root: Spec head only (from /crew:brief)
-│       └── <id>-<title>.md   # numbered phase plan (from /crew:plan), e.g. 1.2-db-schema.md
+│       └── <id>_<title>.md   # numbered phase plan (from /crew:plan), e.g. 1.2_db-schema.md
 ├── archive/          # completed milestones moved out of live state (/crew:archive)
 │   ├── roadmap-<n>_<slug>.md # the archived milestone's roadmap section
 │   └── plans/<n>_<slug>/     # its plan folder, moved verbatim
