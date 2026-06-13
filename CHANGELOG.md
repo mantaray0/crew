@@ -1,5 +1,11 @@
 # @mantaray0/crew
 
+## 0.7.0
+
+### Minor Changes
+
+- [`d39bd3a`](https://github.com/mantaray0/crew/commit/d39bd3af15e02c8ea1126aab16b40c6563f3a3cc) Thanks [@mantaray0](https://github.com/mantaray0)! - Add release-mechanics awareness to deploy. New `config.deploy.releaseTool` (`auto`/`changesets`/`release-please`/`semantic-release`/`manual`/`none`) replaces ship's hardcoded Changesets detection — ship now branches its version/commit/tag steps by the tool (local bump vs. push-only vs. CI-autonomous). New `config.deploy.finishRelease` (`off`/`ask`/`auto`, default `ask`) lets ship merge an open bot version-PR to finish the release (changesets/release-please only). `/crew:init` now runs an active deploy/release interview that feeds these axes and creates the `reference/deploy.md` runbook; `/crew:setup` captures the global defaults. Additive — existing configs gain the new fields with defaults at reconcile.
+
 ## 0.6.0
 
 ### Minor Changes
