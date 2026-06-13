@@ -363,8 +363,8 @@ version-PR to finish the release. Backed by `crew-deploy`.
 - **Targets** the slug you name, or the latest **fully completed** milestone.
 - **Guardrail** — only milestones whose phases are **all `[x]`** archive; if any phase is open it lists
   them and stops.
-- **Moves** (a pure `mv` + text edit, no content change): the `ROADMAP.md` section →
-  `.planning/archive/roadmap-<n>_<slug>.md`, and `plans/<n>_<slug>/` → `.planning/archive/plans/<n>_<slug>/`.
+- **Moves** (a folder `mv` + writing one meta file): `plans/<n>_<slug>/` →
+  `.planning/archive/plans/<n>_<slug>/`, with the `ROADMAP.md` section written **into** it as `_roadmap.md`.
 - **Leaves** a one-line pointer in `ROADMAP.md` (`✓ archiviert YYYY-MM-DD → archive/…`). `LOG.md` is
   never archived — it stays append-only. Backed by `crew-planning`.
 
@@ -400,8 +400,10 @@ UPPERCASE** (like `README`/`CHANGELOG`), **data files and directories are lowerc
 │       ├── _spec.md          # spec root: Spec head only (from /crew:brief)
 │       └── <id>_<title>.md   # numbered phase plan (from /crew:plan), e.g. 1.2_db-schema.md
 ├── archive/          # completed milestones moved out of live state (/crew:archive)
-│   ├── roadmap-<n>_<slug>.md # the archived milestone's roadmap section
 │   └── plans/<n>_<slug>/     # its plan folder, moved verbatim
+│       ├── _roadmap.md       # the archived milestone's ROADMAP section (written in)
+│       ├── _spec.md          # (if the milestone had one)
+│       └── <id>_<title>.md   # numbered phase plans
 ├── reference/        # load-on-demand knowledge docs (indexed in PROJECT.md ## Reference)
 │   └── <topic-slug>.md       # runbooks, domain maps, deep-dives — never auto-loaded
 └── sessions/         # session snapshots for resume (per worktree id)
