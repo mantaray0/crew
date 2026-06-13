@@ -116,7 +116,7 @@ Resolved through the normal layering — a project's `.planning/config.json` ove
 `crewVersion` records the crew plugin version this config was last reconciled with. The **current** plugin version lives in `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` (`version`).
 
 - **On scaffold** (`/crew:init`, `/crew:setup` first run): write `crewVersion` = the current plugin version.
-- **On session start:** the `session-start` hook compares the project's `config.crewVersion` against the plugin version and, if they differ (or `crewVersion` is missing), prints a one-line "config may be out of date — run `/crew:init` to reconcile" notice.
+- **On session start:** the `session-start` hook compares the project's `config.crewVersion` against the plugin version and, if they differ (or `crewVersion` is missing), prints a one-line "config may be out of date — run `/crew:update` to reconcile" notice.
 - **On re-run** of `/crew:setup` (global config) or `/crew:init` (project config): if the config already exists, enter **reconcile mode** instead of scaffolding:
   1. **Schema-diff.** Compare the existing config's keys against this schema (the contract). Classify each: **new** (in the schema, missing from the config), **removed** (in the config, no longer in the schema), **unchanged**. A changed *default* in this schema is never written back over a value the user already has.
   2. **Ask per new field.** For every new key, show the user its purpose and recommended default (from this schema) and ask what they want — as the fitting question type (single-select for enums like `responseStyle`, free-text for open values), following `crew-conventions`. Never silently apply a default.
