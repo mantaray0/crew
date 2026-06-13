@@ -12,11 +12,11 @@ The richer milestone close-out: audit → summarize → archive. Uses the `crew-
 ## Steps
 
 1. **Pick the milestone.** Use the `$ARGUMENTS` slug if given; otherwise the active/latest milestone in `.planning/ROADMAP.md`.
-2. **Audit.** Verify **every** phase is `[x]`. If any phase is open, list the open ones and **stop** — finish them (`/crew:execute`) or defer them (`/crew:adjust`) first.
+2. **Audit.** Verify every phase is `[x]` or `[~]` (deferred). `[~]` is **non-blocking** — a consciously deferred phase does not hold up close-out (confirm once that it should carry into the next milestone). If any phase is still **open** (`[ ]`/`[>]`), list those and **stop** — finish them (`/crew:execute`) or defer them (`/crew:adjust`) first. This matches the `[~]`-as-not-blocking definition the `/crew:execute` boundary guard uses, so the two never disagree on "milestone done".
 3. **Summarize.** Append a milestone summary to `.planning/LOG.md`: what shipped, key decisions, and (if `observability.trackCost`) the rolled-up token/cost.
 4. **Update PROJECT.md.** Refresh "Aktueller Stand" to reflect the completed milestone; move any validated requirement/decision into the living context as appropriate.
 5. **Archive.** Run the `/crew:archive` step (see `commands/archive.md`) for this milestone — move its roadmap section and `plans/<n>_<slug>/` into `.planning/archive/`, leaving the one-line pointer.
 
 ## Hand-off
 
-End your reply **in the user's language**, confirming the milestone is closed and archived, and point to `/crew:plan` or `/crew:new`-style next steps for the following milestone.
+End your reply **in the user's language**, confirming the milestone is closed and archived, and point to the next step for the following milestone: `/crew:plan` if it isn't broken into phases yet, otherwise `/crew:resume` → `/crew:execute`.
