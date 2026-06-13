@@ -80,16 +80,16 @@ Die **Spec-Probe** ist der gemeinsame Mechanismus für Stopp-Kriterium *und* Cut
 ```
 .planning/plans/
   <milestone-slug>/
-    _brief.md            ← Spec-Root (optional; nur wenn es einen Brief gab)
+    _spec.md            ← Spec-Root (optional; nur wenn es einen Brief gab)
     1.2-db-schema.md     ← nummerierte Phasenpläne dieses Milestones
     1.3-auth.md
 ```
 
 - **Gruppierungseinheit = Milestone** (Modell bleibt Milestone → Phase, kein drittes Substantiv):
-  - **Neues Projekt:** `/crew:plan` legt je Roadmap-Milestone einen `<milestone-slug>/`-Ordner an; der Brief selbst ist `PROJECT.md` (kein `_brief.md` in `plans/`).
-  - **Feature in bestehendem Projekt:** Der **Brief-Slug wird der Milestone-Slug** — `/crew:brief` schreibt `plans/<slug>/_brief.md`, `/crew:plan` macht daraus einen neuen (kleinen) Milestone *oder* hängt die Phasen an einen bestehenden Milestone-Ordner. So existiert der Ordnername schon zur Brief-Zeit, ohne eine Phasennummer zu erfinden.
-- **Ticket (`/crew:pull`):** landet im betreffenden Milestone-Ordner; Plan nach Ticket-Id benannt (`LIN-42-…md`), `_brief.md` entfällt (Spec kommt aus dem Ticket).
-- Dateibenennung im Ordner: Phasenpläne `<id>-<title>.md`, der Brief als `_brief.md` (der Slug steckt nun im Ordnernamen, daher nicht mehr `_<slug>.md`).
+  - **Neues Projekt:** `/crew:plan` legt je Roadmap-Milestone einen `<milestone-slug>/`-Ordner an; der Brief selbst ist `PROJECT.md` (kein `_spec.md` in `plans/`).
+  - **Feature in bestehendem Projekt:** Der **Brief-Slug wird der Milestone-Slug** — `/crew:brief` schreibt `plans/<slug>/_spec.md`, `/crew:plan` macht daraus einen neuen (kleinen) Milestone *oder* hängt die Phasen an einen bestehenden Milestone-Ordner. So existiert der Ordnername schon zur Brief-Zeit, ohne eine Phasennummer zu erfinden.
+- **Ticket (`/crew:pull`):** landet im betreffenden Milestone-Ordner; Plan nach Ticket-Id benannt (`LIN-42-…md`), `_spec.md` entfällt (Spec kommt aus dem Ticket).
+- Dateibenennung im Ordner: Phasenpläne `<id>-<title>.md`, das Spec-Root als `_spec.md` (der Slug steckt nun im Ordnernamen, daher nicht mehr `_<slug>.md`). **Begriff:** `/crew:brief` ist der *Akt* des Klärens, das *Ergebnis* ist eine **Spec** — daher heißt das Artefakt `_spec.md` (konsistent mit dem `## Spec`-Head und `clarify.specArtifact`), nicht `_brief.md`.
 - Alle plans-lesenden Commands globben künftig **rekursiv** (`plans/**/*.md`).
 
 ### 2.6 State-Modell — bewusst nicht erweitert
@@ -99,7 +99,7 @@ Geprüft gegen GSDs State-Dateien; **keine übernommen** — crew deckt alles be
 | GSD-Konzept | crew-Pendant | Verdikt |
 |---|---|---|
 | `STATE.md` (mutable Digest, „read first") | verteilt: `ROADMAP.md` (Position) + `LOG.md` (Historie/Cost) + `sessions/<id>/snapshot` (Continuity) + `claims.json`; `/crew:resume` synthetisiert on demand | nicht übernehmen — ein mutables STATE.md hätte **Write-Contention** zwischen Worktrees und bekämpft das Parallel-Modell |
-| `phases/XX/CONTEXT.md` (Per-Phase-Entscheidungen) | Spec-Head im Plan (`_brief.md` milestone-weit + `<id>-…md` je Phase) | nicht übernehmen — wäre ein dritter Ort für dasselbe |
+| `phases/XX/CONTEXT.md` (Per-Phase-Entscheidungen) | Spec-Head im Plan (`_spec.md` milestone-weit + `<id>-…md` je Phase) | nicht übernehmen — wäre ein dritter Ort für dasselbe |
 | Tech-Stack als eigene `.md` | `config.stack` (strukturiert, treibt Tags/Skills) + `PROJECT.md` „Architektur-Entscheidungen" (das *Warum*) | nicht übernehmen — bereits sinnvoll zweigeteilt |
 
 **CLAUDE.md vs. PROJECT.md (Klarstellung, kein Code):**
@@ -120,9 +120,9 @@ Optionale Brücke (vom User selbst, nicht von crew): ein Einzeiler in der Root-`
 | `skills/crew-config/SKILL.md` | `clarify.intensity` (`gentle`/`normal`/`brutal`, Default `normal`) ins Schema + Erläuterung; Erhebung bei setup/init. |
 | `skills/roast-me/SKILL.md` | Batched Stepper + „reicht/tiefer"-Checkpoint; Spec-Probe als Stopp-Kriterium; intensity-Levels mit konkretem Verhalten; Scope-Guardrail (Struktur → plan); Anti-Pattern „one question at a time" ersetzen. |
 | `skills/crew-conventions/SKILL.md` | „One decision at a time" → Unabhängigkeitsregel (Batch unabhängiger Entscheidungen; sequenziell bei Abhängigkeit/Confirm-Gate). |
-| `skills/crew-planning/SKILL.md` | Dateibenennung/Pfade auf Milestone-Ordner umstellen (`plans/<milestone-slug>/_brief.md` + `<id>-<title>.md`); rekursives Globben anmerken. |
+| `skills/crew-planning/SKILL.md` | Dateibenennung/Pfade auf Milestone-Ordner umstellen (`plans/<milestone-slug>/_spec.md` + `<id>-<title>.md`); rekursives Globben anmerken. |
 | `skills/crew-context/SKILL.md` | `plans/`-Zeile auf `plans/<milestone-slug>/…` aktualisieren. |
-| `commands/brief.md` | Spec-Probe-Stopp, Scope-Guardrail, `clarify.intensity` honorieren, gebündelten Stepper nutzen; Brief nach `plans/<slug>/_brief.md` schreiben. |
+| `commands/brief.md` | Spec-Probe-Stopp, Scope-Guardrail, `clarify.intensity` honorieren, gebündelten Stepper nutzen; Brief nach `plans/<slug>/_spec.md` schreiben. |
 | `commands/plan.md` | Spec als gelockt vertrauen, Intent-Lücken zurückwerfen; Phasenpläne in den Milestone-Ordner schreiben. |
 | `commands/setup.md` | Roast-Level (global) erfragen. |
 | `commands/init.md` | Roast-Level (per-project Override) erfragen. |

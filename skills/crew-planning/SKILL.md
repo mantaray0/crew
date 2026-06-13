@@ -49,18 +49,18 @@ Plans live in **milestone folders** — `plans/<milestone-slug>/` — keeping a 
 ```
 .planning/plans/
   <milestone-slug>/
-    _brief.md            ← Spec root (optional; only when a brief produced this work)
+    _spec.md            ← Spec root (optional; only when a brief produced this work)
     1.2-db-schema.md     ← numbered phase plans of this milestone
     1.3-auth.md
 ```
 
 Three file kinds inside a folder, told apart by filename:
 
-- **Brief / Spec root** (`/crew:brief`, feature in an existing project): `_brief.md` — Spec head only (Goal/problem, Requirements, Acceptance, Out of scope). The brief slug *becomes* the milestone-folder name, so no fake phase number is invented. The Plan body is filled later by `/crew:plan`.
+- **Brief / Spec root** (`/crew:brief`, feature in an existing project): `_spec.md` — Spec head only (Goal/problem, Requirements, Acceptance, Out of scope). The brief slug *becomes* the milestone-folder name, so no fake phase number is invented. The Plan body is filled later by `/crew:plan`.
 - **Phase plan** (`/crew:plan`): roadmap phase id + short title — `1.2-db-schema.md`. Sorts naturally, ties straight to the roadmap id.
-- **Ticket plan** (`/crew:pull`): external ticket id + title — `LIN-42-realtime-notifications.md`; no `_brief.md` (the ticket is the spec).
+- **Ticket plan** (`/crew:pull`): external ticket id + title — `LIN-42-realtime-notifications.md`; no `_spec.md` (the ticket is the spec).
 
-**New project:** `/crew:plan` creates one `<milestone-slug>/` folder per roadmap milestone and writes the numbered phase plans into it; the brief itself is `PROJECT.md` (no `_brief.md` in `plans/`). **Feature in an existing project:** the brief's `_brief.md` and its numbered phase plans share one `plans/<milestone-slug>/` folder; once every phase is captured, the `_brief.md` may be removed. All plans-reading commands glob **recursively** (`plans/**/*.md`).
+**New project:** `/crew:plan` creates one `<milestone-slug>/` folder per roadmap milestone and writes the numbered phase plans into it; the brief itself is `PROJECT.md` (no `_spec.md` in `plans/`). **Feature in an existing project:** the brief's `_spec.md` and its numbered phase plans share one `plans/<milestone-slug>/` folder; once every phase is captured, the `_spec.md` may be removed. All plans-reading commands glob **recursively** (`plans/**/*.md`).
 
 ## Principles
 

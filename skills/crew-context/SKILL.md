@@ -12,7 +12,7 @@ origin: crew
 |---|---|
 | `PROJECT.md` | The living project truth: stack, architecture decisions (the *why*), current state, constraints. Loaded automatically at session start. |
 | `ROADMAP.md` | The fahrplan: milestones → phases with status markers + timestamps. |
-| `plans/<milestone-slug>/` | Detail per milestone: optional `_brief.md` (Spec root) + numbered `<id>-<title>.md` phase plans (Spec head + Plan body each). |
+| `plans/<milestone-slug>/` | Detail per milestone: optional `_spec.md` (Spec root) + numbered `<id>-<title>.md` phase plans (Spec head + Plan body each). |
 | `BACKLOG.md` | Idea inbox; triaged at plan/adjust. |
 | `LOG.md` | Append-only history: phase, commit, verify result, token/cost. |
 | `claims.json` | Which instance/worktree holds which phase (parallel-safe). |
