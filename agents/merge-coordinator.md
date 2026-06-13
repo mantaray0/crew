@@ -1,6 +1,6 @@
 ---
 name: merge-coordinator
-description: Integrates parallel feature branches/worktrees with intent-aware conflict resolution. Use during /crew:dispatch rolling integration. Task-type: execution.
+description: Integrates parallel feature branches/worktrees with intent-aware conflict resolution. Use during /crew:execute dispatch rolling integration. Task-type: execution.
 tools: ["Read", "Grep", "Glob", "Edit", "Bash"]
 model: opus
 ---
