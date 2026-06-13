@@ -6,6 +6,8 @@ description: Orient a fresh session — load the living project context and the 
 
 Pick up exactly where the last session left off, in a clean context.
 
+Unlike `/crew:status` (the any-time read-only dashboard), `resume` is the **session bootstrap**: its differentiator is the **session snapshot** — the failed approaches (**DO NOT RETRY**) and the exact **NEXT STEP** — which `status` never reads. `status` answers "where do we stand?"; `resume` answers "what was I doing, and what's the next move?", then ends ready to continue.
+
 **Follow `crew-conventions`:** respond in the user’s language; when a decision is needed, ask it explicitly (single-select / multi-select / free-text) rather than assuming.
 
 ## Steps

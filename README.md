@@ -198,8 +198,10 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
 - **`<text>`:** appends a dated bullet to `BACKLOG.md` (`- [YYYY-MM-DD] <idea>`) and does nothing
   else — no planning, no interrupting the active phase. One-line confirmation.
 - **empty or `new`:** prompts you for the idea, then adds it the same way.
-- **`list`:** lists the backlog and offers, per item, to plan now (hand to `plan`/`adjust`), keep
-  parked, or drop.
+- **`list`:** lists the backlog and offers, per item: **do it now (promote)** — routed by size
+  (small → `/crew:quick`, with **no roadmap entry** · feature → `/crew:brief`/`plan` · roadmap-worthy →
+  `/crew:adjust`) — **plan it**, **keep parked**, or **drop**. Promoting closes the gap from "captured"
+  to "in work" without the roadmap detour; the promoted item then leaves `BACKLOG.md`.
 
 #### `/crew:adjust` &nbsp;`[what to change, free-form]`
 > Change the roadmap mid-flight — insert, reorder, defer, or drop phases — without renumbering pain.
@@ -228,10 +230,12 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
 > a sequential, autonomous milestone run. **`dispatch`** fans phases out across parallel worktrees.
 
 1. **Load context** — `PROJECT.md`, `ROADMAP.md` (the active `[>]` phase, else the next `[ ]`), the
-   phase's plan file, and the tail of `LOG.md`. The exact next step must be unambiguous; if it isn't,
+   phase's plan file, and the tail of `LOG.md`. The exact next step must be unambiguous; if the
+   milestone is done and the next is unplanned it routes you to `/crew:plan`/`/crew:resume`, otherwise
    it asks.
-2. **Claim the phase** — marks it `[>]` and records the claim in `claims.json` so parallel instances
-   don't collide.
+2. **Milestone-boundary guard, then claim** — at a milestone boundary (the previous milestone fully
+   done) it pauses and offers `/crew:complete-milestone` first (you can skip; it never self-completes),
+   then marks the phase `[>]` and records the claim in `claims.json` so parallel instances don't collide.
 3. **Implement** — exactly what the plan specifies, mirroring existing patterns. Model =
    `config.models.execution` (or auto). **Deviation handling** (`execution.onDeviation`): small,
    in-intent deviations are decided autonomously and noted in the log; a real problem, ambiguity, or
@@ -297,6 +301,8 @@ Backed by the `verification-loop` skill.
 - Reports per milestone: phases done `[x]`, active `[>]`, pending `[ ]`, deferred `[~]`, including
   any `@worktree` claim markers.
 - Shows the last few `LOG.md` lines (incl. token/cost notes if present).
+- The any-time **dashboard** — "where do we stand?". To *re-enter work* in a fresh session, use
+  `/crew:resume` instead (it reads the session snapshot; `status` does not).
 
 #### `/crew:resume`
 > Pick up exactly where the last session left off, in a clean context.
@@ -305,6 +311,8 @@ Backed by the `verification-loop` skill.
   worktree subdir), the active phase in `ROADMAP.md`, and the tail of `LOG.md`.
 - **Briefs** you with a structured summary: what we're building, where we are, and the precise next
   step — then waits. The companion to the `PreCompact`/`SessionStart` hooks. Backed by `crew-context`.
+- The **session bootstrap** (vs. `/crew:status`, the dashboard): its differentiator is the snapshot —
+  **DO NOT RETRY** (failed approaches) + the exact **next step** — which `status` never reads.
 
 #### `/crew:report`
 > A compact token/cost + progress report aggregated from `LOG.md`.
@@ -363,7 +371,8 @@ version-PR to finish the release. Backed by `crew-deploy`.
 #### `/crew:complete-milestone` &nbsp;`[milestone slug, optional]`
 > The richer milestone close-out — audit, summarize, then archive. Wraps `/crew:archive`.
 
-1. **Audit** — verifies every phase of the milestone is `[x]`; if not, lists the open ones and stops
+1. **Audit** — verifies every phase is `[x]` or `[~]` (deferred phases are non-blocking, matching the
+   `/crew:execute` boundary guard); if any phase is still open `[ ]`/`[>]`, lists those and stops
    (finish via `/crew:execute` or defer via `/crew:adjust`).
 2. **Summarize** — appends a milestone summary to `LOG.md` (what shipped, key decisions, rolled-up
    token/cost when `observability.trackCost` is on).

@@ -6,6 +6,8 @@ description: Show the current project status from .planning/ (roadmap + log).
 
 Read and summarize the current project state. Do not modify anything.
 
+`status` is the read-only **dashboard** — "where do we stand?", callable any time, with no memory of what you were mid-doing. To **re-enter work** in a fresh session — with the session snapshot's DO-NOT-RETRY and the exact next step — use `/crew:resume` instead.
+
 **Follow `crew-conventions`:** respond in the user’s language; when a decision is needed, ask it explicitly (single-select / multi-select / free-text) rather than assuming.
 
 ## Steps

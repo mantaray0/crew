@@ -4,6 +4,24 @@
 Claude Code plugin. crew keeps project state across sessions in a committed `.planning/` directory
 and runs every command interactively and config-driven.
 
+## Two layers — keep them straight
+
+This repo wears two hats at once, which is the usual source of confusion. Always be explicit
+about which one you're touching:
+
+- **The plugin (the product we ship).** `commands/`, `agents/`, `skills/`, `hooks/`, `scripts/`,
+  `.claude-plugin/`, `README.md`. English, committed, released via Changesets. Editing these
+  **changes crew itself** — it is the deliverable.
+- **The planning state (how we organize building it — crew dogfooding itself).** `.planning/`
+  (PROJECT, ROADMAP, LOG, BACKLOG, `plans/`, `archive/`). German (`language.files: de`),
+  **gitignored / local-only**, written by crew's own `/crew:*` commands. These files **describe and
+  drive** work on the plugin; they are never shipped.
+
+A **milestone / phase / plan** always lives in the *planning state* and is *about* a change to the
+*plugin*. "Milestone 2 is done" means the planning work that produced plugin commits is done — not
+that anything was released. When ambiguous, say **"the crew plugin"** (product) vs
+**"the `.planning` roadmap/plan"** (planning state); **"ship/release" only ever refers to the plugin.**
+
 ## Stack
 
 | Area | Choice |
@@ -50,7 +68,7 @@ The plugin is declarative — the logic lives in Markdown instructions, not comp
 - **Releases run through Changesets** — never bump versions by hand; `pnpm version` syncs the plugin
   manifest via `scripts/sync-version.mjs`.
 - **Markdown-first** — new capabilities are commands/skills/agents, not compiled code.
-- **crew plans itself.** This repo uses crew for its own planning; `.planning/` is the source of
-  truth for project state — PROJECT/ROADMAP/LOG/BACKLOG, plans, and load-on-demand runbooks under
-  `.planning/reference/`. There is no `docs/` folder.
+- **crew plans itself** (see *Two layers* above). `.planning/` is the source of truth for project
+  state — PROJECT/ROADMAP/LOG/BACKLOG, plans, and load-on-demand runbooks under `.planning/reference/`.
+  There is no `docs/` folder.
 - Testing policy: `tests-required` (cli archetype) — adjust if a test setup for the scripts appears.
