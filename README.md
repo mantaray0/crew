@@ -322,20 +322,44 @@ Backed by the `verification-loop` skill.
 #### `/crew:ship` &nbsp;`[environment, optional]`
 > Carry a verified change to a release — version, commit, tag, push, PR, and (when enabled) deploy.
 
-- Driven by `config.deploy.mode` (`off` / `orchestrate` / `execute`) and **bounded by `config.git`** —
-  ship never pushes, opens a PR, or commits in a way your git config disables; it asks instead.
-- Gates on a green `verify`; provider via `gh` (GitHub Actions) or `glab` (GitLab CI). Deploy commands
-  come from `.planning/DEPLOY.md`, never guessed. Backed by `crew-deploy`.
+Driven by `config.deploy.mode` and **bounded by `config.git`** (the ceiling — ship never pushes, opens a
+PR, or commits in a way your git config disables; it asks instead):
+
+1. **Read config** — `config.deploy`, `config.git`, and `.planning/DEPLOY.md`. If `deploy.mode` is
+   `off`, it explains how to enable it and stops.
+2. **Gate on verify** — refuses to ship on a red `verify` (checks the last result in `LOG.md`).
+3. **Version → commit → tag** — runs Changesets `version` (or bumps per `deploy.tagPattern`), commits
+   with your `commitStyle`, and tags (e.g. `v1.4.0`).
+4. **Push & PR** — only if `git.autoPush` / `git.autoPR` allow it (otherwise it asks); PR/MR via the
+   `gh` (GitHub Actions) or `glab` (GitLab CI) CLI.
+5. **Deploy** — only when `deploy.mode` is `execute`: runs the deploy command from `DEPLOY.md` for the
+   target environment, after confirmation. Never guessed by crew.
+6. **Record** — appends the version, tag, and push/PR/deploy outcome to `LOG.md`.
+
+The three modes: `off` (do nothing), `orchestrate` (drive the release; CI deploys), `execute` (also run
+the deploy command). Backed by `crew-deploy`.
 
 #### `/crew:archive` &nbsp;`[milestone slug, optional]`
-> Move a fully completed milestone into `.planning/archive/` to keep the live roadmap small.
+> Move a fully completed milestone into `.planning/archive/` so the live roadmap stays small and cheap to read.
 
-- Only archives milestones whose phases are **all `[x]`**; a pure `mv` of the roadmap section +
-  `plans/<slug>/`, leaving a one-line pointer. `LOG.md` stays append-only.
+- **Targets** the slug you name, or the latest **fully completed** milestone.
+- **Guardrail** — only milestones whose phases are **all `[x]`** archive; if any phase is open it lists
+  them and stops.
+- **Moves** (a pure `mv` + text edit, no content change): the `ROADMAP.md` section →
+  `.planning/archive/roadmap-<slug>.md`, and `plans/<slug>/` → `.planning/archive/plans/<slug>/`.
+- **Leaves** a one-line pointer in `ROADMAP.md` (`✓ archiviert YYYY-MM-DD → archive/…`). `LOG.md` is
+  never archived — it stays append-only. Backed by `crew-planning`.
 
 #### `/crew:complete-milestone` &nbsp;`[milestone slug, optional]`
-> Close out a finished milestone: audit all phases done → summarize to `LOG.md` → update `PROJECT.md`
-> → archive. The richer wrapper around `/crew:archive`.
+> The richer milestone close-out — audit, summarize, then archive. Wraps `/crew:archive`.
+
+1. **Audit** — verifies every phase of the milestone is `[x]`; if not, lists the open ones and stops
+   (finish via `/crew:execute` or defer via `/crew:adjust`).
+2. **Summarize** — appends a milestone summary to `LOG.md` (what shipped, key decisions, rolled-up
+   token/cost when `observability.trackCost` is on).
+3. **Update `PROJECT.md`** — refreshes the current-state section for the completed milestone.
+4. **Archive** — runs the `/crew:archive` move for the milestone. Backed by `crew-context` +
+   `crew-planning`.
 
 ---
 
