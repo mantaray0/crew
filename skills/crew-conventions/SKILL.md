@@ -36,6 +36,21 @@ The point: the user steers each option deliberately. Speed comes from good recom
 - **Hyphenated files only as thin alias wrappers.** A separate file is acceptable solely as a discoverable alias that forwards to the canonical verb — it carries **no logic of its own**.
 - **Document the args.** Keep the command's `argument-hint` and description in sync with the variants it accepts.
 
+## Workflow steps
+
+Work moves through a small, predictable step chain. The **config sections are named after the steps**, so the config reads as the workflow (self-documenting):
+
+```
+brief → plan → execute → verify → finish ( ship · retro · complete )
+```
+
+- **brief** (`config.brief`) — clarify intent via Roast-Me. **plan** (uses `models.planning`) — roadmap + plan files.
+- **execute** (`config.execute`) — pure plan-execution (one phase / `auto` / `dispatch`); it only *produces* commits.
+- **verify** (`config.verify`) — the verify → review → harden → simplify pipeline, run inside execute per phase.
+- **finish** (`config.finish`) — the milestone close-out strand **Ship → Retro → Complete**, each step config-gated (`off`/`ask`/`auto`); `ship`/`retro`/`complete` map to `config.ship` / `config.retro` / `/crew:complete`. execute *suggests* finish at a milestone's end, never runs it.
+
+`tasks` keeps its name (no `pull` section); `plan` has no own block (it uses `models.planning`).
+
 ## Response style
 
 Honour `config.responseStyle` (resolved project-over-global; default `"concise"`) in every command reply:
