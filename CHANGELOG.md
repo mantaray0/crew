@@ -1,5 +1,17 @@
 # @mantaray0/crew
 
+## 0.11.0
+
+### Minor Changes
+
+- [#22](https://github.com/mantaray0/crew/pull/22) [`4e1c197`](https://github.com/mantaray0/crew/commit/4e1c197fe85f30ec6770f82acf0f6ff7ea7312c6) Thanks [@mantaray0](https://github.com/mantaray0)! - `/crew:backlog list` can now promote an item straight into work — a "do it now" triage action routes it by size (small → `/crew:quick` with no roadmap entry, feature → `/crew:brief`/`/crew:plan`, roadmap-worthy → `/crew:adjust`). Adds a routing rule of thumb and removes the promoted item from the backlog. Closes the gap between "captured" and "in work" without a mandatory roadmap detour.
+
+- [#22](https://github.com/mantaray0/crew/pull/22) [`4e1c197`](https://github.com/mantaray0/crew/commit/4e1c197fe85f30ec6770f82acf0f6ff7ea7312c6) Thanks [@mantaray0](https://github.com/mantaray0)! - `/crew:execute` (one-phase default) now has milestone-boundary awareness. When the next phase belongs to a new milestone and the previous one is fully done, it pauses and offers `/crew:complete-milestone` (audit → summary → archive) instead of silently gliding across the boundary — the same awareness `auto`/`dispatch` already have. It only offers; it never self-completes. When the active milestone is done and the next is unplanned, it routes to `/crew:plan`/`/crew:resume` instead of asking vaguely.
+
+### Patch Changes
+
+- [#22](https://github.com/mantaray0/crew/pull/22) [`4e1c197`](https://github.com/mantaray0/crew/commit/4e1c197fe85f30ec6770f82acf0f6ff7ea7312c6) Thanks [@mantaray0](https://github.com/mantaray0)! - Clarify the `/crew:status` vs `/crew:resume` distinction in both command docs (`status` = any-time read-only dashboard; `resume` = session bootstrap that reads the session snapshot — DO NOT RETRY + the exact next step). Fix a dead `/crew:new` reference in `/crew:complete-milestone`'s hand-off (now points to real verbs). Align `/crew:complete-milestone`'s audit so `[~]` deferred phases are non-blocking for close-out, consistent with the `/crew:execute` boundary guard.
+
 ## 0.10.0
 
 ### Minor Changes
