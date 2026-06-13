@@ -57,7 +57,7 @@ Plans live in **numbered milestone folders** — `plans/<n>_<milestone-slug>/` �
     1.3_auth.md
 ```
 
-Three file kinds inside a folder, told apart by filename:
+Files inside a folder are told apart by filename. **A leading underscore marks a meta file, not a phase** — `_spec.md` (a brief's Spec root) and `_roadmap.md` (a milestone's archived ROADMAP section, see *Archiving* below); any future `_*.md` is covered by the same rule. Commands that read phase plans skip `_`-prefixed files — they are never a phase. The remaining kinds carry their id up front:
 
 - **Brief / Spec root** (`/crew:brief`, feature in an existing project): `_spec.md` — Spec head only (Goal/problem, Requirements, Acceptance, Out of scope). The folder is `<n>_<brief-slug>/`, where `<n>` is the next milestone number; no fake phase number is invented. The Plan body is filled later by `/crew:plan`.
 - **Phase plan** (`/crew:plan`): roadmap phase id + short title — `1.2_db-schema.md`. Sorts naturally, ties straight to the roadmap id.
@@ -71,11 +71,13 @@ When a milestone's phases are **all `[x]`**, `/crew:archive` (or `/crew:complete
 
 ```
 .planning/archive/
-  roadmap-<n>_<milestone-slug>.md   ← the milestone's former ROADMAP.md section
   plans/<n>_<milestone-slug>/        ← the whole plans folder, moved verbatim
+    _roadmap.md                       ← the milestone's former ROADMAP.md section (written in)
+    _spec.md                          ← (if the milestone had one)
+    <id>_<title>.md                   ← the phase plans
 ```
 
-The live `ROADMAP.md` keeps a one-liner in place of the section: `## Meilenstein N: <title> — ✓ archiviert YYYY-MM-DD → archive/roadmap-<n>_<slug>.md`. A pure `mv` (the milestone-folder structure makes it content-free). `LOG.md` is never archived — it stays append-only.
+One milestone = one folder: the archived ROADMAP section lands **inside** the moved folder as `_roadmap.md`, beside `_spec.md` and the phases — consistent with the `_spec.md` meta-file idiom. The live `ROADMAP.md` keeps a one-liner in place of the section: `## Meilenstein N: <title> — ✓ archiviert YYYY-MM-DD → archive/plans/<n>_<slug>/_roadmap.md`. Archiving is the folder `mv` **plus** writing that one `_roadmap.md` into it. `LOG.md` is never archived — it stays append-only.
 
 ## Principles
 

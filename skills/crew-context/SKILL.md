@@ -18,7 +18,7 @@ origin: crew
 | `claims.json` | Which instance/worktree holds which phase (parallel-safe). |
 | `sessions/<worktree-id>/` | Per-instance session snapshots. |
 | `config.json` | Behavior config (git, deploy, verify, models, clarify, tasks, …). |
-| `archive/` | Completed milestones moved out of live state (`/crew:archive`): `roadmap-<n>_<slug>.md` + `plans/<n>_<slug>/`. Keeps `ROADMAP.md`/`plans/` small. |
+| `archive/` | Completed milestones moved out of live state (`/crew:archive`): `plans/<n>_<slug>/` with the former ROADMAP section written in as `_roadmap.md`. Keeps `ROADMAP.md`/`plans/` small. |
 | `reference/` | Load-on-demand knowledge docs (runbooks, domain/data maps, architecture deep-dives) — **never auto-loaded**; each indexed one line in PROJECT.md's `## Reference`. Naming `reference/<topic-slug>.md`. |
 
 `PROJECT.md` is the always-true source; `ROADMAP.md` is the plan; `plans/` is detail; `LOG.md` is history. The plan + log are the external memory — the work survives a fresh context, not the context window.
