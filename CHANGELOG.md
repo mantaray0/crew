@@ -1,5 +1,11 @@
 # @mantaray0/crew
 
+## 0.5.0
+
+### Minor Changes
+
+- [#14](https://github.com/mantaray0/crew/pull/14) [`075eca3`](https://github.com/mantaray0/crew/commit/075eca386bba205ec9662133a59da901530b579b) Thanks [@mantaray0](https://github.com/mantaray0)! - Add the `.planning/reference/` convention — load-on-demand knowledge docs (runbooks, domain maps, architecture deep-dives) that never auto-load. Each is indexed one line in `PROJECT.md`'s `## Reference` section (link + what it covers + when to read), keeping the standing context small; docs open with a `**Reference ·** … **Read when:** …` header. Documented in `crew-context`.
+
 ## 0.4.0
 
 ### Minor Changes
