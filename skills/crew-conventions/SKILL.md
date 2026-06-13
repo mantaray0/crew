@@ -12,7 +12,7 @@ These apply to **every** crew command.
 
 crew is interactive on purpose. Do not jump ahead, do not silently apply defaults, and do not let other context pull you out of the flow.
 
-- **One decision at a time.** Walk the command's steps in order. For each decision the command exposes, ask the user **before** acting on it.
+- **Surface every decision — batch the independent ones.** Walk the command's steps in order and ask the user **before** acting on any decision. **Bundle independent decisions into one `AskUserQuestion` stepper batch** — questions whose order doesn't matter and whose options don't depend on each other (clarification gray-areas, multi-field setup forms). **Stay sequential** as soon as one decision's options hinge on a prior answer (a decision-tree branch) or it is a confirm-then-write gate. Batching is for *co-equal* questions — never an excuse to skip a question or silently apply a default.
 - **Each option is a real question**, in the form that fits:
   - **free-text** for open values (project name, a description, a custom stack entry),
   - **single-select** for one-of-fixed choices (an archetype, merge strategy, model mode),
