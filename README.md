@@ -19,10 +19,10 @@ state lives in a committed `.planning/` directory; behavior is driven by a layer
 - [Install](#install)
 - [Quick start](#quick-start)
 - [The core loop](#the-core-loop)
-- [Commands](#commands) — all 16, in detail
-  - [Setup & onboarding](#setup--onboarding): `setup` · `init`
+- [Commands](#commands) — all 19, in detail
+  - [Setup & onboarding](#setup--onboarding): `setup` · `init` · `update`
   - [Shaping work](#shaping-work): `brief` · `plan` · `backlog` · `adjust` · `pull`
-  - [Execution](#execution): `execute` · `dispatch` · `quick`
+  - [Execution](#execution): `execute` (`auto` · `dispatch`) · `quick`
   - [Quality](#quality): `verify` · `rollback`
   - [Orientation](#orientation): `status` · `resume` · `report`
   - [Learning](#learning): `retro`
@@ -103,7 +103,7 @@ to stay fluid.
         └───────┬───────┘
                 ▼
         ┌───────────────┐      independent phases?
-        │ /crew:execute │ ──────────────────────▶ /crew:dispatch (parallel worktrees)
+        │ /crew:execute │ ──────────────────────▶ /crew:execute dispatch (parallel worktrees)
         └───────┬───────┘
                 ▼
    verify → review → harden → simplify   (/crew:verify, runs inside execute)
@@ -160,6 +160,14 @@ Run this once per machine. Backed by the `crew-config` and `crew-conventions` sk
 
 Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventions`.
 
+#### `/crew:update` &nbsp;`[project | global, optional]`
+> Reconcile an existing config against the current plugin's schema.
+
+- Compares the config's `crewVersion` against the plugin version and walks any new/changed keys,
+  asking before writing — a set value is never silently overwritten.
+- Defaults to the **project** config; `global` reconciles `~/.claude/crew/` instead (empty arg offers
+  both). Delegates to the `crew-config` reconcile procedure.
+
 ### Shaping work
 
 #### `/crew:brief` &nbsp;`[free-form idea or feature description]`
@@ -184,13 +192,14 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
   and recording inter-phase `depends:` edges (used later for parallel dispatch).
 - Writes per-plan files under `.planning/plans/`. Backed by `crew-planning` + `crew-conventions`.
 
-#### `/crew:backlog` &nbsp;`[idea text to add | empty to list/triage]`
+#### `/crew:backlog` &nbsp;`[idea text | list | new | empty → ask & add]`
 > A frictionless idea inbox so the active plan stays undisturbed and nothing gets lost.
 
-- **With text:** appends a dated bullet to `BACKLOG.md` (`- [YYYY-MM-DD] <idea>`) and does nothing
+- **`<text>`:** appends a dated bullet to `BACKLOG.md` (`- [YYYY-MM-DD] <idea>`) and does nothing
   else — no planning, no interrupting the active phase. One-line confirmation.
-- **Without text:** lists the backlog and offers, per item, to plan now (hand to `plan`/`adjust`),
-  keep parked, or drop.
+- **empty or `new`:** prompts you for the idea, then adds it the same way.
+- **`list`:** lists the backlog and offers, per item, to plan now (hand to `plan`/`adjust`), keep
+  parked, or drop.
 
 #### `/crew:adjust` &nbsp;`[what to change, free-form]`
 > Change the roadmap mid-flight — insert, reorder, defer, or drop phases — without renumbering pain.
@@ -213,9 +222,10 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
 
 ### Execution
 
-#### `/crew:execute` &nbsp;`[phase id, optional]`
-> The core execution loop. Runs **one** phase to completion: load context → implement → verify →
-> commit.
+#### `/crew:execute` &nbsp;`[phase id | auto | dispatch [ids]]`
+> The execution verb, with three modes. **Default** (a phase id or empty) runs **one** phase to
+> completion: load context → implement → verify → commit. **`auto`** is the manual mode automated —
+> a sequential, autonomous milestone run. **`dispatch`** fans phases out across parallel worktrees.
 
 1. **Load context** — `PROJECT.md`, `ROADMAP.md` (the active `[>]` phase, else the next `[ ]`), the
    phase's plan file, and the tail of `LOG.md`. The exact next step must be unambiguous; if it isn't,
@@ -230,22 +240,18 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
 5. **Commit** — one atomic commit per verified phase, then updates `ROADMAP.md` (`[x]`) and `LOG.md`.
 
 If `config.execution.parallel` is `auto` and independent phases are detected, it offers to hand off
-to `/crew:dispatch`. Backed by `crew-context` + `crew-planning`.
+to `/crew:execute dispatch`. Backed by `crew-context` + `crew-planning`.
 
-#### `/crew:dispatch` &nbsp;`[milestone or phase ids, optional]`
-> Run independent phases in parallel — each in its own git worktree via sub-agents — then roll them
-> into an integration branch.
+**`auto` — sequential autonomous run.** Runs a phase in the main context, then `/clear` +
+`/crew:execute auto`, carrying continuity through `.planning/` state (no sub-agents). Loops until the
+milestone is done or a stop condition is hit; never self-ships or self-completes — reports and
+proposes the next step.
 
-1. **Build the DAG** from the milestone's phases and their `depends:` edges; compute waves of
-   independent phases.
-2. **Confirm** which phases run in parallel vs. sequentially.
-3. **Dispatch a wave** — up to `config.execution.maxConcurrent` phases at once, each in an isolated
-   worktree, each worked by a sub-agent.
-4. **Integrate** — the `merge-coordinator` agent rolls completed branches into an integration branch
-   with intent-aware conflict resolution.
-
-Backed by `crew-planning` (DAG) + `git-merge`, plus the `merge-coordinator` agent. Also triggered
-automatically (with confirmation) from `/crew:execute`.
+**`dispatch [ids]` — parallel worktree run.** Builds the DAG from the milestone's phases and their
+`depends:` edges, computes waves of independent phases, confirms the split, then dispatches a wave
+(up to `config.execution.maxConcurrent` phases, each in an isolated worktree worked by a sub-agent).
+The `merge-coordinator` agent rolls completed branches into an integration branch with intent-aware
+conflict resolution. Backed by `crew-planning` (DAG) + `git-merge`, plus the `merge-coordinator` agent.
 
 #### `/crew:quick` &nbsp;`<what to do>`
 > The quick lane: a small fix or chore that shouldn't go through the full brief→plan→execute flow and
@@ -340,7 +346,7 @@ never pushes, opens a PR, or commits in a way your git config disables; it asks 
 
 `runDeploy` defaults to `off` — in a push-triggered setup the push from step 4 *is* the deploy, so
 there's nothing extra to run. Set it to `ask`/`auto` only for imperative deploys (Vercel/Fly). For
-bot-PR tools, `deploy.finishRelease` (default `ask`) controls whether ship also merges the open
+bot-PR tools, `deploy.finishRelease` (default `off`) controls whether ship also merges the open
 version-PR to finish the release. Backed by `crew-deploy`.
 
 #### `/crew:archive` &nbsp;`[milestone slug, optional]`
@@ -445,7 +451,7 @@ crew is a **pure Claude Code plugin** — four asset types, no build, no runtime
 hook scripts.
 
 ### Commands (`commands/*.md`)
-The 16 slash commands above. Each is a Markdown file with a `description` (+ `argument-hint`) and a
+The 19 slash commands above. Each is a Markdown file with a `description` (+ `argument-hint`) and a
 numbered `## Steps` recipe that Claude follows.
 
 ### Agents (`agents/*.md`)
@@ -465,7 +471,7 @@ Specialist sub-agents the commands dispatch into fresh contexts. Each declares a
 | `silent-failure-hunter` | Hunt swallowed errors, ignored returns, empty catches (the harden stage) |
 | `type-design-analyzer` | Make illegal states unrepresentable; surface `any`/unsafe casts (the harden stage) |
 | `build-error-resolver` | Fix build/typecheck/lint failures when the toolchain is red |
-| `merge-coordinator` | Integrate parallel worktrees with intent-aware conflict resolution (during dispatch) |
+| `merge-coordinator` | Integrate parallel worktrees with intent-aware conflict resolution (during `execute dispatch`) |
 
 ### Skills (`skills/*/SKILL.md`)
 The reusable knowledge the commands lean on:
@@ -473,12 +479,12 @@ The reusable knowledge the commands lean on:
 | Skill | Used by |
 |---|---|
 | `crew-conventions` | **Every** command — the one-decision-at-a-time interaction + language rules |
-| `crew-config` | `setup`, `init` — config schema + project-type/tag registry |
+| `crew-config` | `setup`, `init`, `update` — config schema + project-type/tag registry |
 | `crew-context` | `execute`, `resume` — the `.planning/` state model + session-snapshot format |
-| `crew-planning` | `plan`, `execute`, `dispatch`, `adjust` — roadmap/phase/spec conventions + DAG |
+| `crew-planning` | `plan`, `execute`, `adjust` — roadmap/phase/spec conventions + DAG |
 | `verification-loop` | `verify`, `execute` — the verify→review→harden→simplify pipeline |
-| `model-management` | dispatch + pipeline — task-types and model selection |
-| `git-merge` | `dispatch` — worktree isolation, claims, rolling integration |
+| `model-management` | `execute dispatch` + pipeline — task-types and model selection |
+| `git-merge` | `execute dispatch` — worktree isolation, claims, rolling integration |
 | `roast-me` | `brief`, `init` — bounded clarifying questions with recommended answers |
 | `crew-learn` | `retro` — distilling work into proposed skills/tags |
 
@@ -503,8 +509,8 @@ machines and teammates — not just within one chat.
 so reviewers aren't biased by the implementer's reasoning, and each with a model chosen for its task
 type. Steps are configurable globally and per-phase.
 
-**Parallelism without chaos.** `depends:` edges in `ROADMAP.md` form a DAG; `/crew:dispatch` runs
-independent phases in isolated worktrees, `claims.json` prevents collisions, and the
+**Parallelism without chaos.** `depends:` edges in `ROADMAP.md` form a DAG; `/crew:execute dispatch`
+runs independent phases in isolated worktrees, `claims.json` prevents collisions, and the
 `merge-coordinator` performs intent-aware integration. Atomic per-phase commits make `/crew:rollback`
 trivial.
 

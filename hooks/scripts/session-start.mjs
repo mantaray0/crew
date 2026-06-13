@@ -43,7 +43,7 @@ if (config) {
     const was = stamped ? `v${stamped}` : "an unknown version";
     process.stdout.write(
       `\n> ⚠️ crew config was last reconciled with ${was}, but the installed plugin is v${current}. ` +
-        "Run `/crew:init` to reconcile this project's config (or `/crew:setup` for the global one).\n",
+        "Run `/crew:update` to reconcile this project's config (`/crew:update global` for the global one).\n",
     );
   }
 }
