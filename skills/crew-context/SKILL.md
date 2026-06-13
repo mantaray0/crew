@@ -10,7 +10,7 @@ origin: crew
 
 | File | Owns |
 |---|---|
-| `PROJECT.md` | The living project truth: stack, architecture decisions (the *why*), current state, constraints, plus an optional `## Reference` index. Loaded automatically at session start. |
+| `PROJECT.md` | The living project truth: architecture decisions (the *why*), current state, constraints, a **stack table mirrored from `config.stack`** (the source of truth), plus an optional `## Reference` index. Loaded automatically at session start. |
 | `ROADMAP.md` | The fahrplan: milestones → phases with status markers + timestamps. |
 | `plans/<milestone-slug>/` | Detail per milestone: optional `_spec.md` (Spec root) + numbered `<id>-<title>.md` phase plans (Spec head + Plan body each). |
 | `BACKLOG.md` | Idea inbox; triaged at plan/adjust. |
@@ -18,7 +18,6 @@ origin: crew
 | `claims.json` | Which instance/worktree holds which phase (parallel-safe). |
 | `sessions/<worktree-id>/` | Per-instance session snapshots. |
 | `config.json` | Behavior config (git, deploy, verify, models, clarify, tasks, …). |
-| `DEPLOY.md` | Release knowledge (optional): release strategy, branch/tag conventions, environments, secrets *policy*, rollback, deploy command(s). Used by `/crew:ship`; offered at `/crew:init` when `deploy.mode ≠ off`. |
 | `archive/` | Completed milestones moved out of live state (`/crew:archive`): `roadmap-<slug>.md` + `plans/<slug>/`. Keeps `ROADMAP.md`/`plans/` small. |
 | `reference/` | Load-on-demand knowledge docs (runbooks, domain/data maps, architecture deep-dives) — **never auto-loaded**; each indexed one line in PROJECT.md's `## Reference`. Naming `reference/<topic-slug>.md`. |
 
@@ -40,7 +39,7 @@ origin: crew
   **Reference ·** <what it covers>. **Read when:** <trigger>.
   ```
 - **One topic per doc** (`reference/<topic-slug>.md`, lowercase/kebab); split when a doc grows broad so loading it pulls only relevant context.
-- Not read by crew commands by exact path (unlike `DEPLOY.md`) — freeform knowledge agents consult on demand.
+- Freeform knowledge agents consult on demand — `/crew:ship`, for instance, loads `reference/deploy.md` because shipping touches the deploy area.
 
 ## Session snapshot format
 
