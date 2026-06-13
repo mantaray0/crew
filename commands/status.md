@@ -14,6 +14,7 @@ Read and summarize the current project state. Do not modify anything.
 2. Read `.planning/ROADMAP.md` and report, per milestone: phases done (`[x]`), active (`[>]`), pending (`[ ]`), deferred (`[~]`), including any `@worktree` claim markers.
 3. Read the last 5 lines of `.planning/LOG.md` and show recent progress (incl. token/cost notes if present).
 4. Read `.planning/claims.json`; if any phase is claimed, list which instance/worktree holds it.
-5. Output a compact summary: active milestone, current phase, next pending phase, open claims.
+5. Read `.planning/BACKLOG.md` and show a compact backlog section: item count plus the first ~5 titles. On overflow, append `… (+k more — run /crew:backlog list)`. If empty or placeholder-only, note it. Read-only — never write to it.
+6. Output a compact summary: active milestone, current phase, next pending phase, open claims, backlog count.
 
 Keep it read-only and concise.
