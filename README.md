@@ -328,8 +328,9 @@ never pushes, opens a PR, or commits in a way your git config disables; it asks 
 1. **Read config** — `config.deploy`, `config.git`, and `reference/deploy.md`. If `deploy.enabled` is
    `false`, it explains how to enable it and stops.
 2. **Gate on verify** — refuses to ship on a red `verify` (checks the last result in `LOG.md`).
-3. **Version → commit → tag** — runs Changesets `version` (or bumps per `deploy.tagPattern`), commits
-   with your `commitStyle`, and tags (e.g. `v1.4.0`).
+3. **Release per `deploy.releaseTool`** — `changesets`/`release-please` (push a changeset/commits; a CI
+   bot opens the version-PR), `semantic-release` (push; CI does it all), or `manual` (local bump → commit
+   → tag with your `commitStyle`/`deploy.tagPattern`). `auto` detects the tool from the repo.
 4. **Push & PR** — only if `git.autoPush` / `git.autoPR` allow it (otherwise it asks); PR/MR via the
    `gh` (GitHub Actions) or `glab` (GitLab CI) CLI. In a push-triggered setup the push is the deploy
    trigger, so it stays the user's call.
@@ -338,8 +339,9 @@ never pushes, opens a PR, or commits in a way your git config disables; it asks 
 6. **Record** — appends the version, tag, and push/PR/deploy outcome to `LOG.md`.
 
 `runDeploy` defaults to `off` — in a push-triggered setup the push from step 4 *is* the deploy, so
-there's nothing extra to run. Set it to `ask`/`auto` only for imperative deploys (Vercel/Fly).
-Backed by `crew-deploy`.
+there's nothing extra to run. Set it to `ask`/`auto` only for imperative deploys (Vercel/Fly). For
+bot-PR tools, `deploy.finishRelease` (default `ask`) controls whether ship also merges the open
+version-PR to finish the release. Backed by `crew-deploy`.
 
 #### `/crew:archive` &nbsp;`[milestone slug, optional]`
 > Move a fully completed milestone into `.planning/archive/` so the live roadmap stays small and cheap to read.
