@@ -13,7 +13,7 @@ Bring a work item into the crew workflow. The internal `.planning/` stays the wo
 
 1. **Resolve the provider.** Read `config.tasks.provider` (`local` · `mcp:linear` · `mcp:jira` · `mcp:clickup` · `crew-pm`). For `local`, the source is `ROADMAP.md`. For an `mcp:*` provider, call the corresponding MCP connector to fetch the ticket by id.
 2. **Fetch the work item.** Normalize to `{ id, title, description, acceptanceCriteria, status, externalRef }`.
-3. **Create the plan.** Write `.planning/plans/<milestone-slug>/<id>.md` (in the relevant milestone folder) with the **Spec** head filled from the ticket (title/description → goal/requirements, acceptance criteria), and `externalRef: <id>`. Add a roadmap entry referencing it. The ticket IS the spec — do not re-run roast-me unless the ticket is too thin.
+3. **Create the plan.** Write `.planning/plans/<n>_<milestone-slug>/<id>.md` (in the relevant numbered milestone folder) with the **Spec** head filled from the ticket (title/description → goal/requirements, acceptance criteria), and `externalRef: <id>`. Add a roadmap entry referencing it. The ticket IS the spec — do not re-run roast-me unless the ticket is too thin.
 4. **Work it.** Hand off to `/crew:plan` (if it needs phase breakdown) then `/crew:execute`.
 5. **Write-back (if `config.tasks.writeBack`).** At phase/milestone boundaries, comment progress and update status on the external ticket via the provider. Sync only at boundaries, not on every edit.
 
