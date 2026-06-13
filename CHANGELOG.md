@@ -1,5 +1,15 @@
 # @mantaray0/crew
 
+## 0.10.0
+
+### Minor Changes
+
+- [#20](https://github.com/mantaray0/crew/pull/20) [`072ea53`](https://github.com/mantaray0/crew/commit/072ea53cb2107a8d6416ce7e3139d514f4e98999) Thanks [@mantaray0](https://github.com/mantaray0)! - Use the underscore number↔name separator for phase and ticket plan files too
+
+  Completes the separator unification started in 0.9.0 (milestone folders). Phase and ticket plan files now join their id to the title with an underscore — `<id>_<title>.md` (e.g. `1.2_db-schema.md`, `LIN-42_realtime-notifications.md`) instead of `<id>-<title>.md`. With this, every crew name follows one rule: `_` separates a number/id from its kebab name, `.` is reserved for the phase hierarchy inside an id (`1.2` = phase 2 of milestone 1), and `-` is reserved for the words inside a kebab name.
+
+  Existing projects: rename phase files manually (`<id>-<title>.md` → `<id>_<title>.md`); `/crew:init` reconcile offers the plans-layout migration. Reads are unaffected — commands glob `plans/**/*.md` and match phases by id, not by exact filename.
+
 ## 0.9.0
 
 ### Minor Changes
