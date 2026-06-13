@@ -376,7 +376,6 @@ UPPERCASE** (like `README`/`CHANGELOG`), **data files and directories are lowerc
 ├── ROADMAP.md        # milestones → phases with status markers + depends: edges
 ├── LOG.md            # append-only execution log (phases, deviations, token/cost)
 ├── BACKLOG.md        # dated idea inbox (/crew:backlog)
-├── DEPLOY.md         # release knowledge (optional; used by /crew:ship)
 ├── config.json       # project-layer config (overrides global + defaults)
 ├── claims.json       # which phase is claimed by which worktree (parallel safety)
 ├── plans/            # one folder per milestone
