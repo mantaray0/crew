@@ -1,6 +1,6 @@
 ---
 name: crew-deploy
-description: How crew turns a verified commit into a release/deployment — config.deploy (enabled + runDeploy), config.git as the single git authority, provider handling (gh/glab), and the safety rules. Use during /crew:ship.
+description: How crew turns a verified commit into a release/deployment — config.deploy (enabled + runDeploy + releaseTool), config.git as the single git authority, provider handling (gh/glab), and the safety rules. Use during /crew:ship.
 origin: crew
 ---
 
@@ -17,6 +17,8 @@ origin: crew
 | `provider` | `gh-actions` (`gh`) or `gitlab-ci` (`glab`). |
 | `tagPattern` | Release tag shape, e.g. `v{version}`. |
 | `environments` | Optional named environments. |
+| `releaseTool` *(default `auto`)* | How the version is decided (see **Release mechanics** below). `auto` detects from the repo. Replaces the old hardcoded Changesets check. |
+| `finishRelease` *(default `ask`)* | Bot-PR tools only: merge an open version/release-PR (phase 2)? `off`/`ask`/`auto`. |
 
 ## `config.git` is the single git authority
 
@@ -28,6 +30,22 @@ ship has **no second push axis**. Every git step defers to `config.git`:
 - **Branch / merge** — honour `branchPattern`, `mergeStrategy`, `askBeforeMerge` (see `git-merge`).
 
 In a push-triggered setup the **push is the prod trigger** — so it belongs to `git.autoPush` (default false → ask), i.e. to the user. That is how "crew never touches prod without approval" holds: not as a slogan, but because the prod-triggering push is gated by the user's git config. Even when an `auto*` flag is true, `crew-conventions` still applies — `true` just means the user pre-authorized that step.
+
+## Release mechanics (`releaseTool`)
+
+`releaseTool` decides **where the version is determined**, which changes what ship does in the version/commit/tag steps. It replaces the old hardcoded "if `.changeset/` exists" check.
+
+| `releaseTool` | ship's version/tag steps |
+|---|---|
+| `manual` | Local bump (`npm version` / language equivalent, command per `reference/deploy.md`) → release commit → tag (`tagPattern`) → push → PR. The classic path. |
+| `changesets` | **No** local bump, **no** tag by ship. Ensure a changeset exists (`.changeset/*.md` other than `README`/`config`); if none, offer `changeset add` or stop. Commit it if uncommitted → push → the bot opens a version-PR. **Phase 2** (`finishRelease ≠ off`): if a `changeset-release/*` PR is open, merge it per `finishRelease` → CI tags+releases. |
+| `release-please` | Like `changesets` but Conventional-Commit-driven (no changeset file): push → bot opens a release-PR → phase 2 per `finishRelease`. |
+| `semantic-release` | **Push only.** No version/commit/tag by ship; CI decides the version + tags + releases autonomously. `finishRelease` is irrelevant. |
+| `none` | No versioning: only the git steps (commit/push/PR), no version/tag. |
+
+**`auto` detection** (precedence, first match wins): `.changeset/` with `config.json` → `changesets` · `release-please-config.json` / `.release-please-manifest.json` → `release-please` · `.releaserc*` / `release.config.{js,cjs,mjs,json}` / a `"release"` key in `package.json` → `semantic-release` · else → `manual`.
+
+**Phase 2 is prod-triggering.** Merging the version-PR tags+releases. `finishRelease: auto` acts only on a green verify and under `crew-conventions`; `ask` (default) is the safe choice.
 
 ## The imperative deploy step (`runDeploy ≠ off`)
 
