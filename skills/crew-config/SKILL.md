@@ -31,7 +31,7 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
     "environments": [],                // optional named environments (prod, staging, …)
     "runDeploy": "off",                // "off" | "ask" | "auto" — run an imperative deploy command after the git steps? off = push-triggered CI (the push IS the deploy)
     "releaseTool": "auto",             // "auto" | "changesets" | "release-please" | "semantic-release" | "manual" | "none" — how the version is decided
-    "finishRelease": "ask"             // "off" | "ask" | "auto" — merge an open bot version-PR (phase 2); only meaningful for changesets/release-please
+    "finishRelease": "off"             // "off" | "ask" | "auto" — merge an open bot version-PR (phase 2); only meaningful for changesets/release-please
   },
   "execution": {
     "parallel": "auto",                // | "manual" | "off"
@@ -105,7 +105,7 @@ Resolved through the normal layering — a project's `.planning/config.json` ove
 | `tagPattern` | Release tag shape, e.g. `v{version}`. |
 | `environments` | Optional named environments (prod, staging, …). |
 | `releaseTool` (default `auto`) | How the version is decided — `changesets` / `release-please` (a CI bot opens a version-PR) · `semantic-release` (CI decides autonomously, no PR) · `manual` (local `npm version`/equivalent) · `none` (no versioning). `auto` detects from the repo (see `crew-deploy` → Release mechanics). Replaces ship's old hardcoded Changesets check. |
-| `finishRelease` (default `ask`) | Bot-PR tools only: does ship merge an **open** version/release-PR (phase 2 → CI tags+releases)? `off`/`ask`/`auto`. Meaningless for `manual`/`semantic-release`/`none`. |
+| `finishRelease` (default `off`) | Bot-PR tools only: does ship merge an **open** version/release-PR (phase 2 → CI tags+releases)? `off`/`ask`/`auto`. Meaningless for `manual`/`semantic-release`/`none`. |
 
 **`config.git` is the single git authority.** ship has **no** deploy-specific push axis: every git step (commit/push/PR/merge) defers to `config.git` (`autoCommitPerPhase` / `autoPush` / `autoPR` / `mergeStrategy`). In a push-triggered setup the prod trigger *is* the push — so it belongs to `git.autoPush` (default false → ask), i.e. to the user. ship degrades gracefully — a local `version+commit+tag` is a valid partial result when push/PR are declined.
 
@@ -118,7 +118,7 @@ Resolved through the normal layering — a project's `.planning/config.json` ove
 - **On scaffold** (`/crew:init`, `/crew:setup` first run): write `crewVersion` = the current plugin version.
 - **On session start:** the `session-start` hook compares the project's `config.crewVersion` against the plugin version and, if they differ (or `crewVersion` is missing), prints a one-line "config may be out of date — run `/crew:init` to reconcile" notice.
 - **On re-run** of `/crew:setup` (global config) or `/crew:init` (project config): if the config already exists, enter **reconcile mode** instead of scaffolding:
-  1. **Schema-diff.** Compare the existing config's keys against this schema (the contract). Classify each: **new** (in the schema, missing from the config), **removed** (in the config, no longer in the schema), **unchanged**.
+  1. **Schema-diff.** Compare the existing config's keys against this schema (the contract). Classify each: **new** (in the schema, missing from the config), **removed** (in the config, no longer in the schema), **unchanged**. A changed *default* in this schema is never written back over a value the user already has.
   2. **Ask per new field.** For every new key, show the user its purpose and recommended default (from this schema) and ask what they want — as the fitting question type (single-select for enums like `responseStyle`, free-text for open values), following `crew-conventions`. Never silently apply a default.
   3. **Flag removed fields.** List keys that no longer exist in the schema; offer to drop them.
   4. **Stamp the version.** After applying confirmed changes, set `crewVersion` to the current plugin version.

@@ -19,7 +19,7 @@ Set up `.planning/` for this project. Uses the `crew-config` skill (config schem
    - `provider` — `gh-actions` / `gitlab-ci`.
    - `releaseTool` — `auto` (default; pre-fill the value **detected** from the repo per `crew-deploy` → Release mechanics) · `changesets` · `release-please` · `semantic-release` · `manual` · `none`.
    - `runDeploy` — `off` (default — push-triggered CI, the push *is* the deploy) · `ask` · `auto`.
-   - `finishRelease` — `off` / `ask` (default) / `auto` — **only ask when** the resolved `releaseTool` is a bot-PR tool (`changesets`/`release-please`).
+   - `finishRelease` — `off` (default) / `ask` / `auto` — **only ask when** the resolved `releaseTool` is a bot-PR tool (`changesets`/`release-please`).
    Store all in `config.deploy`. Then **actively create `reference/deploy.md`**: interview the concrete procedure — release strategy, branch/tag conventions, environments, secrets *policy* (pointers, never values), rollback, and (when `runDeploy ≠ off`) the deploy command(s) — write the runbook and index it one line under `PROJECT.md`'s `## Reference`.
 7. **Commit or ignore `.planning/`.** Single-select: **commit** `.planning/` (recommended — shareable, part of project history, readable by PM integrations) or **gitignore** it (local-only)? If **gitignore**, add a `.planning/` line to the project's `.gitignore` (create the file if missing). If **commit**, make sure `.planning/` is not ignored.
 8. **Scaffold `.planning/`:**

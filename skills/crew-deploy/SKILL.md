@@ -18,7 +18,7 @@ origin: crew
 | `tagPattern` | Release tag shape, e.g. `v{version}`. |
 | `environments` | Optional named environments. |
 | `releaseTool` *(default `auto`)* | How the version is decided (see **Release mechanics** below). `auto` detects from the repo. Replaces the old hardcoded Changesets check. |
-| `finishRelease` *(default `ask`)* | Bot-PR tools only: merge an open version/release-PR (phase 2)? `off`/`ask`/`auto`. |
+| `finishRelease` *(default `off`)* | Bot-PR tools only: merge an open version/release-PR (phase 2)? `off`/`ask`/`auto`. |
 
 ## `config.git` is the single git authority
 
@@ -45,7 +45,7 @@ In a push-triggered setup the **push is the prod trigger** — so it belongs to 
 
 **`auto` detection** (precedence, first match wins): `.changeset/` with `config.json` → `changesets` · `release-please-config.json` / `.release-please-manifest.json` → `release-please` · `.releaserc*` / `release.config.{js,cjs,mjs,json}` / a `"release"` key in `package.json` → `semantic-release` · else → `manual`.
 
-**Phase 2 is prod-triggering.** Merging the version-PR tags+releases. `finishRelease: auto` acts only on a green verify and under `crew-conventions`; `ask` (default) is the safe choice.
+**Phase 2 is prod-triggering.** Merging the version-PR tags+releases. `finishRelease: auto` acts only on a green verify and under `crew-conventions`; `off` (default) keeps ship hands-off, and `ask` prompts before merging.
 
 ## The imperative deploy step (`runDeploy ≠ off`)
 
