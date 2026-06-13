@@ -1,5 +1,11 @@
 # @mantaray0/crew
 
+## 0.6.0
+
+### Minor Changes
+
+- [`6e86ba0`](https://github.com/mantaray0/crew/commit/6e86ba067bfd001a12d977c0fa1e1d5432a01f26) Thanks [@mantaray0](https://github.com/mantaray0)! - Rework deploy config. `config.deploy.mode` (off/orchestrate/execute) is replaced by `enabled` (is `/crew:ship` available?) + `runDeploy` (off/ask/auto — run an imperative deploy command?). `config.git` is now the single git authority for ship — there is no separate deploy push axis, so the prod-triggering push belongs to `git.autoPush` (the user). The deploy runbook moves from the dedicated `DEPLOY.md` to the generic `reference/deploy.md`. `config.stack` is the single source of truth for stack facts; `PROJECT.md` mirrors it. Existing configs auto-migrate at `/crew:init` (or `/crew:setup`) reconcile: `off → enabled:false`, `orchestrate → runDeploy:off`, `execute → runDeploy:ask`.
+
 ## 0.5.0
 
 ### Minor Changes
