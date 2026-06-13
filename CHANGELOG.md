@@ -1,5 +1,25 @@
 # @mantaray0/crew
 
+## 0.8.0
+
+### Minor Changes
+
+- [`7443456`](https://github.com/mantaray0/crew/commit/7443456348d6fdfba016c32a851ab2e30948aaec) Thanks [@mantaray0](https://github.com/mantaray0)! - Add `/crew:update` — a dedicated, findable entry point for the config reconcile that previously hid inside the re-run modes of `/crew:init` and `/crew:setup`. Covers project and (when present) global config; delegates to the `crew-config` reconcile procedure instead of duplicating it.
+
+- [`3663b44`](https://github.com/mantaray0/crew/commit/3663b4491eae6fb4dca5b5cda132fba1343cb290) Thanks [@mantaray0](https://github.com/mantaray0)! - Parametrize `/crew:backlog` per the command-naming convention: `add` is now the default verb. `/crew:backlog <text>` adds directly (unchanged), `list` lists and triages (the former bare-call behavior, now explicit), `new` is an alias for the add flow, and a bare `/crew:backlog` now prompts for the idea and adds it. `argument-hint` and description updated to match.
+
+- [`ad63d56`](https://github.com/mantaray0/crew/commit/ad63d566afe589a075e3ca26b6588a02c029a668) Thanks [@mantaray0](https://github.com/mantaray0)! - Show a compact backlog section in `/crew:status` — item count plus the first few titles from `.planning/BACKLOG.md`, with an overflow pointer to `/crew:backlog list`. Keeps parked ideas visible alongside the roadmap while staying read-only.
+
+- [`353113b`](https://github.com/mantaray0/crew/commit/353113b6110ac7aac6864b2fb94ae3f5e9d97cf2) Thanks [@mantaray0](https://github.com/mantaray0)! - Unify execution under `/crew:execute`: add `auto` (sequential autonomous milestone run) and `dispatch [ids]` (parallel worktree run) as space-argument modes, and dissolve the standalone `/crew:dispatch` command (its DAG/wave/rolling-integration mechanics move into `dispatch` mode; `git-merge` stays the source of truth). `auto` is the manual mode automated — no sub-agents: it runs the normal one-phase steps, then triggers `/clear` + `/crew:execute auto` under the hood so each phase starts in a fresh context, with continuity carried by `.planning/` state. Both autonomous modes share one contract: loop, stop-and-ask on real deviations/critical findings, full verify per phase, never self-ship/-complete. All command-path references rewired to `/crew:execute dispatch`.
+
+### Patch Changes
+
+- [`b50e595`](https://github.com/mantaray0/crew/commit/b50e595c0d612ca94159299bcb71560381933eec) Thanks [@mantaray0](https://github.com/mantaray0)! - Document the command naming convention in the crew-conventions skill: one command per verb, variants as space-arguments, hyphenated files only as thin alias wrappers.
+
+- [`7ef32eb`](https://github.com/mantaray0/crew/commit/7ef32eb11763e0220fdd0b3ffd051b8e4f90fc98) Thanks [@mantaray0](https://github.com/mantaray0)! - Default `deploy.finishRelease` to `off` so new scaffolds never auto-merge a bot version-PR; existing configs are untouched (reconcile never writes a changed default over a set value).
+
+- [`7b55ac9`](https://github.com/mantaray0/crew/commit/7b55ac97c394a21d19a6492d1ce1f5ed9a97b1d6) Thanks [@mantaray0](https://github.com/mantaray0)! - Sync the README command catalog and shared references with the unified command surface: `/crew:dispatch` is gone everywhere in favor of `/crew:execute dispatch` (now documented alongside the `auto` mode), `/crew:update` is listed, `/crew:backlog` shows its new `[idea | list | new | empty]` args, and the `finishRelease` default reads `off`. The session-start config-drift notice now points at `/crew:update` (was `/crew:init`).
+
 ## 0.7.0
 
 ### Minor Changes
