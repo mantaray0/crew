@@ -24,6 +24,12 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
     "askBeforeMerge": false,
     "conflictPolicy": "resolve-or-ask"  // | "always-ask" | "autonomous"
   },
+  "deploy": {
+    "mode": "orchestrate",             // "off" | "orchestrate" | "execute"
+    "provider": "gh-actions",          // "gh-actions" | "gitlab-ci"
+    "tagPattern": "v{version}",
+    "environments": []                 // optional named environments (prod, staging, …)
+  },
   "execution": {
     "parallel": "auto",                // | "manual" | "off"
     "maxConcurrent": 3,
@@ -85,6 +91,16 @@ Resolved through the normal layering — a project's `.planning/config.json` ove
 | `gentle` | Pure clarification: fill gaps, recommend a default, don't push back. |
 | `normal` (default) | Push on the load-bearing weak spots, name obvious scope-creep, question one or two load-bearing assumptions. |
 | `brutal` | Attack assumptions ("do you actually need this?"), surface contradictions, steelman cutting scope, name every scope risk. |
+
+**`config.deploy`** drives `/crew:ship` (release/deploy). Layered global < project; ask at `/crew:setup` and `/crew:init`. Provider `gh-actions` (via `gh`) or `gitlab-ci` (via `glab`).
+
+| `mode` | behavior |
+|---|---|
+| `off` | `/crew:ship` does nothing but explain how to enable it. |
+| `orchestrate` (default) | Conservative: crew drives the **release** (version → commit → tag → push → PR); the **deployment** is done by CI. No prod access from crew. |
+| `execute` | Proactive: like `orchestrate`, **plus** crew runs the deploy command from `.planning/DEPLOY.md`. |
+
+**`config.git` is the ceiling.** `deploy.mode` says what `/crew:ship` may *attempt*; `config.git` says whether each git step is auto / ask / off — ship **never** bypasses it. Push defers to `git.autoPush` (ask when false), PR to `git.autoPR`, the release commit to the `git.autoCommitPerPhase` spirit (ask when not auto). ship degrades gracefully — a local `version+commit+tag` is a valid partial result when push/PR are declined.
 
 ## Config versioning & migration
 
