@@ -1,5 +1,13 @@
 # @mantaray0/crew
 
+## 0.4.0
+
+### Minor Changes
+
+- [#12](https://github.com/mantaray0/crew/pull/12) [`6cae535`](https://github.com/mantaray0/crew/commit/6cae5354b8c14ae64508f95a4651e7b64c0609c5) Thanks [@mantaray0](https://github.com/mantaray0)! - Brief/Planning refinement: configurable roast level (`clarify.intensity`: gentle/normal/brutal), batched inline-stepper clarification with a Spec-Probe stop, sharpened brief↔plan boundary (locked spec + intent bounce-back), and milestone-folder structure for `plans/` (`plans/<milestone-slug>/_brief.md` + numbered phase plans).
+
+- [#12](https://github.com/mantaray0/crew/pull/12) [`6cae535`](https://github.com/mantaray0/crew/commit/6cae5354b8c14ae64508f95a4651e7b64c0609c5) Thanks [@mantaray0](https://github.com/mantaray0)! - Deploy/Release + roadmap archiving. New `config.deploy` (`mode`: off/orchestrate/execute, `provider`: gh-actions/gitlab-ci) and a `/crew:ship` command that drives version → commit → tag → push → PR → deploy, **bounded by `config.git`** (never pushes/PRs/commits in a way your git config disables). New `crew-deploy` skill and `.planning/DEPLOY.md` artifact. New `/crew:archive` and `/crew:complete-milestone` move finished milestones into `.planning/archive/` to keep the live roadmap small. CI-workflow scaffolding is intentionally out of this MVP.
+
 ## 0.3.1
 
 ### Patch Changes
