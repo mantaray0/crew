@@ -29,6 +29,13 @@ The point: the user steers each option deliberately. Speed comes from good recom
 - **The plugin repo stays English / neutral** — commands, agents, skills, code, commit messages, and config keys remain English so the plugin is universal.
 - **The user's project files follow `config.language.files`.** The content crew writes into a project — `PROJECT.md`, `ROADMAP.md`, `LOG.md`, `BACKLOG.md`, `plans/` — is written in `config.language.files` (default `"en"`). Ask for it at `/crew:setup` (global default) or `/crew:init` (per project). Section headings / structure stay stable; the prose follows the chosen language.
 
+## Command naming
+
+**One command per verb; variants are space-arguments.** Pass a mode or target as `$ARGUMENTS` / `$1` — e.g. `/crew:execute [phase]`, `/crew:execute auto`, `/crew:backlog [idea|list|new]`. Do **not** mint a hyphenated command (`crew:execute-auto`) for what is really a mode of an existing verb.
+
+- **Hyphenated files only as thin alias wrappers.** A separate file is acceptable solely as a discoverable alias that forwards to the canonical verb — it carries **no logic of its own**.
+- **Document the args.** Keep the command's `argument-hint` and description in sync with the variants it accepts.
+
 ## Response style
 
 Honour `config.responseStyle` (resolved project-over-global; default `"concise"`) in every command reply:
