@@ -19,7 +19,7 @@ Plain Markdown, milestones → phases. Status markers:
 - [ ] 1.3 Auth                 (depends: 1.2)
 ```
 
-Phases are identified by their heading text, **not** by rigid numbers — so inserting/reordering (via `/crew:adjust`) is a text edit, never a renumber. Each phase should be independently mergeable. Record dependencies inline (`depends: …`) so `/crew:dispatch` can build a DAG and parallelize independent phases.
+Phases are identified by their heading text, **not** by rigid numbers — so inserting/reordering (via `/crew:adjust`) is a text edit, never a renumber. Each phase should be independently mergeable. Record dependencies inline (`depends: …`) so `/crew:execute dispatch` can build a DAG and parallelize independent phases.
 
 ## plans/<milestone-slug>/<file>.md
 

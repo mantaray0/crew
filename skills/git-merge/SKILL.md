@@ -1,6 +1,6 @@
 ---
 name: git-merge
-description: How crew isolates parallel work and integrates it — worktree-per-feature, claims, rolling integration, and intent-aware conflict resolution. Use during parallel dispatch and merging.
+description: How crew isolates parallel work and integrates it — worktree-per-feature, claims, rolling integration, and intent-aware conflict resolution. Use during `/crew:execute dispatch` and merging.
 origin: crew
 ---
 
