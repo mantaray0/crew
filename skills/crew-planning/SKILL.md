@@ -23,7 +23,7 @@ Phases are identified by their heading text, **not** by rigid numbers — so ins
 
 ## plans/<n>_<milestone-slug>/<file>.md
 
-One file, two layers (no separate spec file unless `clarify.specArtifact: "separate"`):
+One file, two layers (no separate spec file unless `brief.specArtifact: "separate"`):
 
 ```markdown
 # <Feature/Phase/Ticket>
@@ -67,7 +67,7 @@ Files inside a folder are told apart by filename. **A leading underscore marks a
 
 ## Archiving completed milestones
 
-When a milestone's phases are **all `[x]`**, `/crew:archive` (or `/crew:complete-milestone`) moves it out of the live state to keep `ROADMAP.md` and `plans/` small:
+When a milestone's phases are **all `[x]`**, `/crew:archive` (or `/crew:complete`) moves it out of the live state to keep `ROADMAP.md` and `plans/` small:
 
 ```
 .planning/archive/

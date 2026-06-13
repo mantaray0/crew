@@ -5,7 +5,7 @@ argument-hint: "[phase/milestone, optional — defaults to recent work]"
 
 # /crew:retro
 
-Make the harness learn from completed work so knowledge compounds across projects instead of getting stranded in one repo. Uses the `crew-learn` skill. Active when `config.learn.enabled`.
+Make the harness learn from completed work so knowledge compounds across projects instead of getting stranded in one repo. Uses the `crew-learn` skill. Active when `config.retro.enabled`.
 
 **Follow `crew-conventions`:** present each learning/skill/tag proposal as an explicit confirm (the user approves each before it's written); respond in the user’s language.
 

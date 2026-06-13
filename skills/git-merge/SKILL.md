@@ -13,7 +13,7 @@ origin: crew
 - `branch-per-feature` — branches without separate worktrees (one working tree).
 - `linear` — everything on the current branch (no real parallelism).
 
-Concurrency cap: `config.execution.maxConcurrent`.
+Concurrency cap: `config.execute.maxConcurrent`.
 
 ## Collision-safe state
 
