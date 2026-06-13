@@ -50,5 +50,7 @@ The plugin is declarative — the logic lives in Markdown instructions, not comp
 - **Releases run through Changesets** — never bump versions by hand; `pnpm version` syncs the plugin
   manifest via `scripts/sync-version.mjs`.
 - **Markdown-first** — new capabilities are commands/skills/agents, not compiled code.
-- **Specs & plans** live under `docs/specs/` and `docs/plans/`.
+- **crew plans itself.** This repo uses crew for its own planning; `.planning/` is the source of
+  truth for project state — PROJECT/ROADMAP/LOG/BACKLOG, plans, and load-on-demand runbooks under
+  `.planning/reference/`. There is no `docs/` folder.
 - Testing policy: `tests-required` (cli archetype) — adjust if a test setup for the scripts appears.
