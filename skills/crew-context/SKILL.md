@@ -10,7 +10,7 @@ origin: crew
 
 | File | Owns |
 |---|---|
-| `PROJECT.md` | The living project truth: stack, architecture decisions (the *why*), current state, constraints. Loaded automatically at session start. |
+| `PROJECT.md` | The living project truth: stack, architecture decisions (the *why*), current state, constraints, plus an optional `## Reference` index. Loaded automatically at session start. |
 | `ROADMAP.md` | The fahrplan: milestones → phases with status markers + timestamps. |
 | `plans/<milestone-slug>/` | Detail per milestone: optional `_spec.md` (Spec root) + numbered `<id>-<title>.md` phase plans (Spec head + Plan body each). |
 | `BACKLOG.md` | Idea inbox; triaged at plan/adjust. |
@@ -20,8 +20,27 @@ origin: crew
 | `config.json` | Behavior config (git, deploy, verify, models, clarify, tasks, …). |
 | `DEPLOY.md` | Release knowledge (optional): release strategy, branch/tag conventions, environments, secrets *policy*, rollback, deploy command(s). Used by `/crew:ship`; offered at `/crew:init` when `deploy.mode ≠ off`. |
 | `archive/` | Completed milestones moved out of live state (`/crew:archive`): `roadmap-<slug>.md` + `plans/<slug>/`. Keeps `ROADMAP.md`/`plans/` small. |
+| `reference/` | Load-on-demand knowledge docs (runbooks, domain/data maps, architecture deep-dives) — **never auto-loaded**; each indexed one line in PROJECT.md's `## Reference`. Naming `reference/<topic-slug>.md`. |
 
 `PROJECT.md` is the always-true source; `ROADMAP.md` is the plan; `plans/` is detail; `LOG.md` is history. The plan + log are the external memory — the work survives a fresh context, not the context window.
+
+## Reference docs
+
+`reference/` holds **long-form, durable knowledge** that would bloat `PROJECT.md` — deployment runbooks, domain/data-source maps, architecture deep-dives. The whole point is **context economy**:
+
+- **Load-on-demand, never at start.** The session-start hook loads only `PROJECT.md`. A reference doc enters context **only when the task touches its area** — so the standing context stays small.
+- **Indexed in `PROJECT.md`.** A `## Reference` section lists each doc as one line — link + what it covers + when to read it — so an agent knows what exists *without* loading it:
+  ```markdown
+  ## Reference
+  - [deploy](reference/deploy.md) — Coolify/Hetzner runbook: env, migrations, rollback. *Read before deploy changes.*
+  ```
+- **Header convention.** Each doc opens with a title + one bold line, so the index entry derives from it and a skim reveals relevance:
+  ```markdown
+  # <Title>
+  **Reference ·** <what it covers>. **Read when:** <trigger>.
+  ```
+- **One topic per doc** (`reference/<topic-slug>.md`, lowercase/kebab); split when a doc grows broad so loading it pulls only relevant context.
+- Not read by crew commands by exact path (unlike `DEPLOY.md`) — freeform knowledge agents consult on demand.
 
 ## Session snapshot format
 
