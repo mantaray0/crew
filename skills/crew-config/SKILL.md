@@ -24,7 +24,7 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
     "askBeforeMerge": false,
     "conflictPolicy": "resolve-or-ask"  // | "always-ask" | "autonomous"
   },
-  "deploy": {
+  "ship": {
     "enabled": true,                   // is /crew:ship available here? (replaces the old mode:off)
     "provider": "gh-actions",          // "gh-actions" | "gitlab-ci"
     "tagPattern": "v{version}",
@@ -33,7 +33,7 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
     "releaseTool": "auto",             // "auto" | "changesets" | "release-please" | "semantic-release" | "manual" | "none" — how the version is decided
     "finishRelease": "off"             // "off" | "ask" | "auto" — merge an open bot version-PR (phase 2); only meaningful for changesets/release-please
   },
-  "execution": {
+  "execute": {
     "parallel": "auto",                // | "manual" | "off"
     "maxConcurrent": 3,
     "onDeviation": "small-self-major-ask" // | "always-ask" | "autonomous"
@@ -42,12 +42,17 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
     "default": ["verify", "review", "harden", "simplify"],
     "perPhaseOverride": true
   },
+  "finish": {
+    "ship": "off",                     // "off" | "ask" | "auto" — step in the /crew:finish strand; ship additionally gated by ship.enabled
+    "retro": "ask",                    // gated by retro.enabled; per-milestone cadence
+    "complete": "ask"                  // audit → summary → archive (wraps /crew:complete)
+  },
   "models": {
     "mode": "auto",                    // | "manual"
     "planning": "opus", "execution": "sonnet", "review": "opus",
     "simplify": "sonnet", "trivial": "haiku"
   },
-  "clarify": {
+  "brief": {
     "depth": "normal",                 // "light" | "normal" | "deep" — how broad (coverage)
     "intensity": "normal",             // "gentle" | "normal" | "brutal" — how hard Roast-Me pushes back
     "askOnlyWhenStuck": true,
@@ -61,7 +66,7 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
     "events": ["blocker", "completion"],
     "channel": "os"                    // "os" | "push:ntfy" | "push:pushover" | "off"
   },
-  "learn": { "enabled": true },
+  "retro": { "enabled": true },
   "state": { "commitSessions": true },
   "loop": { "maxIterations": 6 },
   "observability": { "trackCost": true },
@@ -87,7 +92,7 @@ Auto model tiers: planning/review → strongest, execution/simplify → mid, tri
 
 Resolved through the normal layering — a project's `.planning/config.json` overrides the global default (e.g. global `concise`, one project `detailed`).
 
-**`clarify.intensity`** controls how hard Roast-Me challenges an idea during `/crew:brief` — **orthogonal** to `clarify.depth` (depth = how *broad* the questioning, intensity = how *hard* it pushes back). The recommended answer carries in every level (in `brutal` it may be "drop this"). Default `"normal"`. Ask at `/crew:setup` (global) or `/crew:init` (per project), resolved project > global > default — like `language.files`.
+**`brief.intensity`** controls how hard Roast-Me challenges an idea during `/crew:brief` — **orthogonal** to `brief.depth` (depth = how *broad* the questioning, intensity = how *hard* it pushes back). The recommended answer carries in every level (in `brutal` it may be "drop this"). Default `"normal"`. Ask at `/crew:setup` (global) or `/crew:init` (per project), resolved project > global > default — like `language.files`.
 
 | value | behavior |
 |---|---|
@@ -95,7 +100,7 @@ Resolved through the normal layering — a project's `.planning/config.json` ove
 | `normal` (default) | Push on the load-bearing weak spots, name obvious scope-creep, question one or two load-bearing assumptions. |
 | `brutal` | Attack assumptions ("do you actually need this?"), surface contradictions, steelman cutting scope, name every scope risk. |
 
-**`config.deploy`** drives `/crew:ship` (release/deploy). Layered global < project; ask at `/crew:setup` and `/crew:init`. Provider `gh-actions` (via `gh`) or `gitlab-ci` (via `glab`).
+**`config.ship`** drives `/crew:ship` (release/deploy). Layered global < project; ask at `/crew:setup` and `/crew:init`. Provider `gh-actions` (via `gh`) or `gitlab-ci` (via `glab`).
 
 | field | behavior |
 |---|---|
@@ -108,6 +113,22 @@ Resolved through the normal layering — a project's `.planning/config.json` ove
 | `finishRelease` (default `off`) | Bot-PR tools only: does ship merge an **open** version/release-PR (phase 2 → CI tags+releases)? `off`/`ask`/`auto`. Meaningless for `manual`/`semantic-release`/`none`. |
 
 **`config.git` is the single git authority.** ship has **no** deploy-specific push axis: every git step (commit/push/PR/merge) defers to `config.git` (`autoCommitPerPhase` / `autoPush` / `autoPR` / `mergeStrategy`). In a push-triggered setup the prod trigger *is* the push — so it belongs to `git.autoPush` (default false → ask), i.e. to the user. ship degrades gracefully — a local `version+commit+tag` is a valid partial result when push/PR are declined.
+
+**`config.finish`** drives `/crew:finish`, the milestone-close strand that runs **Ship → Retro → Complete** in that fixed order. Each step is an independent tri-state, layered global < project. finish **orchestrates** — it calls the existing steps/skills, it invents no logic of its own.
+
+| value | behavior |
+|---|---|
+| `off` | The step is **not** part of the strand (its standalone command stays usable by hand). |
+| `ask` | The strand **offers** the step and runs it after confirmation. |
+| `auto` | The strand runs the step **without** asking. |
+
+| step | default | extra gating |
+|---|---|---|
+| `ship` | `off` | also hard-gated by `config.ship.enabled`; `config.git` (`autoPush`/`autoPR`) stays the git authority — finish adds **no** new push/release axis. Never ships on a red verify. |
+| `retro` | `ask` | gated by `config.retro.enabled`; cadence is **per milestone** (no per-phase retro). |
+| `complete` | `ask` | audit → summary → archive (wraps `/crew:complete`); only archives once all phases are `[x]`/`[~]`, else the step stops with a note. |
+
+A disabled or not-applicable step is **skipped cleanly**, not aborted. `/crew:execute` only ever *suggests* `/crew:finish` at a milestone's end — it never runs it (the autonomy contract's "never self-ship/-complete" holds).
 
 **`config.stack`** is the **single source of truth** for the project's stack *facts* (language / app / db / orm / …) — it drives tag-based reviewer selection and grounding. `PROJECT.md` shows the stack as a **derived mirror** and carries the *why* (architecture decisions); it is **not** a second place to edit the facts. Change the stack in `config.stack`; crew updates the `PROJECT.md` table to match. The stack is standing context — it stays in the auto-loaded `PROJECT.md`, never in load-on-demand `reference/`.
 
@@ -131,9 +152,15 @@ The schema-diff is generic, but some changes are **renames/splits** where a blin
 
 | change | mapping |
 |---|---|
-| `deploy.mode` removed → `deploy.enabled` + `deploy.runDeploy` | `off` → `enabled: false` · `orchestrate` → `enabled: true, runDeploy: off` · `execute` → `enabled: true, runDeploy: ask` |
+| `clarify` → `brief` | values 1:1 under `brief.*` (`depth`/`intensity`/`askOnlyWhenStuck`/`specArtifact`) |
+| `execution` → `execute` | values 1:1 under `execute.*` (`parallel`/`maxConcurrent`/`onDeviation`) |
+| `deploy` → `ship` | values 1:1 under `ship.*` — includes the legacy `deploy.mode` submigration below |
+| `learn` → `retro` | values 1:1 under `retro.*` (`enabled`) |
+| `deploy.mode` removed → `ship.enabled` + `ship.runDeploy` | `off` → `enabled: false` · `orchestrate` → `enabled: true, runDeploy: off` · `execute` → `enabled: true, runDeploy: ask` |
 
-Also: if a `.planning/DEPLOY.md` exists, note in the reconcile that its content now belongs in `reference/deploy.md` (structured fields → `config.deploy`); offer to move it (a `mv` + the user trims to prose). Never auto-delete it.
+The new `config.finish` block (`ship`/`retro`/`complete`) is **not** a rename — the generic diff sees each key as **new** and offers it via the per-new-field question (default from this schema: `ship=off`, `retro=ask`, `complete=ask`). Nothing is set silently.
+
+Also: if a `.planning/DEPLOY.md` exists, note in the reconcile that its content now belongs in `reference/deploy.md` (structured fields → `config.ship`); offer to move it (a `mv` + the user trims to prose). Never auto-delete it.
 
 ## File naming in `.planning/`
 
