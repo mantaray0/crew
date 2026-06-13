@@ -1,5 +1,5 @@
 ---
-description: Carry a verified change to a release — version, commit, tag, push, PR, and (when enabled) deploy — driven by config.deploy and bounded by config.git.
+description: Carry a verified change to a release — version, commit, tag, push, PR, and (when enabled) deploy — driven by config.ship and bounded by config.git.
 argument-hint: "[environment, optional]"
 ---
 
@@ -13,17 +13,17 @@ Turn a verified commit into a release/deployment. Uses the `crew-deploy`, `crew-
 
 ## Steps
 
-1. **Read config.** Read `config.deploy` (enabled/provider/tagPattern/environments/runDeploy/releaseTool/finishRelease), `config.git`, and `reference/deploy.md` (if present). If `config.deploy.enabled` is `false`, explain how to enable it (`/crew:init` → deploy, or set `config.deploy.enabled`) and **stop**. Resolve `releaseTool` — if `auto`, detect it from the repo per `crew-deploy` → Release mechanics.
+1. **Read config.** Read `config.ship` (enabled/provider/tagPattern/environments/runDeploy/releaseTool/finishRelease), `config.git`, and `reference/deploy.md` (if present). If `config.ship.enabled` is `false`, explain how to enable it (`/crew:init` → deploy, or set `config.ship.enabled`) and **stop**. Resolve `releaseTool` — if `auto`, detect it from the repo per `crew-deploy` → Release mechanics.
 2. **Gate on verify.** Check the last `verify` result in `.planning/LOG.md`. If it is not green, recommend `/crew:verify` and **stop** — never ship on a red verify.
 3. **Release per `releaseTool`** (see `crew-deploy` → Release mechanics; every git step defers to `config.git`):
-   - **`manual`** — version locally (`npm version` / language equivalent, command from `reference/deploy.md`) → release commit (`config.git.commitStyle`; if `autoCommitPerPhase` is false, **ask**) → tag from `config.deploy.tagPattern` (e.g. `v1.4.0`).
+   - **`manual`** — version locally (`npm version` / language equivalent, command from `reference/deploy.md`) → release commit (`config.git.commitStyle`; if `autoCommitPerPhase` is false, **ask**) → tag from `config.ship.tagPattern` (e.g. `v1.4.0`).
    - **`changesets` / `release-please`** — **no** local bump or tag. For `changesets`: ensure a changeset exists (`.changeset/*.md` other than `README`/`config`); if none, offer `changeset add` or **stop**. Commit it if uncommitted. (release-please needs no file — it reads Conventional Commits.)
    - **`semantic-release`** — no version/commit/tag here; CI does it. Proceed to push.
    - **`none`** — no version/tag; commit only if there are staged changes.
 4. **Push.** Push the commit (and tag, for `manual`) — **only if `config.git.autoPush`**; if false, **ask**. On decline, stop here and report the local result. In a push-triggered setup this push is the deploy/release trigger — that is why it is the user's call.
 5. **PR.** Open a PR/MR via the provider CLI (`gh` for `gh-actions`, `glab` for `gitlab-ci`) — **only if `config.git.autoPR`**; if false, **ask** or skip. If the CLI is missing/unauthenticated, explain and stop.
-6. **Finish release (bot-PR tools only, `config.deploy.finishRelease ≠ off`).** For `changesets`/`release-please`: after the push the CI bot opens a version/release-PR. If one is open, merge it per `finishRelease` (`ask` → confirm first, `auto` → proceed) → CI tags + releases. Never on a red verify.
-7. **Deploy (only if `config.deploy.runDeploy ≠ off`).** Run the deploy command from `reference/deploy.md` for the target environment (the optional `$ARGUMENTS`, else the default). With `ask`, confirm first; with `auto`, proceed; never run it on a red verify.
+6. **Finish release (bot-PR tools only, `config.ship.finishRelease ≠ off`).** For `changesets`/`release-please`: after the push the CI bot opens a version/release-PR. If one is open, merge it per `finishRelease` (`ask` → confirm first, `auto` → proceed) → CI tags + releases. Never on a red verify.
+7. **Deploy (only if `config.ship.runDeploy ≠ off`).** Run the deploy command from `reference/deploy.md` for the target environment (the optional `$ARGUMENTS`, else the default). With `ask`, confirm first; with `auto`, proceed; never run it on a red verify.
 8. **Record.** Append to `.planning/LOG.md`: version, tag, and the push/PR/release/deploy outcome.
 
 Do not invent deploy commands or credentials — they come from `reference/deploy.md` and the authenticated provider CLI.

@@ -1,14 +1,16 @@
 ---
 name: crew-deploy
-description: How crew turns a verified commit into a release/deployment — config.deploy (enabled + runDeploy + releaseTool), config.git as the single git authority, provider handling (gh/glab), and the safety rules. Use during /crew:ship.
+description: How crew turns a verified commit into a release/deployment — config.ship (enabled + runDeploy + releaseTool), config.git as the single git authority, provider handling (gh/glab), and the safety rules. Use during /crew:ship.
 origin: crew
 ---
 
 # crew Deploy & Release
 
-`/crew:ship` carries a verified change from the repo to a release (and optionally a deployment). Behavior is config-driven via `config.deploy`; **all git mechanics defer to `config.git`** — the single git authority. There is no deploy-specific push axis.
+`/crew:ship` carries a verified change from the repo to a release (and optionally a deployment). Behavior is config-driven via `config.ship`; **all git mechanics defer to `config.git`** — the single git authority. There is no deploy-specific push axis.
 
-## `config.deploy`
+`/crew:ship` is also the **Ship step** of the `/crew:finish` strand (see `crew-config` → `config.finish`): there it runs only when `config.finish.ship ≠ off` **and** `config.ship.enabled` — finish adds no new push/release axis, it calls this same command.
+
+## `config.ship`
 
 | field | what it does |
 |---|---|
@@ -67,4 +69,4 @@ If the provider CLI is missing or unauthenticated, **explain and stop** — do n
 
 ## `reference/deploy.md`
 
-The project's release runbook — a load-on-demand `reference/` doc (see `crew-context`): release strategy, branch/tag conventions, environments, secrets *policy* (pointers, never values), rollback procedure, and the deploy command(s) (for `runDeploy ≠ off`). `/crew:ship` loads it because shipping touches the deploy area. Offered at `/crew:init` when `deploy.enabled` and `runDeploy ≠ off`.
+The project's release runbook — a load-on-demand `reference/` doc (see `crew-context`): release strategy, branch/tag conventions, environments, secrets *policy* (pointers, never values), rollback procedure, and the deploy command(s) (for `runDeploy ≠ off`). `/crew:ship` loads it because shipping touches the deploy area. Offered at `/crew:init` when `ship.enabled` and `runDeploy ≠ off`.
