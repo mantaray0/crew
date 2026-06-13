@@ -1,6 +1,6 @@
 ---
 name: crew-conventions
-description: How crew runs every command — the step-by-step interaction flow (one decision at a time via free-text / single-select / multi-select, never silently applying defaults) and language (respond in the user's language; repo content stays English). Apply at the start of every crew command.
+description: How crew runs every command — the step-by-step interaction flow (surface every decision via free-text / single-select / multi-select, batch the independent ones in a stepper, stay sequential on dependencies, never silently applying defaults) and language (respond in the user's language; repo content stays English). Apply at the start of every crew command.
 origin: crew
 ---
 
@@ -37,4 +37,4 @@ Honour `config.responseStyle` (resolved project-over-global; default `"concise"`
 - **`detailed`** — full narrative prose: show reasoning, walk through findings, explain trade-offs at length.
 - **`auto`** — choose per content: a table when the content is a structured comparison/finding list, prose when it's a narrative explanation.
 
-This governs *format and length only*. It never changes the interaction flow above — you still ask one decision at a time and never skip questions, whatever the style. If no config is present (e.g. outside a crew project), default to `concise`.
+This governs *format and length only*. It never changes the interaction flow above — you still surface every decision (batching only the independent ones) and never skip questions, whatever the style. If no config is present (e.g. outside a crew project), default to `concise`.
