@@ -25,10 +25,11 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
     "conflictPolicy": "resolve-or-ask"  // | "always-ask" | "autonomous"
   },
   "deploy": {
-    "mode": "orchestrate",             // "off" | "orchestrate" | "execute"
+    "enabled": true,                   // is /crew:ship available here? (replaces the old mode:off)
     "provider": "gh-actions",          // "gh-actions" | "gitlab-ci"
     "tagPattern": "v{version}",
-    "environments": []                 // optional named environments (prod, staging, …)
+    "environments": [],                // optional named environments (prod, staging, …)
+    "runDeploy": "off"                 // "off" | "ask" | "auto" — run an imperative deploy command after the git steps? off = push-triggered CI (the push IS the deploy)
   },
   "execution": {
     "parallel": "auto",                // | "manual" | "off"
@@ -94,13 +95,17 @@ Resolved through the normal layering — a project's `.planning/config.json` ove
 
 **`config.deploy`** drives `/crew:ship` (release/deploy). Layered global < project; ask at `/crew:setup` and `/crew:init`. Provider `gh-actions` (via `gh`) or `gitlab-ci` (via `glab`).
 
-| `mode` | behavior |
+| field | behavior |
 |---|---|
-| `off` | `/crew:ship` does nothing but explain how to enable it. |
-| `orchestrate` (default) | Conservative: crew drives the **release** (version → commit → tag → push → PR); the **deployment** is done by CI. No prod access from crew. |
-| `execute` | Proactive: like `orchestrate`, **plus** crew runs the deploy command from `.planning/DEPLOY.md`. |
+| `enabled` (default `true`) | Is `/crew:ship` available for this project? `false` → ship explains how to turn it on and stops. Replaces the old `mode: off`. |
+| `runDeploy` (default `off`) | The one knob `config.git` does **not** cover: does crew run an **imperative** deploy command after the git steps? `off` = push-triggered CI (the push *is* the deploy). `ask`/`auto` = imperative world (Vercel/Fly), command sourced from `reference/deploy.md`. |
+| `provider` | `gh-actions` (PRs/status via `gh`) or `gitlab-ci` (MRs/status via `glab`). |
+| `tagPattern` | Release tag shape, e.g. `v{version}`. |
+| `environments` | Optional named environments (prod, staging, …). |
 
-**`config.git` is the ceiling.** `deploy.mode` says what `/crew:ship` may *attempt*; `config.git` says whether each git step is auto / ask / off — ship **never** bypasses it. Push defers to `git.autoPush` (ask when false), PR to `git.autoPR`, the release commit to the `git.autoCommitPerPhase` spirit (ask when not auto). ship degrades gracefully — a local `version+commit+tag` is a valid partial result when push/PR are declined.
+**`config.git` is the single git authority.** ship has **no** deploy-specific push axis: every git step (commit/push/PR/merge) defers to `config.git` (`autoCommitPerPhase` / `autoPush` / `autoPR` / `mergeStrategy`). In a push-triggered setup the prod trigger *is* the push — so it belongs to `git.autoPush` (default false → ask), i.e. to the user. ship degrades gracefully — a local `version+commit+tag` is a valid partial result when push/PR are declined.
+
+**`config.stack`** is the **single source of truth** for the project's stack *facts* (language / app / db / orm / …) — it drives tag-based reviewer selection and grounding. `PROJECT.md` shows the stack as a **derived mirror** and carries the *why* (architecture decisions); it is **not** a second place to edit the facts. Change the stack in `config.stack`; crew updates the `PROJECT.md` table to match. The stack is standing context — it stays in the auto-loaded `PROJECT.md`, never in load-on-demand `reference/`.
 
 ## Config versioning & migration
 
@@ -115,6 +120,16 @@ Resolved through the normal layering — a project's `.planning/config.json` ove
   4. **Stamp the version.** After applying confirmed changes, set `crewVersion` to the current plugin version.
 
   This is a procedure, not a coded migration: there is no compiled migrator — diff the live config against this schema and drive the questions from it.
+
+### Known migrations
+
+The schema-diff is generic, but some changes are **renames/splits** where a blind new/removed diff would drop the user's value. Apply these explicitly *before* the generic diff:
+
+| change | mapping |
+|---|---|
+| `deploy.mode` removed → `deploy.enabled` + `deploy.runDeploy` | `off` → `enabled: false` · `orchestrate` → `enabled: true, runDeploy: off` · `execute` → `enabled: true, runDeploy: ask` |
+
+Also: if a `.planning/DEPLOY.md` exists, note in the reconcile that its content now belongs in `reference/deploy.md` (structured fields → `config.deploy`); offer to move it (a `mv` + the user trims to prose). Never auto-delete it.
 
 ## File naming in `.planning/`
 
