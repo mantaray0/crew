@@ -122,10 +122,11 @@ as support commands.
 
 ## Commands
 
-All 16 commands live in `commands/*.md` and are invoked as `/crew:<name>`. Every command follows the
-`crew-conventions` skill: it walks **one decision at a time** (free-text / single-select /
-multi-select), **never silently applies a default** (it shows the default as the recommended choice),
-and **responds in your language** while keeping repo content in English.
+All 19 commands live in `commands/*.md` and are invoked as `/crew:<name>`. Every command follows the
+`crew-conventions` skill: it **surfaces every decision** (free-text / single-select / multi-select),
+**batches the independent ones** into a stepper and stays sequential on dependencies, **never silently
+applies a default** (it shows the default as the recommended choice), and **responds in your language**
+while keeping repo content in English.
 
 ### Setup & onboarding
 
@@ -316,6 +317,50 @@ Backed by the `verification-loop` skill.
 3. **Propose, don't impose** — each proposal is presented for explicit confirmation before anything is
    written to your global registry. Active when `config.learn.enabled`. Backed by `crew-learn`.
 
+### Release & lifecycle
+
+#### `/crew:ship` &nbsp;`[environment, optional]`
+> Carry a verified change to a release — version, commit, tag, push, PR, and (when enabled) deploy.
+
+Driven by `config.deploy.mode` and **bounded by `config.git`** (the ceiling — ship never pushes, opens a
+PR, or commits in a way your git config disables; it asks instead):
+
+1. **Read config** — `config.deploy`, `config.git`, and `.planning/DEPLOY.md`. If `deploy.mode` is
+   `off`, it explains how to enable it and stops.
+2. **Gate on verify** — refuses to ship on a red `verify` (checks the last result in `LOG.md`).
+3. **Version → commit → tag** — runs Changesets `version` (or bumps per `deploy.tagPattern`), commits
+   with your `commitStyle`, and tags (e.g. `v1.4.0`).
+4. **Push & PR** — only if `git.autoPush` / `git.autoPR` allow it (otherwise it asks); PR/MR via the
+   `gh` (GitHub Actions) or `glab` (GitLab CI) CLI.
+5. **Deploy** — only when `deploy.mode` is `execute`: runs the deploy command from `DEPLOY.md` for the
+   target environment, after confirmation. Never guessed by crew.
+6. **Record** — appends the version, tag, and push/PR/deploy outcome to `LOG.md`.
+
+The three modes: `off` (do nothing), `orchestrate` (drive the release; CI deploys), `execute` (also run
+the deploy command). Backed by `crew-deploy`.
+
+#### `/crew:archive` &nbsp;`[milestone slug, optional]`
+> Move a fully completed milestone into `.planning/archive/` so the live roadmap stays small and cheap to read.
+
+- **Targets** the slug you name, or the latest **fully completed** milestone.
+- **Guardrail** — only milestones whose phases are **all `[x]`** archive; if any phase is open it lists
+  them and stops.
+- **Moves** (a pure `mv` + text edit, no content change): the `ROADMAP.md` section →
+  `.planning/archive/roadmap-<slug>.md`, and `plans/<slug>/` → `.planning/archive/plans/<slug>/`.
+- **Leaves** a one-line pointer in `ROADMAP.md` (`✓ archiviert YYYY-MM-DD → archive/…`). `LOG.md` is
+  never archived — it stays append-only. Backed by `crew-planning`.
+
+#### `/crew:complete-milestone` &nbsp;`[milestone slug, optional]`
+> The richer milestone close-out — audit, summarize, then archive. Wraps `/crew:archive`.
+
+1. **Audit** — verifies every phase of the milestone is `[x]`; if not, lists the open ones and stops
+   (finish via `/crew:execute` or defer via `/crew:adjust`).
+2. **Summarize** — appends a milestone summary to `LOG.md` (what shipped, key decisions, rolled-up
+   token/cost when `observability.trackCost` is on).
+3. **Update `PROJECT.md`** — refreshes the current-state section for the completed milestone.
+4. **Archive** — runs the `/crew:archive` move for the milestone. Backed by `crew-context` +
+   `crew-planning`.
+
 ---
 
 ## The `.planning/` directory
@@ -329,11 +374,16 @@ UPPERCASE** (like `README`/`CHANGELOG`), **data files and directories are lowerc
 ├── ROADMAP.md        # milestones → phases with status markers + depends: edges
 ├── LOG.md            # append-only execution log (phases, deviations, token/cost)
 ├── BACKLOG.md        # dated idea inbox (/crew:backlog)
+├── DEPLOY.md         # release knowledge (optional; used by /crew:ship)
 ├── config.json       # project-layer config (overrides global + defaults)
 ├── claims.json       # which phase is claimed by which worktree (parallel safety)
-├── plans/            # plan files; each starts with a Spec head
-│   ├── _<slug>.md            # brief: un-numbered initiative (from /crew:brief)
-│   └── <id>-<title>.md       # numbered phase plan (from /crew:plan), e.g. 1.2-db-schema.md
+├── plans/            # one folder per milestone
+│   └── <milestone-slug>/     # the milestone's plan files
+│       ├── _spec.md          # spec root: Spec head only (from /crew:brief)
+│       └── <id>-<title>.md   # numbered phase plan (from /crew:plan), e.g. 1.2-db-schema.md
+├── archive/          # completed milestones moved out of live state (/crew:archive)
+│   ├── roadmap-<slug>.md     # the archived milestone's roadmap section
+│   └── plans/<slug>/         # its plan folder, moved verbatim
 └── sessions/         # session snapshots for resume (per worktree id)
     └── <worktree-id>/<snapshot>.md
 ```

@@ -1,6 +1,6 @@
 ---
 name: crew-conventions
-description: How crew runs every command — the step-by-step interaction flow (one decision at a time via free-text / single-select / multi-select, never silently applying defaults) and language (respond in the user's language; repo content stays English). Apply at the start of every crew command.
+description: How crew runs every command — the step-by-step interaction flow (surface every decision via free-text / single-select / multi-select, batch the independent ones in a stepper, stay sequential on dependencies, never silently applying defaults) and language (respond in the user's language; repo content stays English). Apply at the start of every crew command.
 origin: crew
 ---
 
@@ -12,7 +12,7 @@ These apply to **every** crew command.
 
 crew is interactive on purpose. Do not jump ahead, do not silently apply defaults, and do not let other context pull you out of the flow.
 
-- **One decision at a time.** Walk the command's steps in order. For each decision the command exposes, ask the user **before** acting on it.
+- **Surface every decision — batch the independent ones.** Walk the command's steps in order and ask the user **before** acting on any decision. **Bundle independent decisions into one `AskUserQuestion` stepper batch** — questions whose order doesn't matter and whose options don't depend on each other (clarification gray-areas, multi-field setup forms). **Stay sequential** as soon as one decision's options hinge on a prior answer (a decision-tree branch) or it is a confirm-then-write gate. Batching is for *co-equal* questions — never an excuse to skip a question or silently apply a default.
 - **Each option is a real question**, in the form that fits:
   - **free-text** for open values (project name, a description, a custom stack entry),
   - **single-select** for one-of-fixed choices (an archetype, merge strategy, model mode),
@@ -37,4 +37,4 @@ Honour `config.responseStyle` (resolved project-over-global; default `"concise"`
 - **`detailed`** — full narrative prose: show reasoning, walk through findings, explain trade-offs at length.
 - **`auto`** — choose per content: a table when the content is a structured comparison/finding list, prose when it's a narrative explanation.
 
-This governs *format and length only*. It never changes the interaction flow above — you still ask one decision at a time and never skip questions, whatever the style. If no config is present (e.g. outside a crew project), default to `concise`.
+This governs *format and length only*. It never changes the interaction flow above — you still surface every decision (batching only the independent ones) and never skip questions, whatever the style. If no config is present (e.g. outside a crew project), default to `concise`.
