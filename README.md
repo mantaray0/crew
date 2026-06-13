@@ -122,10 +122,11 @@ as support commands.
 
 ## Commands
 
-All 16 commands live in `commands/*.md` and are invoked as `/crew:<name>`. Every command follows the
-`crew-conventions` skill: it walks **one decision at a time** (free-text / single-select /
-multi-select), **never silently applies a default** (it shows the default as the recommended choice),
-and **responds in your language** while keeping repo content in English.
+All 19 commands live in `commands/*.md` and are invoked as `/crew:<name>`. Every command follows the
+`crew-conventions` skill: it **surfaces every decision** (free-text / single-select / multi-select),
+**batches the independent ones** into a stepper and stays sequential on dependencies, **never silently
+applies a default** (it shows the default as the recommended choice), and **responds in your language**
+while keeping repo content in English.
 
 ### Setup & onboarding
 
@@ -316,6 +317,26 @@ Backed by the `verification-loop` skill.
 3. **Propose, don't impose** — each proposal is presented for explicit confirmation before anything is
    written to your global registry. Active when `config.learn.enabled`. Backed by `crew-learn`.
 
+### Release & lifecycle
+
+#### `/crew:ship` &nbsp;`[environment, optional]`
+> Carry a verified change to a release — version, commit, tag, push, PR, and (when enabled) deploy.
+
+- Driven by `config.deploy.mode` (`off` / `orchestrate` / `execute`) and **bounded by `config.git`** —
+  ship never pushes, opens a PR, or commits in a way your git config disables; it asks instead.
+- Gates on a green `verify`; provider via `gh` (GitHub Actions) or `glab` (GitLab CI). Deploy commands
+  come from `.planning/DEPLOY.md`, never guessed. Backed by `crew-deploy`.
+
+#### `/crew:archive` &nbsp;`[milestone slug, optional]`
+> Move a fully completed milestone into `.planning/archive/` to keep the live roadmap small.
+
+- Only archives milestones whose phases are **all `[x]`**; a pure `mv` of the roadmap section +
+  `plans/<slug>/`, leaving a one-line pointer. `LOG.md` stays append-only.
+
+#### `/crew:complete-milestone` &nbsp;`[milestone slug, optional]`
+> Close out a finished milestone: audit all phases done → summarize to `LOG.md` → update `PROJECT.md`
+> → archive. The richer wrapper around `/crew:archive`.
+
 ---
 
 ## The `.planning/` directory
@@ -329,11 +350,16 @@ UPPERCASE** (like `README`/`CHANGELOG`), **data files and directories are lowerc
 ├── ROADMAP.md        # milestones → phases with status markers + depends: edges
 ├── LOG.md            # append-only execution log (phases, deviations, token/cost)
 ├── BACKLOG.md        # dated idea inbox (/crew:backlog)
+├── DEPLOY.md         # release knowledge (optional; used by /crew:ship)
 ├── config.json       # project-layer config (overrides global + defaults)
 ├── claims.json       # which phase is claimed by which worktree (parallel safety)
-├── plans/            # plan files; each starts with a Spec head
-│   ├── _<slug>.md            # brief: un-numbered initiative (from /crew:brief)
-│   └── <id>-<title>.md       # numbered phase plan (from /crew:plan), e.g. 1.2-db-schema.md
+├── plans/            # one folder per milestone
+│   └── <milestone-slug>/     # the milestone's plan files
+│       ├── _spec.md          # spec root: Spec head only (from /crew:brief)
+│       └── <id>-<title>.md   # numbered phase plan (from /crew:plan), e.g. 1.2-db-schema.md
+├── archive/          # completed milestones moved out of live state (/crew:archive)
+│   ├── roadmap-<slug>.md     # the archived milestone's roadmap section
+│   └── plans/<slug>/         # its plan folder, moved verbatim
 └── sessions/         # session snapshots for resume (per worktree id)
     └── <worktree-id>/<snapshot>.md
 ```
