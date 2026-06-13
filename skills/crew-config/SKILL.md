@@ -39,7 +39,8 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
     "simplify": "sonnet", "trivial": "haiku"
   },
   "clarify": {
-    "depth": "normal",                 // "light" | "normal" | "deep"
+    "depth": "normal",                 // "light" | "normal" | "deep" — how broad (coverage)
+    "intensity": "normal",             // "gentle" | "normal" | "brutal" — how hard Roast-Me pushes back
     "askOnlyWhenStuck": true,
     "specArtifact": "section"          // "section" | "separate" | "off"
   },
@@ -76,6 +77,14 @@ Auto model tiers: planning/review → strongest, execution/simplify → mid, tri
 | `auto` | Pick per content: table for structured comparisons/findings, prose for narrative explanation. |
 
 Resolved through the normal layering — a project's `.planning/config.json` overrides the global default (e.g. global `concise`, one project `detailed`).
+
+**`clarify.intensity`** controls how hard Roast-Me challenges an idea during `/crew:brief` — **orthogonal** to `clarify.depth` (depth = how *broad* the questioning, intensity = how *hard* it pushes back). The recommended answer carries in every level (in `brutal` it may be "drop this"). Default `"normal"`. Ask at `/crew:setup` (global) or `/crew:init` (per project), resolved project > global > default — like `language.files`.
+
+| value | behavior |
+|---|---|
+| `gentle` | Pure clarification: fill gaps, recommend a default, don't push back. |
+| `normal` (default) | Push on the load-bearing weak spots, name obvious scope-creep, question one or two load-bearing assumptions. |
+| `brutal` | Attack assumptions ("do you actually need this?"), surface contradictions, steelman cutting scope, name every scope risk. |
 
 ## Config versioning & migration
 
