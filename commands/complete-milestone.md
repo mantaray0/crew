@@ -15,7 +15,7 @@ The richer milestone close-out: audit → summarize → archive. Uses the `crew-
 2. **Audit.** Verify **every** phase is `[x]`. If any phase is open, list the open ones and **stop** — finish them (`/crew:execute`) or defer them (`/crew:adjust`) first.
 3. **Summarize.** Append a milestone summary to `.planning/LOG.md`: what shipped, key decisions, and (if `observability.trackCost`) the rolled-up token/cost.
 4. **Update PROJECT.md.** Refresh "Aktueller Stand" to reflect the completed milestone; move any validated requirement/decision into the living context as appropriate.
-5. **Archive.** Run the `/crew:archive` step (see `commands/archive.md`) for this milestone — move its roadmap section and `plans/<slug>/` into `.planning/archive/`, leaving the one-line pointer.
+5. **Archive.** Run the `/crew:archive` step (see `commands/archive.md`) for this milestone — move its roadmap section and `plans/<n>_<slug>/` into `.planning/archive/`, leaving the one-line pointer.
 
 ## Hand-off
 

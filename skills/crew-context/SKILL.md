@@ -12,13 +12,13 @@ origin: crew
 |---|---|
 | `PROJECT.md` | The living project truth: architecture decisions (the *why*), current state, constraints, a **stack table mirrored from `config.stack`** (the source of truth), plus an optional `## Reference` index. Loaded automatically at session start. |
 | `ROADMAP.md` | The fahrplan: milestones → phases with status markers + timestamps. |
-| `plans/<milestone-slug>/` | Detail per milestone: optional `_spec.md` (Spec root) + numbered `<id>-<title>.md` phase plans (Spec head + Plan body each). |
+| `plans/<n>_<milestone-slug>/` | Detail per milestone (folder prefixed with the milestone number so it sorts & reads at a glance when collapsed): optional `_spec.md` (Spec root) + numbered `<id>-<title>.md` phase plans (Spec head + Plan body each). |
 | `BACKLOG.md` | Idea inbox; triaged at plan/adjust. |
 | `LOG.md` | Append-only history: phase, commit, verify result, token/cost. |
 | `claims.json` | Which instance/worktree holds which phase (parallel-safe). |
 | `sessions/<worktree-id>/` | Per-instance session snapshots. |
 | `config.json` | Behavior config (git, deploy, verify, models, clarify, tasks, …). |
-| `archive/` | Completed milestones moved out of live state (`/crew:archive`): `roadmap-<slug>.md` + `plans/<slug>/`. Keeps `ROADMAP.md`/`plans/` small. |
+| `archive/` | Completed milestones moved out of live state (`/crew:archive`): `roadmap-<n>_<slug>.md` + `plans/<n>_<slug>/`. Keeps `ROADMAP.md`/`plans/` small. |
 | `reference/` | Load-on-demand knowledge docs (runbooks, domain/data maps, architecture deep-dives) — **never auto-loaded**; each indexed one line in PROJECT.md's `## Reference`. Naming `reference/<topic-slug>.md`. |
 
 `PROJECT.md` is the always-true source; `ROADMAP.md` is the plan; `plans/` is detail; `LOG.md` is history. The plan + log are the external memory — the work survives a fresh context, not the context window.
