@@ -20,3 +20,7 @@ The harness should get better with every project. After completed work, distil w
 - **Propose with the artifact.** Show the actual draft skill / tag mapping / decision text; the user confirms each.
 - **Write on approval.** Skills/tags go to the global layer (`~/.claude/crew/`) so all projects benefit; decisions go to the project's `PROJECT.md`.
 - **Close the loop.** A learning that becomes a tag should, on the next `/crew:init` of a matching archetype, activate automatically.
+
+## In the finish strand
+
+`/crew:retro` is the **Retro step** of the `/crew:finish` close-out strand (`config.finish.retro`, additionally gated by `config.retro.enabled`). Cadence there is **per milestone** — one retro per finished milestone, never per phase. Run standalone any time, or let `/crew:finish` offer/run it after Ship and before Complete.

@@ -40,7 +40,7 @@ state lives in a committed `.planning/` directory; behavior is driven by a layer
 crew turns Claude Code into a disciplined engineering teammate that keeps its own project memory.
 Instead of one-off prompts, you move work through a small, predictable lifecycle:
 
-> **clarify → plan → execute → verify → commit → learn**
+> **brief → plan → execute → verify → finish** (ship · retro · complete)
 
 Everything crew knows about your project is plain Markdown and JSON in a `.planning/` folder that
 lives **in your repo and is committed**. That means context survives across sessions, machines, and
@@ -111,7 +111,7 @@ to stay fluid.
         atomic commit + LOG.md update
                 ▼
         ┌───────────────┐
-        │ /crew:retro   │  distill learnings into the global registry
+        │ /crew:finish  │  close out the milestone: ship · retro · complete (each config-gated)
         └───────────────┘
 ```
 
@@ -122,7 +122,7 @@ as support commands.
 
 ## Commands
 
-All 19 commands live in `commands/*.md` and are invoked as `/crew:<name>`. Every command follows the
+All 21 commands live in `commands/*.md` and are invoked as `/crew:<name>`. Every command follows the
 `crew-conventions` skill: it **surfaces every decision** (free-text / single-select / multi-select),
 **batches the independent ones** into a stepper and stays sequential on dependencies, **never silently
 applies a default** (it shows the default as the recommended choice), and **responds in your language**
@@ -140,7 +140,7 @@ while keeping repo content in English.
   `postgres`, `tailwind`, `auth`, …). You add / rename / remove until it matches how you actually
   work, then it's written only after you confirm.
 - Optionally writes a **global `config.json`** — going through each config group (`models`, `git`,
-  `notifications`, `tasks.provider`, `execution`, `language.files`, …) one at a time, asking
+  `notifications`, `tasks.provider`, `execute`, `language.files`, …) one at a time, asking
   "keep default vs override". Only the values you confirm are written; everything else stays a
   built-in default.
 
@@ -176,7 +176,7 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
 - Reads `.planning/PROJECT.md` if present (so it knows this is a feature inside an existing project
   vs. a brand-new project).
 - Runs **Roast-Me clarification** (`roast-me` skill): sharp questions one at a time, each carrying a
-  recommended answer you can just confirm. Honors `config.clarify.depth` (`light`/`normal`/`deep`).
+  recommended answer you can just confirm. Honors `config.brief.depth` (`light`/`normal`/`deep`).
   When a question is answerable from the codebase, it investigates instead of asking.
 - For a new project, captures the stack and writes `PROJECT.md`. For a feature, writes the **Spec
   head** of a plan file. Stops when shared understanding is reached.
@@ -234,26 +234,26 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
    milestone is done and the next is unplanned it routes you to `/crew:plan`/`/crew:resume`, otherwise
    it asks.
 2. **Milestone-boundary guard, then claim** — at a milestone boundary (the previous milestone fully
-   done) it pauses and offers `/crew:complete-milestone` first (you can skip; it never self-completes),
+   done) it pauses and offers `/crew:finish` first (you can skip; it never self-finishes),
    then marks the phase `[>]` and records the claim in `claims.json` so parallel instances don't collide.
 3. **Implement** — exactly what the plan specifies, mirroring existing patterns. Model =
-   `config.models.execution` (or auto). **Deviation handling** (`execution.onDeviation`): small,
+   `config.models.execution` (or auto). **Deviation handling** (`execute.onDeviation`): small,
    in-intent deviations are decided autonomously and noted in the log; a real problem, ambiguity, or
    scope change → **stop and ask**.
 4. **Verify** — runs the verify pipeline per `config.verify`.
 5. **Commit** — one atomic commit per verified phase, then updates `ROADMAP.md` (`[x]`) and `LOG.md`.
 
-If `config.execution.parallel` is `auto` and independent phases are detected, it offers to hand off
+If `config.execute.parallel` is `auto` and independent phases are detected, it offers to hand off
 to `/crew:execute dispatch`. Backed by `crew-context` + `crew-planning`.
 
 **`auto` — sequential autonomous run.** Runs a phase in the main context, then `/clear` +
 `/crew:execute auto`, carrying continuity through `.planning/` state (no sub-agents). Loops until the
-milestone is done or a stop condition is hit; never self-ships or self-completes — reports and
-proposes the next step.
+milestone is done or a stop condition is hit; never self-ships, self-completes, or self-finishes —
+reports and proposes `/crew:finish` for the close-out.
 
 **`dispatch [ids]` — parallel worktree run.** Builds the DAG from the milestone's phases and their
 `depends:` edges, computes waves of independent phases, confirms the split, then dispatches a wave
-(up to `config.execution.maxConcurrent` phases, each in an isolated worktree worked by a sub-agent).
+(up to `config.execute.maxConcurrent` phases, each in an isolated worktree worked by a sub-agent).
 The `merge-coordinator` agent rolls completed branches into an integration branch with intent-aware
 conflict resolution. Backed by `crew-planning` (DAG) + `git-merge`, plus the `merge-coordinator` agent.
 
@@ -329,33 +329,39 @@ Backed by the `verification-loop` skill.
 2. **Distill** recurring patterns into a proposed **skill** (reusable procedure), a **tag** (a
    capability that activates skills/rules), or a `PROJECT.md` decision update.
 3. **Propose, don't impose** — each proposal is presented for explicit confirmation before anything is
-   written to your global registry. Active when `config.learn.enabled`. Backed by `crew-learn`.
+   written to your global registry. Active when `config.retro.enabled`. Backed by `crew-learn`.
+
+Also the **Retro step** of the `/crew:finish` strand (`config.finish.retro`), where it runs once per
+milestone — see `/crew:finish` below.
 
 ### Release & lifecycle
 
 #### `/crew:ship` &nbsp;`[environment, optional]`
 > Carry a verified change to a release — version, commit, tag, push, PR, and (when enabled) deploy.
 
-Driven by `config.deploy` (`enabled` + `runDeploy`); **`config.git` is the single git authority** — ship
+Driven by `config.ship` (`enabled` + `runDeploy`); **`config.git` is the single git authority** — ship
 never pushes, opens a PR, or commits in a way your git config disables; it asks instead:
 
-1. **Read config** — `config.deploy`, `config.git`, and `reference/deploy.md`. If `deploy.enabled` is
+1. **Read config** — `config.ship`, `config.git`, and `reference/deploy.md`. If `ship.enabled` is
    `false`, it explains how to enable it and stops.
 2. **Gate on verify** — refuses to ship on a red `verify` (checks the last result in `LOG.md`).
-3. **Release per `deploy.releaseTool`** — `changesets`/`release-please` (push a changeset/commits; a CI
+3. **Release per `ship.releaseTool`** — `changesets`/`release-please` (push a changeset/commits; a CI
    bot opens the version-PR), `semantic-release` (push; CI does it all), or `manual` (local bump → commit
-   → tag with your `commitStyle`/`deploy.tagPattern`). `auto` detects the tool from the repo.
+   → tag with your `commitStyle`/`ship.tagPattern`). `auto` detects the tool from the repo.
 4. **Push & PR** — only if `git.autoPush` / `git.autoPR` allow it (otherwise it asks); PR/MR via the
    `gh` (GitHub Actions) or `glab` (GitLab CI) CLI. In a push-triggered setup the push is the deploy
    trigger, so it stays the user's call.
-5. **Deploy** — only when `deploy.runDeploy` is `ask`/`auto`: runs the imperative deploy command from
+5. **Deploy** — only when `ship.runDeploy` is `ask`/`auto`: runs the imperative deploy command from
    `reference/deploy.md` for the target environment (confirmation on `ask`). Never guessed by crew.
 6. **Record** — appends the version, tag, and push/PR/deploy outcome to `LOG.md`.
 
 `runDeploy` defaults to `off` — in a push-triggered setup the push from step 4 *is* the deploy, so
 there's nothing extra to run. Set it to `ask`/`auto` only for imperative deploys (Vercel/Fly). For
-bot-PR tools, `deploy.finishRelease` (default `off`) controls whether ship also merges the open
+bot-PR tools, `ship.finishRelease` (default `off`) controls whether ship also merges the open
 version-PR to finish the release. Backed by `crew-deploy`.
+
+ship is also the **Ship step** of the `/crew:finish` strand (`config.finish.ship`, additionally gated
+by `config.ship.enabled`); finish adds no new push/release axis — it calls this same command.
 
 #### `/crew:archive` &nbsp;`[milestone slug, optional]`
 > Move a fully completed milestone into `.planning/archive/` so the live roadmap stays small and cheap to read.
@@ -368,7 +374,7 @@ version-PR to finish the release. Backed by `crew-deploy`.
 - **Leaves** a one-line pointer in `ROADMAP.md` (`✓ archiviert YYYY-MM-DD → archive/…`). `LOG.md` is
   never archived — it stays append-only. Backed by `crew-planning`.
 
-#### `/crew:complete-milestone` &nbsp;`[milestone slug, optional]`
+#### `/crew:complete` &nbsp;`[milestone slug, optional]`
 > The richer milestone close-out — audit, summarize, then archive. Wraps `/crew:archive`.
 
 1. **Audit** — verifies every phase is `[x]` or `[~]` (deferred phases are non-blocking, matching the
@@ -379,6 +385,29 @@ version-PR to finish the release. Backed by `crew-deploy`.
 3. **Update `PROJECT.md`** — refreshes the current-state section for the completed milestone.
 4. **Archive** — runs the `/crew:archive` move for the milestone. Backed by `crew-context` +
    `crew-planning`.
+
+Reachable under its former name `/crew:complete-milestone` (a deprecated, non-breaking alias that
+forwards to `/crew:complete`). Also the **Complete step** of the `/crew:finish` strand below.
+
+#### `/crew:finish` &nbsp;`[milestone slug, optional]`
+> Close out a milestone end-to-end in one strand: **Ship → Retro → Complete**, each step config-gated.
+
+finish **orchestrates** — it calls the existing commands/skills (`/crew:ship`, `/crew:retro`,
+`/crew:complete`) in that fixed order and invents no logic of its own. Each step is an independent
+tri-state in `config.finish` (layered global < project):
+
+| step | default | runs when | resolves to |
+|---|---|---|---|
+| **Ship** | `off` | `finish.ship ≠ off` **and** `ship.enabled` | a release via `/crew:ship` (never on a red verify — that stops the strand) |
+| **Retro** | `ask` | `finish.retro ≠ off` **and** `retro.enabled` | `/crew:retro`, once per milestone |
+| **Complete** | `ask` | `finish.complete ≠ off` | audit → summarize → archive via `/crew:complete` (blocks if any phase is still open) |
+
+`off` skips the step (its standalone command stays usable by hand), `ask` offers it then runs on
+confirmation, `auto` runs it without asking. Every step ends in exactly one logged outcome —
+**ran**, **skipped** (with reason), or **stopped** (a real block: red verify or open phases) — so a
+finish run loses no information versus running the three commands by hand. `config.git` stays the sole
+git authority; finish adds no new push axis, and `/crew:execute` only ever *suggests* finish, never
+runs it. Backed by `crew-config` (`config.finish`) + the delegated command skills.
 
 ---
 
@@ -428,15 +457,17 @@ the source of truth in the **`crew-config`** skill; here are the groups and thei
 | Group | Key defaults | What it controls |
 |---|---|---|
 | `git` | `autoCommitPerPhase: true`, `autoPush: false`, `isolation: "worktree-per-feature"`, `mergeStrategy: "integration-branch"` | Commit/branch/merge behavior; never touches the remote without approval |
-| `execution` | `parallel: "auto"`, `maxConcurrent: 3`, `onDeviation: "small-self-major-ask"` | Parallelism and how deviations are handled |
+| `execute` | `parallel: "auto"`, `maxConcurrent: 3`, `onDeviation: "small-self-major-ask"` | Parallelism and how deviations are handled |
 | `verify` | `default: ["verify","review","harden","simplify"]`, `perPhaseOverride: true` | The verification pipeline |
 | `models` | `mode: "auto"`; planning/review→`opus`, execution/simplify→`sonnet`, trivial→`haiku` | Model per task type (auto tiers or manual pins) |
-| `clarify` | `depth: "normal"`, `askOnlyWhenStuck: true` | How hard Roast-Me pushes |
+| `brief` | `depth: "normal"`, `intensity: "normal"`, `askOnlyWhenStuck: true` | How broad/hard Roast-Me pushes during `/crew:brief` |
+| `ship` | `enabled: true`, `runDeploy: "off"`, `releaseTool: "auto"`, `finishRelease: "off"` | `/crew:ship` release/deploy behavior (`config.git` stays the git authority) |
+| `retro` | `enabled: true` | `/crew:retro` self-learning |
+| `finish` | `ship: "off"`, `retro: "ask"`, `complete: "ask"` | Which milestone-close steps the `/crew:finish` strand runs (`off`/`ask`/`auto`) |
 | `tasks` | `provider: "local"`, `writeBack: false` | External PM integration for `/crew:pull` |
 | `testing` | `policy: "from-archetype"` | TDD / tests-required / optional |
 | `security` | `auto: false` | Security pass is **never** automatic — recommended on sensitive scope, run only on approval |
 | `notifications` | `enabled: true`, `events: ["blocker","completion"]`, `channel: "os"` | Desktop/push notifications (see hooks) |
-| `learn` | `enabled: true` | `/crew:retro` self-learning |
 | `language` | `files: "en"` | Language of generated project files (separate from conversation language) |
 | `responseStyle` | `"concise"` | Verbosity/format of replies: `concise` (short, tables) · `detailed` (full prose) · `auto` |
 | `crewVersion` | set on init | Plugin version the config was last reconciled with — drives the update flow |
