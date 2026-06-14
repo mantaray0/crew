@@ -38,18 +38,41 @@ The point: the user steers each option deliberately. Speed comes from good recom
 
 ## Workflow steps
 
-Work moves through a small, predictable step chain. The **config sections are named after the steps**, so the config reads as the workflow (self-documenting):
+Work moves through a small, predictable step chain. The **config sections are named after the steps** and live under `config.workflow.*`, so the config reads as the workflow (self-documenting). `crew-config` → *Workflow model* is the contract; this is its execution-facing mirror.
 
 ```
-brief → plan → execute → verify → finish ( ship · retro · complete )
+brief → plan → execute ( → verify ) → ship → learn → complete
 ```
 
-- **brief** (`config.brief`) — clarify intent via Roast-Me. **plan** (uses `models.planning`) — roadmap + plan files.
-- **execute** (`config.execute`) — pure plan-execution (one phase / `auto` / `dispatch`); it only *produces* commits.
-- **verify** (`config.verify`) — the verify → review → harden → simplify pipeline, run inside execute per phase.
-- **finish** (`config.finish`) — the milestone close-out strand **Ship → Retro → Complete**, each step config-gated (`off`/`ask`/`auto`); `ship`/`retro`/`complete` map to `config.ship` / `config.retro` / `/crew:complete`. execute *suggests* finish at a milestone's end, never runs it.
+**Two levels — never conflate them:**
 
-`tasks` keeps its name (no `pull` section); `plan` has no own block (it uses `models.planning`).
+- **Level 1 — `config.workflow.mode` (`manual` | `auto`)** sits *above* the chain: does it advance between steps? `manual` (default) = do the one called step and **stop** (the `run` gates stay dormant); `auto` = walk the chain, each step firing per its `run`, in the close-out order **Ship → Learn → Complete**.
+- **Level 2 — per-step `run` (`off` | `ask` | `auto` | `smart`)** decides how a step is handled *when the chain reaches it*: `off` skip (standalone command still usable), `ask` ask at the boundary, `auto` run unasked, `smart` the agent judges and runs it if worthwhile.
+
+Per step:
+
+- **brief** (`config.workflow.brief`) / **plan** (`config.workflow.plan`, uses `models.planning`) — **always interactive**, no `run` gate.
+- **execute** (`config.workflow.execute`) — pure plan-execution, no skip-gate; it only *produces* commits. Owns its phase loop (`execute.loop` `one|all`), strategy (`execute.parallel`), and the verify pipeline.
+- **verify** (`config.workflow.execute.verify`) — the **test → review → harden → simplify** pipeline, run inside execute per phase; a list, **never** a `run`-gate, never auto-skipped. Also callable standalone via `/crew:verify`.
+- **ship / learn / complete** (`config.workflow.{ship,learn,complete}`) — the gateable close-out steps, each carrying `run`. `/crew:finish` orchestrates them (Ship → Learn → Complete) by reading their `run`s. execute *suggests* finish at a milestone's end under `manual`, never runs it.
+
+Cross-cutting config (`git`, `models`, `tasks`, `testing`, …) stays **top-level**, not under `workflow`. **Safety boundary:** `config.git` is the sole git/remote authority for **every** `run` including `auto`/`smart` — "run the step?" and "touch the remote/prod?" are orthogonal axes (see `crew-config`).
+
+## Workflow vocabulary — three granularities
+
+The same idea "runs through" lives on three distinctly named fields, so **`auto` is never ambiguous**:
+
+| level | what advances | field |
+|---|---|---|
+| Workflow steps | brief → … → complete | `workflow.mode: manual \| auto` |
+| Phases in execute | phase 1 → 2 → 3 … of the milestone | `workflow.execute.loop: one \| all` |
+| Execution strategy | phases serial vs. parallel (worktrees) | `workflow.execute.parallel: auto \| manual \| off` |
+
+`loop`/`parallel` exist only on `execute` (only it has phases); other steps are single actions. `smart` (a step's `run`) = the agent decides whether the step is worthwhile and runs it if so. `crew-config` is the contract for the exact fields and defaults — mirror it here, never define divergently.
+
+## Catch-up rule
+
+When a **later** step is invoked directly while an **earlier** close-out step in the same milestone hasn't run yet, the step **detects** the gap (from `LOG.md` / state) and **offers the missing earlier step(s) per their `run`**: `auto` → catch up, `ask` → ask, `smart` → judge, `off` → ignore. This is light awareness — **not** a dependency graph and **never** forced. Commands reference this rule rather than restating it.
 
 ## Response style
 
