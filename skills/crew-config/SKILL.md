@@ -51,7 +51,7 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
       "enabled": true                  // per-milestone cadence (was config.retro.enabled)
     },
     "complete": {
-      "run": "ask"                     // "off" | "ask" | "auto" | "smart" — audit → summary → archive, run inline by /crew:finish (wraps /crew:archive)
+      "run": "ask"                     // "off" | "ask" | "auto" | "smart" — audit → summary → archive; standalone /crew:complete, called by /crew:finish as its final step (wraps /crew:archive)
     },
     "finish": {}                       // orchestrator only — runs Ship → Learn → Complete in that order, reading each step's `run`; carries no gate of its own (see "config.workflow.finish")
   },
@@ -161,13 +161,13 @@ Resolved through the normal layering — a project's `.planning/config.json` ove
 
 **`config.git` is the single git authority.** ship has **no** deploy-specific push axis: every git step (commit/push/PR/merge) defers to `config.git` (`autoCommitPerPhase` / `autoPush` / `autoPR` / `mergeStrategy`). In a push-triggered setup the prod trigger *is* the push — so it belongs to `git.autoPush` (default false → ask), i.e. to the user. ship degrades gracefully — a local `version+commit+tag` is a valid partial result when push/PR are declined.
 
-**`config.workflow.finish`** is the milestone-close **orchestrator** — it runs **Ship → Learn → Complete** in that fixed order. It has **no gate block of its own** (the old `config.finish.{ship,retro,complete}` tri-states have **dissolved** into the steps' own `run`): `/crew:finish` reads `workflow.ship.run`, `workflow.learn.run`, `workflow.complete.run` and `workflow.mode`, then orchestrates. It invents no logic — it calls the existing `/crew:ship` and `/crew:learn` commands and runs the **Complete** close-out inline (audit → summary → archive, wrapping `/crew:archive`). There is **no standalone `/crew:complete` command** — Complete lives only inside `/crew:finish`.
+**`config.workflow.finish`** is the milestone-close **orchestrator** — it runs **Ship → Learn → Complete** in that fixed order. It has **no gate block of its own** (the old `config.finish.{ship,retro,complete}` tri-states have **dissolved** into the steps' own `run`): `/crew:finish` reads `workflow.ship.run`, `workflow.learn.run`, `workflow.complete.run` and `workflow.mode`, then orchestrates. It invents no logic — it **delegates all three steps** to their own commands (`/crew:ship`, `/crew:learn`, `/crew:complete`); the Complete close-out (audit → summary → archive, wrapping `/crew:archive`) lives in the standalone **`/crew:complete`** command, which finish calls as its final step.
 
 | close-out step | gate (`run`) | extra gating |
 |---|---|---|
 | `ship` | `workflow.ship.run` (default `ask`) | also hard-gated by `config.workflow.ship.enabled`; `config.git` (`autoPush`/`autoPR`) stays the git authority — finish adds **no** new push/release axis. Never ships on a red verify. |
 | `learn` | `workflow.learn.run` (default `ask`) | gated by `config.workflow.learn.enabled`; cadence is **per milestone** (no per-phase learn). |
-| `complete` | `workflow.complete.run` (default `ask`) | audit → summary → archive, run **inline** by `/crew:finish` (wraps `/crew:archive`); only archives once all phases are `[x]`/`[~]`, else the step stops with a note. |
+| `complete` | `workflow.complete.run` (default `ask`) | audit → summary → archive; the standalone **`/crew:complete`** command, called by `/crew:finish` as the final close-out step (wraps `/crew:archive`); only archives once all phases are `[x]`/`[~]`, else the step stops with a note. |
 
 A step whose `run` is `off`, or that is disabled/not-applicable, is **skipped cleanly**, not aborted. `/crew:execute` only ever *suggests* `/crew:finish` at a milestone's end under `mode: manual` — it never runs it (the autonomy contract's "never self-ship/-complete" holds); under `mode: auto` the chain advances and each step fires per its `run`.
 

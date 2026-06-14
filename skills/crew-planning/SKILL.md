@@ -67,7 +67,7 @@ Files inside a folder are told apart by filename. **A leading underscore marks a
 
 ## Archiving completed milestones
 
-When a milestone's phases are **all `[x]`**, `/crew:archive` (or the inline Complete step of `/crew:finish`) moves it out of the live state to keep `ROADMAP.md` and `plans/` small:
+When a milestone's phases are **all `[x]`** (or `[~]` deferred — non-blocking), `/crew:archive` (or `/crew:complete`, which calls it as its final step) moves it out of the live state to keep `ROADMAP.md` and `plans/` small:
 
 ```
 .planning/archive/
@@ -78,6 +78,8 @@ When a milestone's phases are **all `[x]`**, `/crew:archive` (or the inline Comp
 ```
 
 One milestone = one folder: the archived ROADMAP section lands **inside** the moved folder as `_roadmap.md`, beside `_spec.md` and the phases — consistent with the `_spec.md` meta-file idiom. The live `ROADMAP.md` keeps a one-liner in place of the section: `## Meilenstein N: <title> — ✓ archiviert YYYY-MM-DD → archive/plans/<n>_<slug>/_roadmap.md`. Archiving is the folder `mv` **plus** writing that one `_roadmap.md` into it. `LOG.md` is never archived — it stays append-only.
+
+**Complete vs. Archive — not aliases.** `/crew:complete` is the full *semantic* close-out (audit → summarize → `PROJECT.md` → archive) and calls `/crew:archive` as its last step; `/crew:archive` is the mechanical *primitive* (the folder `mv` + `_roadmap.md` write) and stays usable on its own for pure tidy-up (e.g. an old milestone that never ran through finish). The done-threshold is identical in both — every phase `[x]` or `[~]` (deferred non-blocking), only `[ ]`/`[>]` block.
 
 ## Principles
 
