@@ -1,5 +1,62 @@
 # @mantaray0/crew
 
+## 0.13.0
+
+### Minor Changes
+
+- [`84270a1`](https://github.com/mantaray0/crew/commit/84270a177bb3d4d3ce61947dceaabb27c4614bad) Thanks [@mantaray0](https://github.com/mantaray0)! - Add a config-gated `/crew:finish` close-out strand and align config sections with workflow-step names.
+
+  `/crew:finish` runs the milestone close-out as one strand — **Ship → Retro → Complete** in that fixed
+  order, each step independently gated by the new `config.finish` block (`off` / `ask` / `auto`; defaults
+  `ship: off`, `retro: ask`, `complete: ask`). finish orchestrates only: it calls the existing
+  `/crew:ship`, `/crew:retro`, and `/crew:complete`, invents no logic, keeps `config.git` as the sole git
+  authority, never ships on a red verify, and only archives once every phase is `[x]`/`[~]`. Every step
+  ends in exactly one logged outcome (ran / skipped / stopped), so a finish run loses no information
+  versus running the three commands by hand. `/crew:execute` stays pure plan-execution and now _suggests_
+  `/crew:finish` at a milestone's end — it never self-ships, self-completes, or self-finishes.
+
+  `/crew:complete-milestone` is renamed to **`/crew:complete`**; the old name lives on as a non-breaking
+  deprecated alias.
+
+  The config sections are renamed to match the workflow step they drive — `clarify→brief`,
+  `execution→execute`, `deploy→ship`, `learn→retro` (`verify` and all cross-cutting sections unchanged).
+  This is a pure key rename: the `/crew:init` / `/crew:setup` reconcile carries existing values
+  losslessly to the new keys via explicit known-migrations and prompts for the new `finish` keys — nothing
+  is set silently or dropped.
+
+- [`f134bd8`](https://github.com/mantaray0/crew/commit/f134bd84d490f2be2e3a5767e6cb57c9c6994516) Thanks [@mantaray0](https://github.com/mantaray0)! - Restructure config into `config.workflow.*` with a two-level workflow model, and finish the close-out
+  vocabulary cleanup.
+
+  **Two levels, so "auto" is never ambiguous.** The workflow steps now live under `config.workflow.*`
+  (`brief`/`plan`/`execute`/`ship`/`learn`/`complete`/`finish`); cross-cutting config (`git`, `models`,
+  `tasks`, …) stays top-level. **`workflow.mode`** (`manual | auto`, default `manual`) advances the _step_
+  chain (brief → … → complete); each gateable close-out step carries a **`run`** (`off | ask | auto |
+smart`, with the new `smart` = the agent judges whether it's worthwhile) that decides how it's handled
+  when the chain reaches it. The three "auto" granularities are now distinct fields — `workflow.mode`
+  (steps), `workflow.execute.loop` (phases), `workflow.execute.parallel` (strategy). `config.git` stays
+  the sole git/remote authority for **every** `run` including `auto`/`smart`: entering a step never pushes,
+  PRs, or merges without approval.
+
+  **`verify` is nested under execute** as `config.workflow.execute.verify` and its first stage is renamed
+  `verify` → `test` (the pipeline/command stay named `verify`); the default is now
+  `["test", "review", "harden", "simplify"]`.
+
+  **`config.finish` dissolves** into the steps' own `run`s (`config.workflow.{ship,learn,complete}.run`);
+  `/crew:finish` stays the orchestrator and reads them. The learn step is renamed: **`/crew:retro` →
+  `/crew:learn`** (config section `retro` → `learn`), with `/crew:retro` kept as a non-breaking deprecated
+  alias.
+
+  **Audit cleanup:** the dead `config.loop`, `config.state`, and `brief.askOnlyWhenStuck` are removed, and
+  the unwired `sessions/` snapshot mechanism is removed entirely (the `PreCompact` hook, `resume`'s
+  snapshot dependency, and the format docs) — continuity rides on the committed `PROJECT.md` + `ROADMAP.md`
+
+  - `LOG.md`. `/crew:init` and `/crew:setup` now prompt for every workflow gate explicitly.
+
+  This is a non-breaking migration: the `/crew:init` / `/crew:setup` / `/crew:update` reconcile carries
+  existing values losslessly to the new `config.workflow.*` keys via explicit known-migrations (the
+  0.7.0 → M4 → M5 chain), prompts for genuinely new fields, and flags removed ones — nothing is set
+  silently or dropped.
+
 ## 0.12.0
 
 ### Minor Changes
