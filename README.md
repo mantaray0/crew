@@ -25,7 +25,8 @@ state lives in a committed `.planning/` directory; behavior is driven by a layer
   - [Execution](#execution): `execute` (`auto` · `dispatch`) · `quick`
   - [Quality](#quality): `verify` · `rollback`
   - [Orientation](#orientation): `status` · `resume` · `report`
-  - [Learning](#learning): `retro`
+  - [Learning](#learning): `learn`
+  - [Release & lifecycle](#release--lifecycle): `ship` · `archive` · `complete` · `finish`
 - [The `.planning/` directory](#the-planning-directory)
 - [Configuration](#configuration)
 - [Architecture](#architecture): commands, agents, skills, hooks
@@ -40,7 +41,7 @@ state lives in a committed `.planning/` directory; behavior is driven by a layer
 crew turns Claude Code into a disciplined engineering teammate that keeps its own project memory.
 Instead of one-off prompts, you move work through a small, predictable lifecycle:
 
-> **brief → plan → execute → verify → finish** (ship · retro · complete)
+> **brief → plan → execute → verify → finish** (ship · learn · complete)
 
 Everything crew knows about your project is plain Markdown and JSON in a `.planning/` folder that
 lives **in your repo and is committed**. That means context survives across sessions, machines, and
@@ -80,14 +81,15 @@ only for maintainers: changesets-based releases. Users never install anything bu
 /crew:init      # per project: pick a project type, capture the stack, scaffold .planning/
 /crew:brief     # clarify an idea or feature (Roast-Me questioning)
 /crew:plan      # turn the brief into a roadmap + detailed plan files
-/crew:execute      # execute the next phase (verify pipeline + atomic commit)
+/crew:execute   # execute the next phase (verify pipeline + atomic commit)
+/crew:finish    # close out the milestone: ship · learn · complete
 /crew:status    # where are we?
 /crew:resume    # orient a fresh session
 ```
 
 `/crew:setup` is run once per machine. `/crew:init` is run once per repository. After that, your
-day-to-day is mostly `brief → plan → execute`, with `status`/`resume` to orient and `adjust`/`backlog`
-to stay fluid.
+day-to-day is mostly `brief → plan → execute`, closing each milestone with `finish`, and using
+`status`/`resume` to orient and `adjust`/`backlog` to stay fluid.
 
 ---
 
@@ -109,10 +111,14 @@ to stay fluid.
    test → review → harden → simplify   (/crew:verify, runs inside execute)
                 ▼
         atomic commit + LOG.md update
-                ▼
+                │
+                ▼  per milestone
         ┌───────────────┐
-        │ /crew:finish  │  close out the milestone: ship · learn · complete (each gated by its run)
+        │ /crew:finish  │  close out a milestone — each step gated by its run:
         └───────────────┘
+              ├─ ship      → /crew:ship       version · tag · push · release
+              ├─ learn     → /crew:learn      distill patterns → global registry
+              └─ complete  → /crew:complete   audit · summarize · archive
 ```
 
 `status`, `resume`, `report`, `adjust`, `backlog`, `rollback`, `quick`, and `pull` orbit this loop
@@ -313,11 +319,13 @@ Backed by the `verification-loop` skill.
 - **Loads** `PROJECT.md`, the active phase in `ROADMAP.md`, and the tail of `LOG.md` (whose latest
   entries carry the recent decisions, deviations, and next step). Continuity rides on the committed
   `.planning/` state — no separate snapshot.
-- **Briefs** you with a structured summary: what we're building, where we are, and the precise next
-  step — then waits. The companion to the `SessionStart` hook. Backed by `crew-context`.
-- The **session bootstrap** (vs. `/crew:status`, the dashboard): its differentiator is reading the
-  `LOG.md` history in depth — **DO NOT RETRY** (failed approaches/deviations) + the exact **next
-  step** — which the compact `status` dashboard never surfaces.
+- **Briefs** you with a structured summary — **PROJECT** (what we're building), **STATE** (done /
+  in-progress / not-started phases), **DO NOT RETRY** (failed approaches & deviations, always shown),
+  and the exact **NEXT STEP** — then waits. The companion to the `SessionStart` hook. Backed by
+  `crew-context`.
+- The **session bootstrap** (vs. `/crew:status`, the dashboard): `status` answers "where do we stand?",
+  `resume` answers "what was I doing, and what's the next move?" — its differentiator is reading the
+  `LOG.md` history in depth (the **DO NOT RETRY** + **NEXT STEP** that the compact dashboard never surfaces).
 
 #### `/crew:report`
 > A compact token/cost + progress report aggregated from `LOG.md`.
@@ -573,7 +581,8 @@ and tags — so the next project starts smarter. Nothing is written without your
 **Safety defaults.** crew never pushes, opens PRs, or runs a security pass automatically. State-
 changing actions are confirmed; the security pass requires both a recommendation and your approval.
 
-See `docs/specs/2026-06-12-crew-harness-core-design.md` for the full design rationale.
+The **skills are the source of truth** for crew's behavior — see the `skills/*/SKILL.md` files (and
+`CLAUDE.md`) for the full design rationale behind each concept.
 
 ---
 
@@ -581,8 +590,8 @@ See `docs/specs/2026-06-12-crew-harness-core-design.md` for the full design rati
 
 Contributions are welcome — most changes are just editing a Markdown command, agent, or skill. See
 [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md). Releases follow the
-changesets flow in [docs/RELEASING.md](docs/RELEASING.md). Found a security issue? See
-[SECURITY.md](SECURITY.md).
+[changesets](https://github.com/changesets/changesets) flow — add a changeset (`pnpm changeset`) and a
+CI bot opens the version PR. Found a security issue? See [SECURITY.md](SECURITY.md).
 
 ## License
 
