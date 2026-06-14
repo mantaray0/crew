@@ -67,7 +67,7 @@ Files inside a folder are told apart by filename. **A leading underscore marks a
 
 ## Archiving completed milestones
 
-When a milestone's phases are **all `[x]`**, `/crew:archive` (or `/crew:complete`) moves it out of the live state to keep `ROADMAP.md` and `plans/` small:
+When a milestone's phases are **all `[x]`**, `/crew:archive` (or the inline Complete step of `/crew:finish`) moves it out of the live state to keep `ROADMAP.md` and `plans/` small:
 
 ```
 .planning/archive/
