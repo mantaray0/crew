@@ -114,21 +114,35 @@ day-to-day is mostly `brief → plan → execute`, closing each milestone with `
                 │
                 ▼  per milestone
         ┌───────────────┐
-        │ /crew:finish  │  close out a milestone — each step gated by its run:
+        │ /crew:finish  │  orchestrator — close out a milestone, each step gated by its run:
         └───────────────┘
               ├─ ship      → /crew:ship       version · tag · push · release
               ├─ learn     → /crew:learn      distill patterns → global registry
-              └─ complete  → (inline)         audit · summarize · archive (wraps /crew:archive)
+              └─ complete  → /crew:complete   audit · summarize · PROJECT.md · archive (wraps /crew:archive)
 ```
+
+`execute` runs at three granularities: the **phase loop** (`one` vs `auto`), the **strategy**
+(sequential vs `dispatch` parallel worktrees), and `workflow.mode` (`manual` stops at the milestone
+boundary and *suggests* `finish`; `auto` chains into it). The close-out always runs in the fixed order
+**Ship → Learn → Complete**, and **`finish` is the orchestrator that bundles all three** — each step is
+also runnable on its own.
 
 `status`, `resume`, `report`, `adjust`, `backlog`, `rollback`, `quick`, and `pull` orbit this loop
 as support commands.
+
+### Command map
+
+| Level | Command(s) | Role |
+|---|---|---|
+| **Orchestrator** | `/crew:finish` | Runs the close-out **Ship → Learn → Complete** in order, each step gated by its `run`; delegates every step to its own command, invents no logic. |
+| **Single steps** | `/crew:ship` · `/crew:learn` · `/crew:complete` | Each runnable on its own. ship = release; learn = distill patterns; complete = the full milestone close-out (audit → summarize → `PROJECT.md` → archive). |
+| **Primitive** | `/crew:archive` | The mechanical move (folder `mv` + `_roadmap.md`); `/crew:complete` calls it as its last step. Stays usable on its own for pure tidy-up — **not** an alias of complete. |
 
 ---
 
 ## Commands
 
-All 22 commands live in `commands/*.md` and are invoked as `/crew:<name>`. Every command follows the
+All 20 commands live in `commands/*.md` and are invoked as `/crew:<name>`. Every command follows the
 `crew-conventions` skill: it **surfaces every decision** (free-text / single-select / multi-select),
 **batches the independent ones** into a stepper and stays sequential on dependencies, **never silently
 applies a default** (it shows the default as the recommended choice), and **responds in your language**
@@ -387,24 +401,33 @@ by `config.workflow.ship.enabled`); finish adds no new push/release axis — it 
 - **Leaves** a one-line pointer in `ROADMAP.md` (`✓ archiviert YYYY-MM-DD → archive/…`). `LOG.md` is
   never archived — it stays append-only. Backed by `crew-planning`.
 
+#### `/crew:complete` &nbsp;`[milestone slug, optional]`
+> Close out a finished milestone — audit that all phases are done, summarize what shipped, update `PROJECT.md`, then archive it.
+
+- **The full semantic close-out**: **(a)** audit (every phase `[x]` or `[~]`; open `[ ]`/`[>]` blocks)
+  → **(b)** summarize the milestone into `LOG.md` → **(c)** update `PROJECT.md` → **(d)** archive.
+- **Complete ⊃ Archive** — it calls `/crew:archive` as its last step (delegate, not duplicate);
+  `/crew:archive` stays usable on its own for pure tidy-up. They are **not** aliases of each other.
+- As the **Complete step** of `/crew:finish` its gate is `config.workflow.complete.run`; invoked
+  directly it always runs. Backed by `crew-context` + `crew-planning`.
+
 #### `/crew:finish` &nbsp;`[milestone slug, optional]`
 > Close out a milestone end-to-end in one strand: **Ship → Learn → Complete**, each step gated by its `run`.
 
-finish **orchestrates** — Ship and Learn call the existing `/crew:ship` and `/crew:learn` commands, and
-the **Complete** close-out runs **inline** here (audit → summarize → update `PROJECT.md` → archive,
-wrapping `/crew:archive`); there is no standalone `/crew:complete` command. It runs the steps in that
-fixed order and invents no logic of its own. Each step's gate is its own
+finish **orchestrates** — it **delegates all three steps** to their own commands (`/crew:ship`,
+`/crew:learn`, `/crew:complete`); the **Complete** close-out (audit → summarize → update `PROJECT.md` →
+archive, wrapping `/crew:archive`) lives in the standalone `/crew:complete` command. It runs the steps in
+that fixed order and invents no logic of its own. Each step's gate is its own
 `run` (`off|ask|auto|smart`) in `config.workflow.{ship,learn,complete}` (layered global < project):
 
 | step | default `run` | runs when | resolves to |
 |---|---|---|---|
 | **Ship** | `ask` | `ship.run ≠ off` **and** `ship.enabled` | a release via `/crew:ship` (never on a red verify — that stops the strand) |
 | **Learn** | `ask` | `learn.run ≠ off` **and** `learn.enabled` | `/crew:learn`, once per milestone |
-| **Complete** | `ask` | `complete.run ≠ off` | audit → summarize → archive **inline** (wraps `/crew:archive`; blocks if any phase is still open) |
+| **Complete** | `ask` | `complete.run ≠ off` | `/crew:complete` — audit → summarize → archive (wraps `/crew:archive`; blocks if any phase is still open) |
 
-`off` skips the step (Ship/Learn keep their standalone commands usable by hand; Complete lives only in
-finish), `ask` offers it then runs on confirmation, `auto` runs it without asking, `smart` lets the
-agent judge whether it's worthwhile.
+`off` skips the step (each step keeps its standalone command usable by hand), `ask` offers it then runs
+on confirmation, `auto` runs it without asking, `smart` lets the agent judge whether it's worthwhile.
 Whether the strand is *chained* automatically after execute is governed by `workflow.mode`; `config.git`
 stays the sole push/PR authority regardless of `run`. Every step ends in exactly one logged outcome —
 **ran**, **skipped** (with reason), or **stopped** (a real block: red verify or open phases) — so a
@@ -469,7 +492,7 @@ and their defaults:
 | `workflow.execute` | `parallel: "auto"`, `loop: "all"`, `maxConcurrent: 3`, `onDeviation: "small-self-major-ask"`, `verify: {default: ["test","review","harden","simplify"], perPhaseOverride: true}` | The phase loop, parallel strategy, deviation handling, and the nested verify pipeline |
 | `workflow.ship` | `run: "ask"`, `enabled: true`, `runDeploy: "off"`, `releaseTool: "auto"`, `finishRelease: "off"` | `/crew:ship` release/deploy + its close-out gate (`config.git` stays the git authority) |
 | `workflow.learn` | `run: "ask"`, `enabled: true` | `/crew:learn` self-learning + its close-out gate |
-| `workflow.complete` | `run: "ask"` | milestone close-out (Complete) gate — runs inline in `/crew:finish` |
+| `workflow.complete` | `run: "ask"` | `/crew:complete` milestone close-out + its gate within `/crew:finish` |
 | `git` | `autoCommitPerPhase: true`, `autoPush: false`, `isolation: "worktree-per-feature"`, `mergeStrategy: "integration-branch"` | Commit/branch/merge behavior; the **sole** git/remote authority for every `run` — never touches the remote without approval |
 | `models` | `mode: "auto"`; planning/review→`opus`, execution/simplify→`sonnet`, trivial→`haiku` | Model per task type (auto tiers or manual pins) |
 | `tasks` | `provider: "local"`, `writeBack: false` | External PM integration for `/crew:pull` |

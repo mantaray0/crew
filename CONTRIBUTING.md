@@ -17,7 +17,6 @@ contributions approachable: most changes are editing a command, agent, or skill 
 | `hooks/` | `hooks.json` + self-contained `.mjs` lifecycle scripts |
 | `.claude-plugin/plugin.json` | The plugin manifest |
 | `scripts/validate-plugin.mjs` | Structure check run in CI |
-| `docs/` | Design spec and release docs |
 
 ## Authoring conventions
 
@@ -51,7 +50,7 @@ Try your change by pointing Claude Code at your fork:
    pnpm changeset      # pick patch | minor | major, write a short summary
    ```
 4. Run `node scripts/validate-plugin.mjs` and open a PR. CI validates structure; the maintainer
-   cuts releases via the changesets flow (see `docs/RELEASING.md`).
+   cuts releases via the changesets flow.
 
 ## Code of Conduct
 
