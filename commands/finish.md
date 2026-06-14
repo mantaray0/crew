@@ -7,16 +7,15 @@ argument-hint: "[milestone slug, optional — passed through to the Complete ste
 
 The milestone-close strand: run **Ship → Learn → Complete** in that fixed order, each step
 individually gated by its own `config.workflow.<step>.run`. Uses the `crew-conventions`, `crew-config`,
-`crew-context`, and `crew-planning` skills; Ship and Learn delegate to the `/crew:ship` and `/crew:learn`
-commands (`crew-deploy` / `crew-learn`), and **Complete runs inline here** (audit → summarize → archive,
-wrapping `/crew:archive`) — there is **no standalone `/crew:complete` command**. Whether finish is
-*chained* automatically after `execute` is governed by `workflow.mode` (see `commands/execute.md` →
-*Milestone end*); finish itself just runs the step `run`s in order.
+`crew-context`, and `crew-planning` skills; **all three steps delegate to their own commands** —
+`/crew:ship`, `/crew:learn`, and `/crew:complete` (`crew-deploy` / `crew-learn` / the close-out flow).
+Whether finish is *chained* automatically after `execute` is governed by `workflow.mode` (see
+`commands/execute.md` → *Milestone end*); finish itself just runs the step `run`s in order.
 
-**finish orchestrates.** Ship and Learn call the existing commands/skills (it does not re-implement
-them); Complete is the one step it runs inline (the milestone close-out wrapping `/crew:archive`). Each
-delegated step writes its own `LOG.md` traces, and finish adds a short summary of the gating outcomes
-(which steps ran, were skipped, or stopped) — so a finish run loses no information.
+**finish orchestrates, it re-implements nothing.** All three steps call their existing commands/skills;
+the Complete logic lives in **exactly one** command (`/crew:complete`), so there is no inline duplication
+and no drift risk. Each delegated step writes its own `LOG.md` traces, and finish adds a short summary of
+the gating outcomes (which steps ran, were skipped, or stopped) — so a finish run loses no information.
 
 **Follow `crew-conventions`:** surface each decision explicitly; respond in the user's language.
 `/crew:finish` is the user's deliberate close-out under `workflow.mode: manual` — `/crew:execute` only
@@ -54,18 +53,13 @@ same `run`s (`crew-conventions` → *Catch-up rule*).
    Execute `commands/learn.md` (the `crew-learn` flow). Cadence is **per milestone** — there is no
    per-phase learn. If `config.workflow.learn.enabled` is `false`, **skip** it with a logged note
    (`skipped: learn (learn.enabled=false)`) and continue.
-3. **Complete** — run when `config.workflow.complete.run ≠ off`. The milestone close-out, run **inline**
-   here (there is no standalone `/crew:complete`); uses `crew-context` + `crew-planning`. Pick the
-   milestone from `$ARGUMENTS` (slug, optional) or the active/latest one in `.planning/ROADMAP.md`, then:
-   **(a) Audit** — every phase must be `[x]` or `[~]` (deferred phases are **non-blocking**, matching the
-   `/crew:execute` boundary guard; confirm once a `[~]` should carry into the next milestone).
-   **(b) Summarize** — append a milestone summary to `.planning/LOG.md` (what shipped, key decisions,
-   rolled-up token/cost when `observability.trackCost`). **(c) Update `PROJECT.md`** — refresh the
-   current-state section for the completed milestone. **(d) Archive** — run the `/crew:archive` step
-   (`commands/archive.md`): move the milestone's `plans/<n>_<slug>/` and its `ROADMAP.md` section into
-   `.planning/archive/`, leaving the one-line pointer.
-   **Guard:** Complete only archives once every phase is `[x]`/`[~]`; if a phase is still open
-   (`[ ]`/`[>]`), this is a **blocked** outcome, not a skip — *this step* stops with
+3. **Complete** — run when `config.workflow.complete.run ≠ off`. Execute the steps of
+   `commands/complete.md` (delegate, do not duplicate) — the milestone close-out (audit → summarize →
+   `PROJECT.md` → archive, wrapping `/crew:archive`), symmetric to Ship→`/crew:ship` and
+   Learn→`/crew:learn`. Pass `$ARGUMENTS` (slug, optional) through; complete picks the active/latest
+   milestone in `.planning/ROADMAP.md` otherwise.
+   **Guard:** Complete only archives once every phase is `[x]`/`[~]` (deferred `[~]` are non-blocking); if
+   a phase is still open (`[ ]`/`[>]`), this is a **blocked** outcome, not a skip — *this step* stops with
    `stopped: complete — open phases <list>`, points the user at `/crew:execute`/`/crew:adjust` to resolve
    them, and the strand ends there. finish does **not** hard-crash, but it also does **not** pretend the
    milestone closed.
