@@ -19,7 +19,7 @@ state lives in a committed `.planning/` directory; behavior is driven by a layer
 - [Install](#install)
 - [Quick start](#quick-start)
 - [The core loop](#the-core-loop)
-- [Commands](#commands) — all 19, in detail
+- [Commands](#commands) — all 22, in detail
   - [Setup & onboarding](#setup--onboarding): `setup` · `init` · `update`
   - [Shaping work](#shaping-work): `brief` · `plan` · `backlog` · `adjust` · `pull`
   - [Execution](#execution): `execute` (`auto` · `dispatch`) · `quick`
@@ -48,15 +48,15 @@ teammates — and a fresh Claude session can pick up exactly where the last one 
 
 What makes it more than a prompt collection:
 
-- **Cross-session context.** A living `PROJECT.md` + `ROADMAP.md` + `LOG.md`, plus per-session
-  snapshots, so `/crew:resume` reconstitutes full context in a clean window.
-- **A configurable verify pipeline.** Every change can pass through `verify → review → harden →
+- **Cross-session context.** A living `PROJECT.md` + `ROADMAP.md` + `LOG.md`, so `/crew:resume`
+  reconstitutes full context in a clean window.
+- **A configurable verify pipeline.** Every change can pass through `test → review → harden →
   simplify`, each in a fresh sub-agent context with the right model.
 - **Model management.** Cheap models for trivial work, strong models for planning/review — chosen
   automatically or pinned per task type.
 - **Parallel dispatch.** Independent phases run concurrently in isolated git worktrees and roll up
   through an integration branch.
-- **Self-learning.** `/crew:retro` distills reusable patterns into skills/tags in your global
+- **Self-learning.** `/crew:learn` distills reusable patterns into skills/tags in your global
   registry, so knowledge compounds across projects instead of getting stranded in one repo.
 
 ---
@@ -106,12 +106,12 @@ to stay fluid.
         │ /crew:execute │ ──────────────────────▶ /crew:execute dispatch (parallel worktrees)
         └───────┬───────┘
                 ▼
-   verify → review → harden → simplify   (/crew:verify, runs inside execute)
+   test → review → harden → simplify   (/crew:verify, runs inside execute)
                 ▼
         atomic commit + LOG.md update
                 ▼
         ┌───────────────┐
-        │ /crew:finish  │  close out the milestone: ship · retro · complete (each config-gated)
+        │ /crew:finish  │  close out the milestone: ship · learn · complete (each gated by its run)
         └───────────────┘
 ```
 
@@ -122,7 +122,7 @@ as support commands.
 
 ## Commands
 
-All 21 commands live in `commands/*.md` and are invoked as `/crew:<name>`. Every command follows the
+All 22 commands live in `commands/*.md` and are invoked as `/crew:<name>`. Every command follows the
 `crew-conventions` skill: it **surfaces every decision** (free-text / single-select / multi-select),
 **batches the independent ones** into a stepper and stays sequential on dependencies, **never silently
 applies a default** (it shows the default as the recommended choice), and **responds in your language**
@@ -156,7 +156,7 @@ Run this once per machine. Backed by the `crew-config` and `crew-conventions` sk
 - **Stack interview:** confirm/adjust DB, frontend, UI, backend-API, queue, deploy — pre-filled from
   the archetype and your defaults, with the escape hatch "you decide → I propose → you approve".
 - **Scaffolds** `.planning/` with `config.json`, an empty `PROJECT.md`/`ROADMAP.md`/`LOG.md`/
-  `BACKLOG.md`, and the `plans/` + `sessions/` directories.
+  `BACKLOG.md`, and the `plans/` directory.
 
 Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventions`.
 
@@ -176,7 +176,7 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
 - Reads `.planning/PROJECT.md` if present (so it knows this is a feature inside an existing project
   vs. a brand-new project).
 - Runs **Roast-Me clarification** (`roast-me` skill): sharp questions one at a time, each carrying a
-  recommended answer you can just confirm. Honors `config.brief.depth` (`light`/`normal`/`deep`).
+  recommended answer you can just confirm. Honors `config.workflow.brief.depth` (`light`/`normal`/`deep`).
   When a question is answerable from the codebase, it investigates instead of asking.
 - For a new project, captures the stack and writes `PROJECT.md`. For a feature, writes the **Spec
   head** of a plan file. Stops when shared understanding is reached.
@@ -237,14 +237,17 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
    done) it pauses and offers `/crew:finish` first (you can skip; it never self-finishes),
    then marks the phase `[>]` and records the claim in `claims.json` so parallel instances don't collide.
 3. **Implement** — exactly what the plan specifies, mirroring existing patterns. Model =
-   `config.models.execution` (or auto). **Deviation handling** (`execute.onDeviation`): small,
+   `config.models.execution` (or auto). **Deviation handling** (`workflow.execute.onDeviation`): small,
    in-intent deviations are decided autonomously and noted in the log; a real problem, ambiguity, or
    scope change → **stop and ask**.
-4. **Verify** — runs the verify pipeline per `config.verify`.
+4. **Verify** — runs the verify pipeline per `config.workflow.execute.verify`.
 5. **Commit** — one atomic commit per verified phase, then updates `ROADMAP.md` (`[x]`) and `LOG.md`.
 
-If `config.execute.parallel` is `auto` and independent phases are detected, it offers to hand off
-to `/crew:execute dispatch`. Backed by `crew-context` + `crew-planning`.
+The three "auto" granularities are distinct fields: the **phase loop** (`workflow.execute.loop` `one|all`,
+the `auto` argument), the **strategy** (`workflow.execute.parallel`, the `dispatch` argument), and the
+**step chain** (`workflow.mode`; see *Configuration*). If `config.workflow.execute.parallel` is `auto` and
+independent phases are detected, it offers to hand off to `/crew:execute dispatch`. Backed by `crew-context`
++ `crew-planning`.
 
 **`auto` — sequential autonomous run.** Runs a phase in the main context, then `/clear` +
 `/crew:execute auto`, carrying continuity through `.planning/` state (no sub-agents). Loops until the
@@ -253,7 +256,7 @@ reports and proposes `/crew:finish` for the close-out.
 
 **`dispatch [ids]` — parallel worktree run.** Builds the DAG from the milestone's phases and their
 `depends:` edges, computes waves of independent phases, confirms the split, then dispatches a wave
-(up to `config.execute.maxConcurrent` phases, each in an isolated worktree worked by a sub-agent).
+(up to `config.workflow.execute.maxConcurrent` phases, each in an isolated worktree worked by a sub-agent).
 The `merge-coordinator` agent rolls completed branches into an integration branch with intent-aware
 conflict resolution. Backed by `crew-planning` (DAG) + `git-merge`, plus the `merge-coordinator` agent.
 
@@ -272,10 +275,10 @@ conflict resolution. Backed by `crew-planning` (DAG) + `git-merge`, plus the `me
 > Explicitly run the verification pipeline (it also runs automatically inside `/crew:execute`).
 
 1. **Scope** — the current uncommitted diff, or a named phase's change.
-2. **Resolve steps** — from `config.verify.default`, default `["verify","review","harden","simplify"]`,
+2. **Resolve steps** — from `config.workflow.execute.verify.default`, default `["test","review","harden","simplify"]`,
    with optional per-phase overrides.
 3. **Run each step in a fresh sub-agent context**, picking the model per `config.models`:
-   - **verify** — does it do what the phase intended? (tests/build/behavior)
+   - **test** — does it do what the phase intended? (tests/build/behavior)
    - **review** — logic errors, edge cases, convention drift (language-specific reviewer agents)
    - **harden** — hunt swallowed errors and weak type design (`silent-failure-hunter`,
      `type-design-analyzer`)
@@ -295,24 +298,26 @@ Backed by the `verification-loop` skill.
 ### Orientation
 
 #### `/crew:status`
-> Read-only snapshot of the current project state. Modifies nothing.
+> Read-only view of the current project state. Modifies nothing.
 
 - If `.planning/` is missing, points you to `/crew:init`.
 - Reports per milestone: phases done `[x]`, active `[>]`, pending `[ ]`, deferred `[~]`, including
   any `@worktree` claim markers.
 - Shows the last few `LOG.md` lines (incl. token/cost notes if present).
 - The any-time **dashboard** — "where do we stand?". To *re-enter work* in a fresh session, use
-  `/crew:resume` instead (it reads the session snapshot; `status` does not).
+  `/crew:resume` instead (it reads the `LOG.md` history in depth; `status` shows a compact dashboard).
 
 #### `/crew:resume`
 > Pick up exactly where the last session left off, in a clean context.
 
-- **Loads** `PROJECT.md`, the most recent snapshot in `.planning/sessions/` (newest across any
-  worktree subdir), the active phase in `ROADMAP.md`, and the tail of `LOG.md`.
+- **Loads** `PROJECT.md`, the active phase in `ROADMAP.md`, and the tail of `LOG.md` (whose latest
+  entries carry the recent decisions, deviations, and next step). Continuity rides on the committed
+  `.planning/` state — no separate snapshot.
 - **Briefs** you with a structured summary: what we're building, where we are, and the precise next
-  step — then waits. The companion to the `PreCompact`/`SessionStart` hooks. Backed by `crew-context`.
-- The **session bootstrap** (vs. `/crew:status`, the dashboard): its differentiator is the snapshot —
-  **DO NOT RETRY** (failed approaches) + the exact **next step** — which `status` never reads.
+  step — then waits. The companion to the `SessionStart` hook. Backed by `crew-context`.
+- The **session bootstrap** (vs. `/crew:status`, the dashboard): its differentiator is reading the
+  `LOG.md` history in depth — **DO NOT RETRY** (failed approaches/deviations) + the exact **next
+  step** — which the compact `status` dashboard never surfaces.
 
 #### `/crew:report`
 > A compact token/cost + progress report aggregated from `LOG.md`.
@@ -322,16 +327,16 @@ Backed by the `verification-loop` skill.
 
 ### Learning
 
-#### `/crew:retro` &nbsp;`[phase/milestone, optional]`
-> Make the harness learn from completed work so knowledge compounds across projects.
+#### `/crew:learn` &nbsp;`[phase/milestone, optional]`
+> Make the harness learn from completed work so knowledge compounds across projects. (`/crew:retro` is a deprecated alias.)
 
 1. **Gather** recent `LOG.md` entries, the diffs of completed phases, and `PROJECT.md` decisions.
 2. **Distill** recurring patterns into a proposed **skill** (reusable procedure), a **tag** (a
    capability that activates skills/rules), or a `PROJECT.md` decision update.
 3. **Propose, don't impose** — each proposal is presented for explicit confirmation before anything is
-   written to your global registry. Active when `config.retro.enabled`. Backed by `crew-learn`.
+   written to your global registry. Active when `config.workflow.learn.enabled`. Backed by `crew-learn`.
 
-Also the **Retro step** of the `/crew:finish` strand (`config.finish.retro`), where it runs once per
+Also the **Learn step** of the `/crew:finish` strand (`config.workflow.learn.run`), where it runs once per
 milestone — see `/crew:finish` below.
 
 ### Release & lifecycle
@@ -339,10 +344,10 @@ milestone — see `/crew:finish` below.
 #### `/crew:ship` &nbsp;`[environment, optional]`
 > Carry a verified change to a release — version, commit, tag, push, PR, and (when enabled) deploy.
 
-Driven by `config.ship` (`enabled` + `runDeploy`); **`config.git` is the single git authority** — ship
+Driven by `config.workflow.ship` (`enabled` + `runDeploy`); **`config.git` is the single git authority** — ship
 never pushes, opens a PR, or commits in a way your git config disables; it asks instead:
 
-1. **Read config** — `config.ship`, `config.git`, and `reference/deploy.md`. If `ship.enabled` is
+1. **Read config** — `config.workflow.ship`, `config.git`, and `reference/deploy.md`. If `ship.enabled` is
    `false`, it explains how to enable it and stops.
 2. **Gate on verify** — refuses to ship on a red `verify` (checks the last result in `LOG.md`).
 3. **Release per `ship.releaseTool`** — `changesets`/`release-please` (push a changeset/commits; a CI
@@ -360,8 +365,8 @@ there's nothing extra to run. Set it to `ask`/`auto` only for imperative deploys
 bot-PR tools, `ship.finishRelease` (default `off`) controls whether ship also merges the open
 version-PR to finish the release. Backed by `crew-deploy`.
 
-ship is also the **Ship step** of the `/crew:finish` strand (`config.finish.ship`, additionally gated
-by `config.ship.enabled`); finish adds no new push/release axis — it calls this same command.
+ship is also the **Ship step** of the `/crew:finish` strand (`config.workflow.ship.run`, additionally gated
+by `config.workflow.ship.enabled`); finish adds no new push/release axis — it calls this same command.
 
 #### `/crew:archive` &nbsp;`[milestone slug, optional]`
 > Move a fully completed milestone into `.planning/archive/` so the live roadmap stays small and cheap to read.
@@ -390,24 +395,26 @@ Reachable under its former name `/crew:complete-milestone` (a deprecated, non-br
 forwards to `/crew:complete`). Also the **Complete step** of the `/crew:finish` strand below.
 
 #### `/crew:finish` &nbsp;`[milestone slug, optional]`
-> Close out a milestone end-to-end in one strand: **Ship → Retro → Complete**, each step config-gated.
+> Close out a milestone end-to-end in one strand: **Ship → Learn → Complete**, each step gated by its `run`.
 
-finish **orchestrates** — it calls the existing commands/skills (`/crew:ship`, `/crew:retro`,
-`/crew:complete`) in that fixed order and invents no logic of its own. Each step is an independent
-tri-state in `config.finish` (layered global < project):
+finish **orchestrates** — it calls the existing commands/skills (`/crew:ship`, `/crew:learn`,
+`/crew:complete`) in that fixed order and invents no logic of its own. Each step's gate is its own
+`run` (`off|ask|auto|smart`) in `config.workflow.{ship,learn,complete}` (layered global < project):
 
-| step | default | runs when | resolves to |
+| step | default `run` | runs when | resolves to |
 |---|---|---|---|
-| **Ship** | `off` | `finish.ship ≠ off` **and** `ship.enabled` | a release via `/crew:ship` (never on a red verify — that stops the strand) |
-| **Retro** | `ask` | `finish.retro ≠ off` **and** `retro.enabled` | `/crew:retro`, once per milestone |
-| **Complete** | `ask` | `finish.complete ≠ off` | audit → summarize → archive via `/crew:complete` (blocks if any phase is still open) |
+| **Ship** | `off` | `ship.run ≠ off` **and** `ship.enabled` | a release via `/crew:ship` (never on a red verify — that stops the strand) |
+| **Learn** | `ask` | `learn.run ≠ off` **and** `learn.enabled` | `/crew:learn`, once per milestone |
+| **Complete** | `ask` | `complete.run ≠ off` | audit → summarize → archive via `/crew:complete` (blocks if any phase is still open) |
 
 `off` skips the step (its standalone command stays usable by hand), `ask` offers it then runs on
-confirmation, `auto` runs it without asking. Every step ends in exactly one logged outcome —
+confirmation, `auto` runs it without asking, `smart` lets the agent judge whether it's worthwhile.
+Whether the strand is *chained* automatically after execute is governed by `workflow.mode`; `config.git`
+stays the sole push/PR authority regardless of `run`. Every step ends in exactly one logged outcome —
 **ran**, **skipped** (with reason), or **stopped** (a real block: red verify or open phases) — so a
 finish run loses no information versus running the three commands by hand. `config.git` stays the sole
-git authority; finish adds no new push axis, and `/crew:execute` only ever *suggests* finish, never
-runs it. Backed by `crew-config` (`config.finish`) + the delegated command skills.
+git authority; finish adds no new push axis, and `/crew:execute` only ever *suggests* finish under
+`workflow.mode: manual`, never runs it. Backed by `crew-config` (`config.workflow`) + the delegated command skills.
 
 ---
 
@@ -433,10 +440,8 @@ UPPERCASE** (like `README`/`CHANGELOG`), **data files and directories are lowerc
 │       ├── _roadmap.md       # the archived milestone's ROADMAP section (written in)
 │       ├── _spec.md          # (if the milestone had one)
 │       └── <id>_<title>.md   # numbered phase plans
-├── reference/        # load-on-demand knowledge docs (indexed in PROJECT.md ## Reference)
-│   └── <topic-slug>.md       # runbooks, domain maps, deep-dives — never auto-loaded
-└── sessions/         # session snapshots for resume (per worktree id)
-    └── <worktree-id>/<snapshot>.md
+└── reference/        # load-on-demand knowledge docs (indexed in PROJECT.md ## Reference)
+    └── <topic-slug>.md       # runbooks, domain maps, deep-dives — never auto-loaded
 ```
 
 Status markers used in `ROADMAP.md`: `[ ]` open · `[>]` active · `[x]` done · `[~]` deferred.
@@ -452,18 +457,25 @@ built-in defaults  <  ~/.claude/crew/config.json (global)  <  .planning/config.j
 ```
 
 with ad-hoc overrides (e.g. a per-phase verify override) winning over all of them. The full schema is
-the source of truth in the **`crew-config`** skill; here are the groups and their defaults:
+the source of truth in the **`crew-config`** skill.
+
+**Two levels (so "auto" is never ambiguous).** The workflow steps live under `config.workflow.*`;
+cross-cutting config stays top-level. **`workflow.mode`** (`manual|auto`) advances the *step* chain
+(brief → … → complete); each gateable close-out step's **`run`** (`off|ask|auto|smart`) decides how it's
+handled when the chain reaches it. The three "auto" granularities are distinct fields: `workflow.mode`
+(steps), `workflow.execute.loop` (phases), `workflow.execute.parallel` (strategy). Here are the groups
+and their defaults:
 
 | Group | Key defaults | What it controls |
 |---|---|---|
-| `git` | `autoCommitPerPhase: true`, `autoPush: false`, `isolation: "worktree-per-feature"`, `mergeStrategy: "integration-branch"` | Commit/branch/merge behavior; never touches the remote without approval |
-| `execute` | `parallel: "auto"`, `maxConcurrent: 3`, `onDeviation: "small-self-major-ask"` | Parallelism and how deviations are handled |
-| `verify` | `default: ["verify","review","harden","simplify"]`, `perPhaseOverride: true` | The verification pipeline |
+| `workflow.mode` | `"manual"` | Whether the step chain advances between steps (`manual` stops after the called step; `auto` walks brief → … → complete, firing each step's `run`) |
+| `workflow.brief` | `depth: "normal"`, `intensity: "normal"` | How broad/hard Roast-Me pushes during `/crew:brief` |
+| `workflow.execute` | `parallel: "auto"`, `loop: "one"`, `maxConcurrent: 3`, `onDeviation: "small-self-major-ask"`, `verify: {default: ["test","review","harden","simplify"], perPhaseOverride: true}` | The phase loop, parallel strategy, deviation handling, and the nested verify pipeline |
+| `workflow.ship` | `run: "off"`, `enabled: true`, `runDeploy: "off"`, `releaseTool: "auto"`, `finishRelease: "off"` | `/crew:ship` release/deploy + its close-out gate (`config.git` stays the git authority) |
+| `workflow.learn` | `run: "ask"`, `enabled: true` | `/crew:learn` self-learning + its close-out gate |
+| `workflow.complete` | `run: "ask"` | `/crew:complete` milestone close-out gate |
+| `git` | `autoCommitPerPhase: true`, `autoPush: false`, `isolation: "worktree-per-feature"`, `mergeStrategy: "integration-branch"` | Commit/branch/merge behavior; the **sole** git/remote authority for every `run` — never touches the remote without approval |
 | `models` | `mode: "auto"`; planning/review→`opus`, execution/simplify→`sonnet`, trivial→`haiku` | Model per task type (auto tiers or manual pins) |
-| `brief` | `depth: "normal"`, `intensity: "normal"`, `askOnlyWhenStuck: true` | How broad/hard Roast-Me pushes during `/crew:brief` |
-| `ship` | `enabled: true`, `runDeploy: "off"`, `releaseTool: "auto"`, `finishRelease: "off"` | `/crew:ship` release/deploy behavior (`config.git` stays the git authority) |
-| `retro` | `enabled: true` | `/crew:retro` self-learning |
-| `finish` | `ship: "off"`, `retro: "ask"`, `complete: "ask"` | Which milestone-close steps the `/crew:finish` strand runs (`off`/`ask`/`auto`) |
 | `tasks` | `provider: "local"`, `writeBack: false` | External PM integration for `/crew:pull` |
 | `testing` | `policy: "from-archetype"` | TDD / tests-required / optional |
 | `security` | `auto: false` | Security pass is **never** automatic — recommended on sensitive scope, run only on approval |
@@ -493,7 +505,7 @@ crew is a **pure Claude Code plugin** — four asset types, no build, no runtime
 hook scripts.
 
 ### Commands (`commands/*.md`)
-The 19 slash commands above. Each is a Markdown file with a `description` (+ `argument-hint`) and a
+The 22 slash commands above. Each is a Markdown file with a `description` (+ `argument-hint`) and a
 numbered `## Steps` recipe that Claude follows.
 
 ### Agents (`agents/*.md`)
@@ -522,20 +534,18 @@ The reusable knowledge the commands lean on:
 |---|---|
 | `crew-conventions` | **Every** command — the one-decision-at-a-time interaction + language rules |
 | `crew-config` | `setup`, `init`, `update` — config schema + project-type/tag registry |
-| `crew-context` | `execute`, `resume` — the `.planning/` state model + session-snapshot format |
+| `crew-context` | `execute`, `resume` — the `.planning/` state model |
 | `crew-planning` | `plan`, `execute`, `adjust` — roadmap/phase/spec conventions + DAG |
-| `verification-loop` | `verify`, `execute` — the verify→review→harden→simplify pipeline |
+| `verification-loop` | `verify`, `execute` — the test→review→harden→simplify pipeline |
 | `model-management` | `execute dispatch` + pipeline — task-types and model selection |
 | `git-merge` | `execute dispatch` — worktree isolation, claims, rolling integration |
 | `roast-me` | `brief`, `init` — bounded clarifying questions with recommended answers |
-| `crew-learn` | `retro` — distilling work into proposed skills/tags |
+| `crew-learn` | `learn` — distilling work into proposed skills/tags |
 
 ### Hooks (`hooks/`)
-Three Node scripts wired in `hooks/hooks.json`:
+Two Node scripts wired in `hooks/hooks.json`:
 
 - **`SessionStart` → `session-start.mjs`** — primes a new session with crew context.
-- **`PreCompact` → `pre-compact.mjs`** — writes a session snapshot before context is compacted, so
-  `/crew:resume` can recover.
 - **`Notification` → `notify.mjs blocker`** and **`Stop` → `notify.mjs completion`** — fire desktop/
   push notifications on blockers and completions, per `config.notifications`.
 
@@ -543,11 +553,12 @@ Three Node scripts wired in `hooks/hooks.json`:
 
 ## Concepts in depth
 
-**Cross-session continuity.** The `PreCompact` hook snapshots state before compaction; `SessionStart`
-re-primes; `/crew:resume` reconstitutes. Because `.planning/` is committed, this works across
-machines and teammates — not just within one chat.
+**Cross-session continuity.** Continuity rides on the committed `.planning/` state — `PROJECT.md` +
+`ROADMAP.md` + `LOG.md`; `SessionStart` re-primes a new window and `/crew:resume` reconstitutes from
+them. Because `.planning/` is committed, this works across machines and teammates — not just within one
+chat.
 
-**The verify pipeline.** `verify → review → harden → simplify`, each in a *fresh* sub-agent context
+**The verify pipeline.** `test → review → harden → simplify`, each in a *fresh* sub-agent context
 so reviewers aren't biased by the implementer's reasoning, and each with a model chosen for its task
 type. Steps are configurable globally and per-phase.
 
@@ -556,7 +567,7 @@ runs independent phases in isolated worktrees, `claims.json` prevents collisions
 `merge-coordinator` performs intent-aware integration. Atomic per-phase commits make `/crew:rollback`
 trivial.
 
-**Self-learning.** `/crew:retro` lifts patterns out of one repo into your global registry as skills
+**Self-learning.** `/crew:learn` lifts patterns out of one repo into your global registry as skills
 and tags — so the next project starts smarter. Nothing is written without your explicit confirmation.
 
 **Safety defaults.** crew never pushes, opens PRs, or runs a security pass automatically. State-
