@@ -1,6 +1,6 @@
 ---
 name: crew-context
-description: How crew holds project state across sessions — the .planning state model, what each file owns, and the session-snapshot handoff format. Use when reading/writing .planning state or resuming work.
+description: How crew holds project state across sessions — the .planning state model and what each file owns. Use when reading/writing .planning state or resuming work.
 origin: crew
 ---
 
@@ -16,8 +16,7 @@ origin: crew
 | `BACKLOG.md` | Idea inbox; triaged at plan/adjust. |
 | `LOG.md` | Append-only history: phase, commit, verify result, token/cost. |
 | `claims.json` | Which instance/worktree holds which phase (parallel-safe). |
-| `sessions/<worktree-id>/` | Per-instance session snapshots. |
-| `config.json` | Behavior config (git, ship, verify, models, brief, retro, finish, tasks, …). |
+| `config.json` | Behavior config: cross-cutting top-level (`git`, `models`, `tasks`, …) + the workflow steps under `config.workflow.*` (`brief`/`plan`/`execute`(+`verify`)/`ship`/`learn`/`complete`/`finish`). |
 | `archive/` | Completed milestones moved out of live state (`/crew:archive`): `plans/<n>_<slug>/` with the former ROADMAP section written in as `_roadmap.md`. Keeps `ROADMAP.md`/`plans/` small. |
 | `reference/` | Load-on-demand knowledge docs (runbooks, domain/data maps, architecture deep-dives) — **never auto-loaded**; each indexed one line in PROJECT.md's `## Reference`. Naming `reference/<topic-slug>.md`. |
 
@@ -41,24 +40,6 @@ origin: crew
 - **One topic per doc** (`reference/<topic-slug>.md`, lowercase/kebab); split when a doc grows broad so loading it pulls only relevant context.
 - Freeform knowledge agents consult on demand — `/crew:ship`, for instance, loads `reference/deploy.md` because shipping touches the deploy area.
 
-## Session snapshot format
+## Cross-session continuity
 
-When context is about to compact or a session ends, write `sessions/<worktree-id>/<timestamp>.md`:
-
-```markdown
-# Snapshot <timestamp>
-## Building
-<1-3 sentences>
-## Works (with evidence)
-- <thing> — confirmed by: <evidence>
-## Does NOT work (and why)
-- <approach> — failed because: <exact reason>   ← most important section
-## File states
-| file | status | notes |
-## Decisions
-- <decision> — because: <why>
-## Exact next step
-<the single most important next action — zero guesswork>
-```
-
-`/crew:resume` reads `PROJECT.md` + the newest snapshot + `LOG.md` and produces a briefing. Snapshots are read-only history — never edit a past one; always write a new file.
+Continuity rides on the **committed `.planning/` state**, not on a separate snapshot file: `PROJECT.md` (the always-true project truth + decisions), `ROADMAP.md` (phase status), and `LOG.md` (append-only history — per-phase results, key decisions, deviations, and the next step). A fresh context re-orients from these; the work survives because it lives in the plan and the log, not in the context window. `/crew:resume` reads `PROJECT.md` + the active `ROADMAP.md` phase + the `LOG.md` tail and produces a briefing.

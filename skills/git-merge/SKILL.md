@@ -13,13 +13,12 @@ origin: crew
 - `branch-per-feature` — branches without separate worktrees (one working tree).
 - `linear` — everything on the current branch (no real parallelism).
 
-Concurrency cap: `config.execute.maxConcurrent`.
+Concurrency cap: `config.workflow.execute.maxConcurrent`.
 
 ## Collision-safe state
 
 - One `plans/<n>_<milestone-slug>/` folder per feature (different folders/files → no conflict).
 - `LOG.md` is append-only (or per-feature files under a `logs/` directory).
-- Snapshots under `sessions/<worktree-id>/`.
 - `claims.json` records which worktree owns which phase; the roadmap shows `[>] @worktree-id`.
 
 ## Rolling integration
