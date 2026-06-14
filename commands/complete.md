@@ -5,7 +5,7 @@ argument-hint: "[milestone slug, optional — defaults to the active/latest mile
 
 # /crew:complete
 
-The richer milestone close-out: audit → summarize → archive. Uses the `crew-context`, `crew-planning`, and `crew-conventions` skills. Wraps `/crew:archive` (which is the mechanical move). Also the **Complete step** of the `/crew:finish` strand (`config.finish.complete`); the standalone command stays usable by hand. Reachable under its former name `/crew:complete-milestone` (deprecated alias).
+The richer milestone close-out: audit → summarize → archive. Uses the `crew-context`, `crew-planning`, and `crew-conventions` skills. Wraps `/crew:archive` (which is the mechanical move). Also the **Complete step** of the `/crew:finish` strand (gated by `config.workflow.complete.run`); the standalone command stays usable by hand. When invoked directly, apply the canonical **Catch-up rule** (`crew-conventions`) — offer any missing earlier close-out step (ship/learn) per its `run`. Reachable under its former name `/crew:complete-milestone` (deprecated alias).
 
 **Follow `crew-conventions`:** confirm before writing; respond in the user's language.
 
