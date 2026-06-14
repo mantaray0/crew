@@ -17,5 +17,10 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          # setup-node@v5 enables package-manager caching by default when a
+          # packageManager field is present (pnpm@…). This job installs no deps
+          # (it only runs a standalone script), and pnpm is not set up here — so
+          # auto-caching would fail looking for pnpm. Disable it.
+          package-manager-cache: false
       - name: Validate plugin structure
         run: node scripts/validate-plugin.mjs
