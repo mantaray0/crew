@@ -12,7 +12,7 @@ Move a finished milestone out of the live state into `.planning/archive/`, so `R
 ## Steps
 
 1. **Pick the milestone.** Use the `$ARGUMENTS` slug if given; otherwise the **latest fully completed** milestone in `.planning/ROADMAP.md`.
-2. **Guardrail — done only.** Verify **every** phase of that milestone is `[x]`. If any phase is open (`[ ]`/`[>]`/`[~]`), list the open ones and **stop** — only fully completed milestones archive.
+2. **Guardrail — done only.** Verify **every** phase of that milestone is `[x]` **or** `[~]` (deferred phases are **non-blocking**, matching the audit in `/crew:complete`; confirm once whether a `[~]` should carry into the next milestone). If a phase is still open (`[ ]`/`[>]`), list the open ones and **stop** — only fully completed milestones archive.
 3. **Confirm.** Show what will move (the milestone's `plans/<n>_<slug>/` folder, with its `ROADMAP.md` section written in as `_roadmap.md`) and where, then proceed.
 4. **Move state** (a folder `mv` + writing one meta file, no content change):
    - Move `.planning/plans/<n>_<slug>/` → `.planning/archive/plans/<n>_<slug>/`.
@@ -20,7 +20,7 @@ Move a finished milestone out of the live state into `.planning/archive/`, so `R
    - Replace the milestone's section in `ROADMAP.md` with a one-liner: `## Meilenstein N: <Titel> — ✓ archiviert YYYY-MM-DD → archive/plans/<n>_<slug>/_roadmap.md`.
 5. **Record.** Append a note to `.planning/LOG.md` (which milestone was archived, when). `LOG.md` itself stays append-only — never archived.
 
-Do not touch `PROJECT.md`. Never archive a milestone with open phases.
+Do not touch `PROJECT.md`. Never archive a milestone with open phases (`[ ]`/`[>]`); deferred `[~]` are non-blocking.
 
 ## Hand-off
 
