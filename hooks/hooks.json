@@ -10,16 +10,6 @@
         ]
       }
     ],
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/pre-compact.mjs\""
-          }
-        ]
-      }
-    ],
     "Notification": [
       {
         "hooks": [
