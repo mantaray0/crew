@@ -13,6 +13,50 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
 ```jsonc
 {
   "crewVersion": null,                 // crew plugin version this config was last reconciled with; set by /crew:init & /crew:setup, checked on session start
+
+  // ── workflow: the steps, as first-class objects ────────────────────────────
+  // Two levels (see "Workflow model" below): workflow.mode advances the *step*
+  // chain (brief→…→complete); each gateable step's `run` decides how it's handled
+  // when the chain reaches it.
+  "workflow": {
+    "mode": "manual",                  // "manual" | "auto" — Level 1: manual = do the one called step and stop (run-gates dormant); auto = walk the chain, each step firing per its run
+    "brief": {                         // always interactive — no run gate (see "Safety boundary")
+      "depth": "normal",               // "light" | "normal" | "deep" — how broad (coverage)
+      "intensity": "normal",           // "gentle" | "normal" | "brutal" — how hard Roast-Me pushes back
+      "specArtifact": "section"        // "section" | "separate" | "off"
+    },
+    "plan": {},                        // always interactive — no run gate
+    "execute": {
+      "parallel": "auto",              // "auto" | "manual" | "off" — strategy granularity: phases serial vs parallel (worktrees)
+      "loop": "one",                   // "one" | "all" — phase granularity: one phase then stop, or loop the milestone's phases
+      "maxConcurrent": 3,
+      "onDeviation": "small-self-major-ask", // | "always-ask" | "autonomous"
+      "verify": {                      // verify is PART of execute (runs every phase); also callable standalone via /crew:verify. NOT a run-gated step — never auto-skipped.
+        "default": ["test", "review", "harden", "simplify"], // first stage is "test" (build/typecheck/tests); the pipeline & command stay named "verify"
+        "perPhaseOverride": true
+      }
+    },
+    "ship": {
+      "run": "off",                    // "off" | "ask" | "auto" | "smart" — Level 2 gate (fires under mode:auto / the finish strand)
+      "enabled": true,                 // is /crew:ship available here? (orthogonal to run; replaces the old mode:off)
+      "provider": "gh-actions",        // "gh-actions" | "gitlab-ci"
+      "tagPattern": "v{version}",
+      "environments": [],              // optional named environments (prod, staging, …)
+      "runDeploy": "off",              // "off" | "ask" | "auto" — run an imperative deploy command after the git steps? off = push-triggered CI (the push IS the deploy)
+      "releaseTool": "auto",           // "auto" | "changesets" | "release-please" | "semantic-release" | "manual" | "none" — how the version is decided
+      "finishRelease": "off"           // "off" | "ask" | "auto" — merge an open bot version-PR (phase 2); only meaningful for changesets/release-please
+    },
+    "learn": {
+      "run": "ask",                    // "off" | "ask" | "auto" | "smart" — gate (was config.finish.retro)
+      "enabled": true                  // per-milestone cadence (was config.retro.enabled)
+    },
+    "complete": {
+      "run": "ask"                     // "off" | "ask" | "auto" | "smart" — audit → summary → archive (wraps /crew:complete)
+    },
+    "finish": {}                       // orchestrator only — runs Ship → Learn → Complete in that order, reading each step's `run`; carries no gate of its own (see "config.workflow.finish")
+  },
+
+  // ── cross-cutting: top-level, not part of the step chain ────────────────────
   "git": {
     "autoCommitPerPhase": true,        // atomic commit after a verified phase
     "autoPush": false,                 // never touch the remote without approval
@@ -24,39 +68,10 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
     "askBeforeMerge": false,
     "conflictPolicy": "resolve-or-ask"  // | "always-ask" | "autonomous"
   },
-  "ship": {
-    "enabled": true,                   // is /crew:ship available here? (replaces the old mode:off)
-    "provider": "gh-actions",          // "gh-actions" | "gitlab-ci"
-    "tagPattern": "v{version}",
-    "environments": [],                // optional named environments (prod, staging, …)
-    "runDeploy": "off",                // "off" | "ask" | "auto" — run an imperative deploy command after the git steps? off = push-triggered CI (the push IS the deploy)
-    "releaseTool": "auto",             // "auto" | "changesets" | "release-please" | "semantic-release" | "manual" | "none" — how the version is decided
-    "finishRelease": "off"             // "off" | "ask" | "auto" — merge an open bot version-PR (phase 2); only meaningful for changesets/release-please
-  },
-  "execute": {
-    "parallel": "auto",                // | "manual" | "off"
-    "maxConcurrent": 3,
-    "onDeviation": "small-self-major-ask" // | "always-ask" | "autonomous"
-  },
-  "verify": {
-    "default": ["verify", "review", "harden", "simplify"],
-    "perPhaseOverride": true
-  },
-  "finish": {
-    "ship": "off",                     // "off" | "ask" | "auto" — step in the /crew:finish strand; ship additionally gated by ship.enabled
-    "retro": "ask",                    // gated by retro.enabled; per-milestone cadence
-    "complete": "ask"                  // audit → summary → archive (wraps /crew:complete)
-  },
   "models": {
     "mode": "auto",                    // | "manual"
     "planning": "opus", "execution": "sonnet", "review": "opus",
     "simplify": "sonnet", "trivial": "haiku"
-  },
-  "brief": {
-    "depth": "normal",                 // "light" | "normal" | "deep" — how broad (coverage)
-    "intensity": "normal",             // "gentle" | "normal" | "brutal" — how hard Roast-Me pushes back
-    "askOnlyWhenStuck": true,
-    "specArtifact": "section"          // "section" | "separate" | "off"
   },
   "tasks": { "provider": "local", "writeBack": false, "projectKey": null },
   "testing": { "policy": "from-archetype" }, // | "tdd" | "tests-required" | "optional"
@@ -66,9 +81,6 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
     "events": ["blocker", "completion"],
     "channel": "os"                    // "os" | "push:ntfy" | "push:pushover" | "off"
   },
-  "retro": { "enabled": true },
-  "state": { "commitSessions": true },
-  "loop": { "maxIterations": 6 },
   "observability": { "trackCost": true },
   "language": { "files": "en" },
   "responseStyle": "concise",          // "concise" | "detailed" | "auto" — verbosity/format of the assistant's command replies (see crew-conventions)
@@ -78,7 +90,41 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
 }
 ```
 
-Auto model tiers: planning/review → strongest, execution/simplify → mid, trivial → cheap. `manual` uses the per-type ids. Override precedence: ad-hoc > project > global > built-in default.
+Auto model tiers: planning/review → strongest, execution/simplify → mid, trivial → cheap. `manual` uses the per-type ids. Override precedence: ad-hoc > project > global > built-in default. The `models.*` keys are model **tiers** (e.g. `models.execution` = the execution-task tier) — not to be confused with the `workflow.execute` step section.
+
+## Workflow model (canonical vocabulary)
+
+crew's workflow is **two levels, named so "auto" is never ambiguous**. `crew-conventions` carries the same vocabulary for command authors.
+
+**Level 1 — `config.workflow.mode`** (does the chain advance between *steps*?):
+
+| `mode` | behavior |
+|---|---|
+| `manual` *(default)* | The agent does **the one** called step and **stops**. The per-step `run` gates are **dormant** — after `execute` it neither chains to `ship` nor asks. (Today's behavior.) |
+| `auto` | The agent **advances itself**: after each step it asks "what's next?" and acts **per that step's `run`**, in the close-out order **Ship → Learn → Complete**. |
+
+**Level 2 — per-step `run`** (how a step is handled *when the chain reaches it* — i.e. under `mode: auto`, or at the one-phase milestone-end hand-off):
+
+| `run` | who decides | behavior |
+|---|---|---|
+| `off` | nobody | step not in the flow (its standalone command stays usable by hand) |
+| `ask` | you | crew asks at the step boundary → runs on yes |
+| `auto` | you, in advance | runs without asking |
+| `smart` | the agent | the agent judges whether it's worthwhile and runs it if so |
+
+Only the gateable close-out steps carry `run` (`ship`, `learn`, `complete`). `brief`/`plan` are **always interactive** (no `run`); `execute` has no skip-gate — it runs its phase loop + verify pipeline; `verify` is a pipeline list, never a `run`-gate.
+
+**Three granularities — the "auto" disambiguation.** The same idea "runs through" lives on three distinctly named fields, so it is never ambiguous:
+
+| level | what advances | field |
+|---|---|---|
+| Workflow steps | brief → … → execute → ship → learn → complete | `workflow.mode: manual \| auto` |
+| Phases *in* execute | phase 1 → 2 → 3 … of the milestone | `workflow.execute.loop: one \| all` |
+| Execution strategy | phases serial vs. parallel (worktrees) | `workflow.execute.parallel: auto \| manual \| off` |
+
+`loop`/`parallel` are **execute-specific** (only `execute` has phases). Other steps are single actions; their internal pauses come from `config.git` and the `run` gate, not from a parallel/loop knob. ("Work through the milestone" = the old `/crew:execute auto` = `execute.loop: all`; "split phases" = the old `dispatch` = `execute.parallel`.)
+
+**Safety boundary (load-bearing).** `config.git` stays the **sole git/remote authority** for **every** `run` value, including `auto` **and** `smart`: "run the step?" (`run`) and "touch the remote/prod?" (`git.autoPush`/`autoPR`, `workflow.ship.enabled`) are orthogonal axes. Even if a `smart` step "decides to ship", crew does **not** push/PR without approval when `git.autoPush=false`. And `verify` is **never** auto-skipped — it is a pipeline list, not a `run`-gate.
 
 **`language.files`** sets the language of the project files crew writes (`PROJECT.md`, `ROADMAP.md`, `LOG.md`, `BACKLOG.md`, `plans/`). Default `"en"`; ask the user at `/crew:setup` (global) or `/crew:init` (per project). This is separate from the *conversation* language (see `crew-conventions`): the plugin repo and config keys stay English, but the user's own project files may be written in their language.
 
@@ -92,7 +138,7 @@ Auto model tiers: planning/review → strongest, execution/simplify → mid, tri
 
 Resolved through the normal layering — a project's `.planning/config.json` overrides the global default (e.g. global `concise`, one project `detailed`).
 
-**`brief.intensity`** controls how hard Roast-Me challenges an idea during `/crew:brief` — **orthogonal** to `brief.depth` (depth = how *broad* the questioning, intensity = how *hard* it pushes back). The recommended answer carries in every level (in `brutal` it may be "drop this"). Default `"normal"`. Ask at `/crew:setup` (global) or `/crew:init` (per project), resolved project > global > default — like `language.files`.
+**`config.workflow.brief.intensity`** controls how hard Roast-Me challenges an idea during `/crew:brief` — **orthogonal** to `workflow.brief.depth` (depth = how *broad* the questioning, intensity = how *hard* it pushes back). The recommended answer carries in every level (in `brutal` it may be "drop this"). Default `"normal"`. Ask at `/crew:setup` (global) or `/crew:init` (per project), resolved project > global > default — like `language.files`.
 
 | value | behavior |
 |---|---|
@@ -100,10 +146,11 @@ Resolved through the normal layering — a project's `.planning/config.json` ove
 | `normal` (default) | Push on the load-bearing weak spots, name obvious scope-creep, question one or two load-bearing assumptions. |
 | `brutal` | Attack assumptions ("do you actually need this?"), surface contradictions, steelman cutting scope, name every scope risk. |
 
-**`config.ship`** drives `/crew:ship` (release/deploy). Layered global < project; ask at `/crew:setup` and `/crew:init`. Provider `gh-actions` (via `gh`) or `gitlab-ci` (via `glab`).
+**`config.workflow.ship`** drives `/crew:ship` (release/deploy). Layered global < project; ask at `/crew:setup` and `/crew:init`. Provider `gh-actions` (via `gh`) or `gitlab-ci` (via `glab`). Its `run` (off/ask/auto/smart) is the close-out gate; the fields below are ship's own mechanics.
 
 | field | behavior |
 |---|---|
+| `run` (default `off`) | The close-out gate (Level 2) — fires under `workflow.mode: auto` / the finish strand. Orthogonal to `enabled`: `run` decides *whether the chain runs ship*, `enabled` whether ship is available at all. |
 | `enabled` (default `true`) | Is `/crew:ship` available for this project? `false` → ship explains how to turn it on and stops. Replaces the old `mode: off`. |
 | `runDeploy` (default `off`) | The one knob `config.git` does **not** cover: does crew run an **imperative** deploy command after the git steps? `off` = push-triggered CI (the push *is* the deploy). `ask`/`auto` = imperative world (Vercel/Fly), command sourced from `reference/deploy.md`. |
 | `provider` | `gh-actions` (PRs/status via `gh`) or `gitlab-ci` (MRs/status via `glab`). |
@@ -114,21 +161,15 @@ Resolved through the normal layering — a project's `.planning/config.json` ove
 
 **`config.git` is the single git authority.** ship has **no** deploy-specific push axis: every git step (commit/push/PR/merge) defers to `config.git` (`autoCommitPerPhase` / `autoPush` / `autoPR` / `mergeStrategy`). In a push-triggered setup the prod trigger *is* the push — so it belongs to `git.autoPush` (default false → ask), i.e. to the user. ship degrades gracefully — a local `version+commit+tag` is a valid partial result when push/PR are declined.
 
-**`config.finish`** drives `/crew:finish`, the milestone-close strand that runs **Ship → Retro → Complete** in that fixed order. Each step is an independent tri-state, layered global < project. finish **orchestrates** — it calls the existing steps/skills, it invents no logic of its own.
+**`config.workflow.finish`** is the milestone-close **orchestrator** — it runs **Ship → Learn → Complete** in that fixed order. It has **no gate block of its own** (the old `config.finish.{ship,retro,complete}` tri-states have **dissolved** into the steps' own `run`): `/crew:finish` reads `workflow.ship.run`, `workflow.learn.run`, `workflow.complete.run` and `workflow.mode`, then orchestrates. It invents no logic — it calls the existing steps/skills.
 
-| value | behavior |
-|---|---|
-| `off` | The step is **not** part of the strand (its standalone command stays usable by hand). |
-| `ask` | The strand **offers** the step and runs it after confirmation. |
-| `auto` | The strand runs the step **without** asking. |
-
-| step | default | extra gating |
+| close-out step | gate (`run`) | extra gating |
 |---|---|---|
-| `ship` | `off` | also hard-gated by `config.ship.enabled`; `config.git` (`autoPush`/`autoPR`) stays the git authority — finish adds **no** new push/release axis. Never ships on a red verify. |
-| `retro` | `ask` | gated by `config.retro.enabled`; cadence is **per milestone** (no per-phase retro). |
-| `complete` | `ask` | audit → summary → archive (wraps `/crew:complete`); only archives once all phases are `[x]`/`[~]`, else the step stops with a note. |
+| `ship` | `workflow.ship.run` (default `off`) | also hard-gated by `config.workflow.ship.enabled`; `config.git` (`autoPush`/`autoPR`) stays the git authority — finish adds **no** new push/release axis. Never ships on a red verify. |
+| `learn` | `workflow.learn.run` (default `ask`) | gated by `config.workflow.learn.enabled`; cadence is **per milestone** (no per-phase learn). |
+| `complete` | `workflow.complete.run` (default `ask`) | audit → summary → archive (wraps `/crew:complete`); only archives once all phases are `[x]`/`[~]`, else the step stops with a note. |
 
-A disabled or not-applicable step is **skipped cleanly**, not aborted. `/crew:execute` only ever *suggests* `/crew:finish` at a milestone's end — it never runs it (the autonomy contract's "never self-ship/-complete" holds).
+A step whose `run` is `off`, or that is disabled/not-applicable, is **skipped cleanly**, not aborted. `/crew:execute` only ever *suggests* `/crew:finish` at a milestone's end under `mode: manual` — it never runs it (the autonomy contract's "never self-ship/-complete" holds); under `mode: auto` the chain advances and each step fires per its `run`.
 
 **`config.stack`** is the **single source of truth** for the project's stack *facts* (language / app / db / orm / …) — it drives tag-based reviewer selection and grounding. `PROJECT.md` shows the stack as a **derived mirror** and carries the *why* (architecture decisions); it is **not** a second place to edit the facts. Change the stack in `config.stack`; crew updates the `PROJECT.md` table to match. The stack is standing context — it stays in the auto-loaded `PROJECT.md`, never in load-on-demand `reference/`.
 
@@ -148,25 +189,40 @@ A disabled or not-applicable step is **skipped cleanly**, not aborted. `/crew:ex
 
 ### Known migrations
 
-The schema-diff is generic, but some changes are **renames/splits** where a blind new/removed diff would drop the user's value. Apply these explicitly *before* the generic diff:
+The schema-diff is generic, but some changes are **renames/splits/moves** where a blind new/removed diff would drop the user's value. Apply these explicitly *before* the generic diff. The chain must carry a config from `crewVersion 0.7.0` (flat legacy keys) **through M4** (section renames) **to M5** (into `config.workflow`) **losslessly** — apply the two groups in order (a config of any vintage lands on the same M5 shape).
+
+**Group 1 — 0.7.0 → M4 section renames** (lift flat legacy keys to their M4 names):
 
 | change | mapping |
 |---|---|
-| `clarify` → `brief` | values 1:1 under `brief.*` (`depth`/`intensity`/`askOnlyWhenStuck`/`specArtifact`) |
-| `execution` → `execute` | values 1:1 under `execute.*` (`parallel`/`maxConcurrent`/`onDeviation`) |
-| `deploy` → `ship` | values 1:1 under `ship.*` — includes the legacy `deploy.mode` submigration below |
-| `learn` → `retro` | values 1:1 under `retro.*` (`enabled`) |
+| `clarify` → `brief` | values 1:1 (`depth`/`intensity`/`specArtifact`; `askOnlyWhenStuck` is **dropped in M5** — see Group 2) |
+| `execution` → `execute` | values 1:1 (`parallel`/`maxConcurrent`/`onDeviation`) |
+| `deploy` → `ship` | values 1:1 — includes the legacy `deploy.mode` submigration below |
+| `learn` → `retro` | values 1:1 (`enabled`) — **reversed again in M5** (`retro` → `learn`); a 0.7.0 `learn` ends up at `workflow.learn` net |
 | `deploy.mode` removed → `ship.enabled` + `ship.runDeploy` | `off` → `enabled: false` · `orchestrate` → `enabled: true, runDeploy: off` · `execute` → `enabled: true, runDeploy: ask` |
 
-The new `config.finish` block (`ship`/`retro`/`complete`) is **not** a rename — the generic diff sees each key as **new** and offers it via the per-new-field question (default from this schema: `ship=off`, `retro=ask`, `complete=ask`). Nothing is set silently.
+**Group 2 — M4 → M5: into `config.workflow`** (then move the M4-named sections under `workflow`, nest verify, dissolve finish):
 
-Also: if a `.planning/DEPLOY.md` exists, note in the reconcile that its content now belongs in `reference/deploy.md` (structured fields → `config.ship`); offer to move it (a `mv` + the user trims to prose). Never auto-delete it.
+| change | mapping |
+|---|---|
+| `brief` → `workflow.brief` | move; carry `depth`/`intensity`/`specArtifact`; **drop** `askOnlyWhenStuck` (removed) |
+| `execute` → `workflow.execute` | move; `parallel`/`maxConcurrent`/`onDeviation` 1:1 |
+| `verify` → `workflow.execute.verify` | move **and nest under execute**; in the `default` stage list rename the first stage `"verify"` → `"test"` (`perPhaseOverride` stays a boolean; the same stage-name rename applies to any per-phase override lists, which live in plan files, not here) |
+| `ship` → `workflow.ship` | move 1:1; its new `run` is seeded from `finish.ship` (below) |
+| `retro` → `workflow.learn` | rename **and** move; `enabled` 1:1; its new `run` is seeded from `finish.retro` |
+| `complete` → `workflow.complete` | new section; its `run` is seeded from `finish.complete` |
+| `finish.{ship,retro,complete}` → `workflow.{ship,learn,complete}.run` | the M4 tri-state values map 1:1 onto the steps' `run`; the `config.finish` block then **disappears** (no longer a section) |
+| removed: `config.loop`, `config.state`, `brief.askOnlyWhenStuck` | **dropped** — `loop.maxIterations`/`state.commitSessions` were never read (dead); `brief.askOnlyWhenStuck` is superseded. Flag & confirm the drop; never silently keep. |
+
+**Genuinely new fields** (no predecessor → offered via the per-new-field question, never set silently): `workflow.mode` (default `manual`), `workflow.execute.loop` (default `one`), and `run` on any close-out step lacking a `finish.*` source — e.g. a pristine 0.7.0 config (no `finish` block) gets `ship.run`/`learn.run`/`complete.run` from this schema's defaults (`off`/`ask`/`ask`).
+
+Also: if a `.planning/DEPLOY.md` exists, note in the reconcile that its content now belongs in `reference/deploy.md` (structured fields → `config.workflow.ship`); offer to move it (a `mv` + the user trims to prose). Never auto-delete it.
 
 ## File naming in `.planning/`
 
 - **Documents are UPPERCASE:** `PROJECT.md`, `ROADMAP.md`, `LOG.md`, `BACKLOG.md` (like `README`/`CHANGELOG`).
 - **Data files are lowercase:** `config.json`, `claims.json`.
-- **Directories are lowercase:** `plans/`, `sessions/`.
+- **Directories are lowercase:** `plans/`.
 
 ## `project-types.json` (starter registry — global layer)
 
