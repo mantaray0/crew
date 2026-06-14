@@ -118,7 +118,7 @@ day-to-day is mostly `brief → plan → execute`, closing each milestone with `
         └───────────────┘
               ├─ ship      → /crew:ship       version · tag · push · release
               ├─ learn     → /crew:learn      distill patterns → global registry
-              └─ complete  → /crew:complete   audit · summarize · archive
+              └─ complete  → (inline)         audit · summarize · archive (wraps /crew:archive)
 ```
 
 `status`, `resume`, `report`, `adjust`, `backlog`, `rollback`, `quick`, and `pull` orbit this loop
@@ -336,7 +336,7 @@ Backed by the `verification-loop` skill.
 ### Learning
 
 #### `/crew:learn` &nbsp;`[phase/milestone, optional]`
-> Make the harness learn from completed work so knowledge compounds across projects. (`/crew:retro` is a deprecated alias.)
+> Make the harness learn from completed work so knowledge compounds across projects.
 
 1. **Gather** recent `LOG.md` entries, the diffs of completed phases, and `PROJECT.md` decisions.
 2. **Distill** recurring patterns into a proposed **skill** (reusable procedure), a **tag** (a
@@ -387,40 +387,28 @@ by `config.workflow.ship.enabled`); finish adds no new push/release axis — it 
 - **Leaves** a one-line pointer in `ROADMAP.md` (`✓ archiviert YYYY-MM-DD → archive/…`). `LOG.md` is
   never archived — it stays append-only. Backed by `crew-planning`.
 
-#### `/crew:complete` &nbsp;`[milestone slug, optional]`
-> The richer milestone close-out — audit, summarize, then archive. Wraps `/crew:archive`.
-
-1. **Audit** — verifies every phase is `[x]` or `[~]` (deferred phases are non-blocking, matching the
-   `/crew:execute` boundary guard); if any phase is still open `[ ]`/`[>]`, lists those and stops
-   (finish via `/crew:execute` or defer via `/crew:adjust`).
-2. **Summarize** — appends a milestone summary to `LOG.md` (what shipped, key decisions, rolled-up
-   token/cost when `observability.trackCost` is on).
-3. **Update `PROJECT.md`** — refreshes the current-state section for the completed milestone.
-4. **Archive** — runs the `/crew:archive` move for the milestone. Backed by `crew-context` +
-   `crew-planning`.
-
-Reachable under its former name `/crew:complete-milestone` (a deprecated, non-breaking alias that
-forwards to `/crew:complete`). Also the **Complete step** of the `/crew:finish` strand below.
-
 #### `/crew:finish` &nbsp;`[milestone slug, optional]`
 > Close out a milestone end-to-end in one strand: **Ship → Learn → Complete**, each step gated by its `run`.
 
-finish **orchestrates** — it calls the existing commands/skills (`/crew:ship`, `/crew:learn`,
-`/crew:complete`) in that fixed order and invents no logic of its own. Each step's gate is its own
+finish **orchestrates** — Ship and Learn call the existing `/crew:ship` and `/crew:learn` commands, and
+the **Complete** close-out runs **inline** here (audit → summarize → update `PROJECT.md` → archive,
+wrapping `/crew:archive`); there is no standalone `/crew:complete` command. It runs the steps in that
+fixed order and invents no logic of its own. Each step's gate is its own
 `run` (`off|ask|auto|smart`) in `config.workflow.{ship,learn,complete}` (layered global < project):
 
 | step | default `run` | runs when | resolves to |
 |---|---|---|---|
-| **Ship** | `off` | `ship.run ≠ off` **and** `ship.enabled` | a release via `/crew:ship` (never on a red verify — that stops the strand) |
+| **Ship** | `ask` | `ship.run ≠ off` **and** `ship.enabled` | a release via `/crew:ship` (never on a red verify — that stops the strand) |
 | **Learn** | `ask` | `learn.run ≠ off` **and** `learn.enabled` | `/crew:learn`, once per milestone |
-| **Complete** | `ask` | `complete.run ≠ off` | audit → summarize → archive via `/crew:complete` (blocks if any phase is still open) |
+| **Complete** | `ask` | `complete.run ≠ off` | audit → summarize → archive **inline** (wraps `/crew:archive`; blocks if any phase is still open) |
 
-`off` skips the step (its standalone command stays usable by hand), `ask` offers it then runs on
-confirmation, `auto` runs it without asking, `smart` lets the agent judge whether it's worthwhile.
+`off` skips the step (Ship/Learn keep their standalone commands usable by hand; Complete lives only in
+finish), `ask` offers it then runs on confirmation, `auto` runs it without asking, `smart` lets the
+agent judge whether it's worthwhile.
 Whether the strand is *chained* automatically after execute is governed by `workflow.mode`; `config.git`
 stays the sole push/PR authority regardless of `run`. Every step ends in exactly one logged outcome —
 **ran**, **skipped** (with reason), or **stopped** (a real block: red verify or open phases) — so a
-finish run loses no information versus running the three commands by hand. `config.git` stays the sole
+finish run loses no information versus running the steps by hand. `config.git` stays the sole
 git authority; finish adds no new push axis, and `/crew:execute` only ever *suggests* finish under
 `workflow.mode: manual`, never runs it. Backed by `crew-config` (`config.workflow`) + the delegated command skills.
 
@@ -478,10 +466,10 @@ and their defaults:
 |---|---|---|
 | `workflow.mode` | `"manual"` | Whether the step chain advances between steps (`manual` stops after the called step; `auto` walks brief → … → complete, firing each step's `run`) |
 | `workflow.brief` | `depth: "normal"`, `intensity: "normal"` | How broad/hard Roast-Me pushes during `/crew:brief` |
-| `workflow.execute` | `parallel: "auto"`, `loop: "one"`, `maxConcurrent: 3`, `onDeviation: "small-self-major-ask"`, `verify: {default: ["test","review","harden","simplify"], perPhaseOverride: true}` | The phase loop, parallel strategy, deviation handling, and the nested verify pipeline |
-| `workflow.ship` | `run: "off"`, `enabled: true`, `runDeploy: "off"`, `releaseTool: "auto"`, `finishRelease: "off"` | `/crew:ship` release/deploy + its close-out gate (`config.git` stays the git authority) |
+| `workflow.execute` | `parallel: "auto"`, `loop: "all"`, `maxConcurrent: 3`, `onDeviation: "small-self-major-ask"`, `verify: {default: ["test","review","harden","simplify"], perPhaseOverride: true}` | The phase loop, parallel strategy, deviation handling, and the nested verify pipeline |
+| `workflow.ship` | `run: "ask"`, `enabled: true`, `runDeploy: "off"`, `releaseTool: "auto"`, `finishRelease: "off"` | `/crew:ship` release/deploy + its close-out gate (`config.git` stays the git authority) |
 | `workflow.learn` | `run: "ask"`, `enabled: true` | `/crew:learn` self-learning + its close-out gate |
-| `workflow.complete` | `run: "ask"` | `/crew:complete` milestone close-out gate |
+| `workflow.complete` | `run: "ask"` | milestone close-out (Complete) gate — runs inline in `/crew:finish` |
 | `git` | `autoCommitPerPhase: true`, `autoPush: false`, `isolation: "worktree-per-feature"`, `mergeStrategy: "integration-branch"` | Commit/branch/merge behavior; the **sole** git/remote authority for every `run` — never touches the remote without approval |
 | `models` | `mode: "auto"`; planning/review→`opus`, execution/simplify→`sonnet`, trivial→`haiku` | Model per task type (auto tiers or manual pins) |
 | `tasks` | `provider: "local"`, `writeBack: false` | External PM integration for `/crew:pull` |

@@ -23,4 +23,4 @@ The harness should get better with every project. After completed work, distil w
 
 ## In the finish strand
 
-`/crew:learn` is the **Learn step** of the `/crew:finish` close-out strand (`config.workflow.learn.run`, additionally gated by `config.workflow.learn.enabled`). Cadence there is **per milestone** — one learn per finished milestone, never per phase. Run standalone any time (`/crew:retro` is a deprecated alias), or let `/crew:finish` offer/run it after Ship and before Complete.
+`/crew:learn` is the **Learn step** of the `/crew:finish` close-out strand (`config.workflow.learn.run`, additionally gated by `config.workflow.learn.enabled`). Cadence there is **per milestone** — one learn per finished milestone, never per phase. Run standalone any time, or let `/crew:finish` offer/run it after Ship and before Complete.

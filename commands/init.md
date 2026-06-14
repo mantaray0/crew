@@ -23,10 +23,10 @@ Set up `.planning/` for this project. Uses the `crew-config` skill (config schem
    Store all in `config.workflow.ship`. Then **actively create `reference/deploy.md`**: interview the concrete procedure — release strategy, branch/tag conventions, environments, secrets *policy* (pointers, never values), rollback, and (when `runDeploy ≠ off`) the deploy command(s) — write the runbook and index it one line under `PROJECT.md`'s `## Reference`.
 7. **Workflow gates (`config.workflow`).** Ask the workflow-gate group so the two-level model isn't silently defaulted (`crew-conventions`). **Batch these independent questions in an `AskUserQuestion` stepper**; each single-select shows its default and always offers **inherit the global** (project overrides global per field; leave a field out to inherit). Fields:
    - `workflow.mode` — `manual` (default) · `auto` · inherit global — does the step chain advance between steps (execute → ship → learn → complete)?
-   - `workflow.ship.run` — `off` (default) · `ask` · `auto` · `smart` · inherit global — the ship close-out gate (orthogonal to `ship.enabled` above; `config.git` still authorizes every push/PR).
+   - `workflow.ship.run` — `ask` (default) · `off` · `auto` · `smart` · inherit global — the ship close-out gate (orthogonal to `ship.enabled` above; `config.git` still authorizes every push/PR).
    - `workflow.learn.run` — `off` · `ask` (default) · `auto` · `smart` · inherit global.
    - `workflow.complete.run` — `off` · `ask` (default) · `auto` · `smart` · inherit global.
-   - `workflow.execute.loop` — `one` (default) · `all` · inherit global — the phase loop; and `workflow.execute.parallel` — `auto` (default) · `manual` · `off` · inherit global — the execution strategy.
+   - `workflow.execute.loop` — `all` (default) · `one` · inherit global — the phase loop (`all` works through the whole milestone, `one` stops after each phase); and `workflow.execute.parallel` — `auto` (default) · `manual` · `off` · inherit global — the execution strategy.
 
    Write only overridden values into `config.workflow.*`; **inherit-global / default → leave the field out** so it inherits at runtime through the `defaults < global < project` layering.
 8. **Commit or ignore `.planning/`.** Single-select: **commit** `.planning/` (recommended — shareable, part of project history, readable by PM integrations) or **gitignore** it (local-only)? If **gitignore**, add a `.planning/` line to the project's `.gitignore` (create the file if missing). If **commit**, make sure `.planning/` is not ignored.
