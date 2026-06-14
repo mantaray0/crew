@@ -1,5 +1,17 @@
 # @mantaray0/crew
 
+## 0.14.0
+
+### Minor Changes
+
+- [`35308a5`](https://github.com/mantaray0/crew/commit/35308a536db90edb15caaef5aab1e0a607c58611) Thanks [@mantaray0](https://github.com/mantaray0)! - Restore the standalone `/crew:complete` command and make `/crew:finish` a clean orchestrator.
+
+  `/crew:finish` now delegates all three close-out steps (Ship → Learn → Complete) to their own
+  commands instead of folding Complete inline — the close-out logic lives in exactly one place
+  (`/crew:complete`: audit → summarize → update `PROJECT.md` → archive, wrapping `/crew:archive`).
+  `/crew:archive` now tolerates deferred `[~]` phases with a one-time confirmation, matching the
+  Complete audit threshold. Docs and command surface only — no config-schema change.
+
 ## 0.13.1
 
 ### Patch Changes
