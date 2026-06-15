@@ -1,5 +1,19 @@
 # @mantaray0/crew
 
+## 0.16.0
+
+### Minor Changes
+
+- [`98cb6c6`](https://github.com/mantaray0/crew/commit/98cb6c69e71d5ca444a49fddac58854f58029146) Thanks [@mantaray0](https://github.com/mantaray0)! - Rename `config.git.commitStyle` to `config.git.commitPattern` and let it take a free template.
+
+  The field was effectively single-value (`"conventional"`). It is renamed to `commitPattern` and now accepts either the `"conventional"` keyword shortcut (`type(scope): subject`) or a free template with placeholders `{type}`/`{scope}`/`{ticket}`/`{subject}`/`{body}` — e.g. `"[{type}] {ticket}: {subject}"`, where an empty optional placeholder and its adjacent separators collapse. A Known-migration carries an existing `commitStyle` value 1:1 onto `commitPattern` (the old value stays valid as the shortcut). The commit steps in `/crew:execute`, `/crew:quick`, `/crew:ship`, the `deploy` skill, and the README now reference `config.git.commitPattern`.
+
+- [`a629c2a`](https://github.com/mantaray0/crew/commit/a629c2a7e317cc53d0900d9772e4d605aede2f1a) Thanks [@mantaray0](https://github.com/mantaray0)! - Make config inheritance explicit (inherit-first writes).
+
+  `/crew:init`, `/crew:setup`, and the reconcile path (`/crew:update`) previously wrote inheritable config fields into a project/global `config.json` even when the user wanted to inherit them from the layer below — silently decoupling the config from `defaults < global < project`. The write side is now **inherit-first**: every config-driven question offers "take from global" (init) / "take the built-in default" (setup) as its first, pre-selected option, showing the value it currently resolves to; choosing it **omits the key** (dynamic inheritance). An explicitly picked value is **always written, even when equal to the inherited value** — a deliberate freeze against later drift. `responseStyle` is now actively asked instead of blindly seeded, `ship` is asked per leaf field with `enabled` as the gating trunk, and `/crew:init` step 9 drops the "full default config" seeding model for the omit-key model.
+
+  The reconcile path gains three distinct ways a field returns to inheritance: a **one-time, version-gated M8 cleanup** that batches a reset of legacy over-seeded fields (runs once at the pre-0.16.0 transition, never recurring), an always-available **per-field reset**, and an **opt-in revisit pass** that re-walks every inheritable/workflow field with the current value pre-selected. The rule is anchored canonically in the `crew-config` skill; init/setup/update reference it rather than duplicating it.
+
 ## 0.15.0
 
 ### Minor Changes

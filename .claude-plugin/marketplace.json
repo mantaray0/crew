@@ -11,7 +11,7 @@
       "name": "crew",
       "source": "./",
       "description": "Config-driven agentic workflow harness for Claude Code",
-      "version": "0.15.0",
+      "version": "0.16.0",
       "author": {
         "name": "Daniel Baumert"
       }
