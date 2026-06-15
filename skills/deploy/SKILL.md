@@ -26,7 +26,7 @@ origin: crew
 
 ship has **no second push axis**. Every git step defers to `config.git`:
 
-- **Release commit** — follow `git.commitStyle`; if `git.autoCommitPerPhase` is false, **ask** before committing. A release needs a commit to tag.
+- **Release commit** — follow `git.commitPattern`; if `git.autoCommitPerPhase` is false, **ask** before committing. A release needs a commit to tag.
 - **Push** (commit + tag) — defer to `git.autoPush` (default false → **ask**). On decline, stay local: `version+commit+tag` is still a valid partial result.
 - **PR** — defer to `git.autoPR` (default false → **ask** or skip). Use the provider CLI.
 - **Branch / merge** — honour `branchPattern`, `mergeStrategy`, `askBeforeMerge` (see `git-merge`).
