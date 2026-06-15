@@ -10,7 +10,7 @@ Every implemented phase passes through a verification pipeline before it is trus
 
 ## The stages
 
-1. **test** — run tests / build / typecheck (commands from `PROJECT.md`). Test-strictness from `config.testing.policy` (an `api-service` archetype may require TDD; a `marketing-site` may be optional).
+1. **test** — run tests / build / typecheck (commands from `PROJECT.md`). Test-strictness from `config.testingPolicy` (an `api-service` archetype may require TDD; a `marketing-site` may be optional).
 2. **review** — `code-reviewer` + stack reviewers selected by the project's `tags`.
 3. **harden** — `silent-failure-hunter` (swallowed errors) + `type-design-analyzer` (illegal states).
 4. **simplify** — `code-simplifier` (behavior-preserving cleanup; tests stay green).
