@@ -68,6 +68,7 @@ The plugin is declarative — the logic lives in Markdown instructions, not comp
 - **Releases run through Changesets** — never bump versions by hand; `pnpm version` syncs the plugin
   manifest via `scripts/sync-version.mjs`.
 - **Markdown-first** — new capabilities are commands/skills/agents, not compiled code.
+- **No internal planning identifiers in shipped content.** `commands/`/`agents/`/`skills/`/`hooks/`/`README.md`/`.claude-plugin/` must never name crew's internal milestone/phase numbers (`M8`, `1.2`) or `.planning` slugs — config migrations are named by the **public plugin version** (`crewVersion` gates), never by an internal milestone. (CLAUDE.md itself is repo dev-doc, *not* shipped content — its "distilled from Milestone N" rationale is exempt.) Enforced by `scripts/validate-plugin.mjs` (check 5, run in CI).
 - **crew plans itself** (see *Two layers* above). `.planning/` is the source of truth for project
   state — PROJECT/ROADMAP/LOG/BACKLOG, plans, and load-on-demand runbooks under `.planning/reference/`.
   There is no `docs/` folder.

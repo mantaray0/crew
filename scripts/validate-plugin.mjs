@@ -70,6 +70,46 @@ for (const ref of new Set(refs)) {
   }
 }
 
+// 5. No internal planning identifiers in shipped content.
+// Shipped instructions/manifest must never name crew's internal development-milestone
+// labels — config migrations are named by the public plugin version instead. The narrow
+// pattern below catches the epoch-label form (also inside "pre-M8") without false-flagging
+// version numbers, {type} placeholders, or the planning skill's fictional "Meilenstein N"
+// examples (the word "Meilenstein" is separated from its number by a space, so M is never
+// directly adjacent to a digit). CLAUDE.md, .planning/, and scripts/ are repo dev-state,
+// not shipped — deliberately not scanned here.
+const milestoneLabel = /\bM\d+\b/;
+const shippedRoots = ["commands", "agents", "skills", "hooks", ".claude-plugin", "README.md"];
+const scannableExt = new Set([".md", ".json", ".mjs"]);
+
+async function* walkShipped(entry) {
+  const stat = await fs.stat(entry); // throws loudly on a missing root — never silently skipped
+  if (stat.isDirectory()) {
+    for (const name of await fs.readdir(entry)) yield* walkShipped(path.join(entry, name));
+  } else if (scannableExt.has(path.extname(entry))) {
+    yield entry;
+  }
+}
+
+const errorsBeforeCheck5 = errors;
+for (const root of shippedRoots) {
+  try {
+    for await (const file of walkShipped(root)) {
+      const lines = (await fs.readFile(file, "utf8")).split("\n");
+      lines.forEach((line, i) => {
+        if (milestoneLabel.test(line)) {
+          fail(`${file}:${i + 1}: internal milestone label (\\bM\\d+\\b) in shipped content — name migrations by public plugin version, not internal milestones: ${line.trim()}`);
+        }
+      });
+    }
+  } catch (e) {
+    // Surface a scan failure as a proper error (not an unhandled rejection) so the
+    // clean signal below cannot fire on an incompletely scanned tree.
+    fail(`check 5: could not scan shipped root "${root}": ${e.message}`);
+  }
+}
+if (errors === errorsBeforeCheck5) ok("no internal milestone labels in shipped content");
+
 if (errors > 0) {
   console.error(`\n${errors} problem(s) found.`);
   process.exit(1);
