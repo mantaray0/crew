@@ -374,7 +374,7 @@ never pushes, opens a PR, or commits in a way your git config disables; it asks 
 2. **Gate on verify** — refuses to ship on a red `verify` (checks the last result in `LOG.md`).
 3. **Release per `ship.releaseTool`** — `changesets`/`release-please` (push a changeset/commits; a CI
    bot opens the version-PR), `semantic-release` (push; CI does it all), or `manual` (local bump → commit
-   → tag with your `commitStyle`/`ship.tagPattern`). `auto` detects the tool from the repo.
+   → tag with your `commitPattern`/`ship.tagPattern`). `auto` detects the tool from the repo.
 4. **Push & PR** — only if `git.autoPush` / `git.autoPR` allow it (otherwise it asks); PR/MR via the
    `gh` (GitHub Actions) or `glab` (GitLab CI) CLI. In a push-triggered setup the push is the deploy
    trigger, so it stays the user's call.
