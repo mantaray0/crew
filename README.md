@@ -561,6 +561,17 @@ The reusable knowledge the commands lean on:
 | `roast-me` | `brief`, `init` — bounded clarifying questions with recommended answers |
 | `crew-learn` | `learn` — distilling work into proposed skills/tags |
 
+#### Skills as standalone tools
+
+Four of these skills carry a **second entry point** — invoke them ad-hoc, with no `/crew:` command and no `.planning/` state, straight from natural language:
+
+- **`roast-me`** — *the headliner.* Pressure-test any idea on the spot: say **"roast me"** (optionally with a nickname), "roast my idea/plan", or "challenge my idea/plan/assumptions". Works well outside a brief — any time you want a bounded, recommended-answer-carrying challenge.
+- **`crew-planning`** — "plan this" / "write me a plan": drafts a milestone→phase plan inline, no roadmap files required.
+- **`verification-loop`** — "verify this" / "review my changes": runs test→review→harden→simplify on any diff, no active phase required.
+- **`crew-learn`** — "what's worth keeping here?" / "learn from this": distils reusable skills/tags/decisions from any diff, no finished milestone required.
+
+Each writes nothing to `.planning/` unless you ask — the standalone path returns its result in the conversation.
+
 ### Hooks (`hooks/`)
 Two Node scripts wired in `hooks/hooks.json`:
 
