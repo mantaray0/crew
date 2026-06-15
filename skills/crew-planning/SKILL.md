@@ -87,3 +87,10 @@ One milestone = one folder: the archived ROADMAP section lands **inside** the mo
 - Keep phases small enough to verify and commit atomically.
 - Flag security-sensitive scope (auth/payments/tokens) and **recommend** a security pass — never enable it silently.
 - Plans are living documents: `/crew:adjust` rewrites them freely as understanding changes.
+
+## Standalone usage
+
+A second entry point: ask this skill to draft a plan **ad-hoc** — "plan this", "write me a plan" — without `/crew:plan`'s roadmap orchestration.
+
+- **State-free.** Don't require an existing `ROADMAP.md`, a milestone folder, or `.planning/` at all. Apply the milestone→phase structure and the spec-head-in-plan format as **conventions**, not as files that must already exist.
+- **Output inline by default.** Emit the plan **in the conversation** rather than writing `plans/<n>_<slug>/` files or touching `ROADMAP.md`. Only persist into `.planning/` when the user asks — or hand off to `/crew:plan` for the full, tracked path.

@@ -24,3 +24,10 @@ The harness should get better with every project. After completed work, distil w
 ## In the finish strand
 
 `/crew:learn` is the **Learn step** of the `/crew:finish` close-out strand (`config.workflow.learn.run`, additionally gated by `config.workflow.learn.enabled`). Cadence there is **per milestone** — one learn per finished milestone, never per phase. Run standalone any time, or let `/crew:finish` offer/run it after Ship and before Complete.
+
+## Standalone usage
+
+A second entry point: distil reusable assets **ad-hoc** from any finished work or diff — "what's worth keeping here?", "learn from this" — without the finish strand.
+
+- **State-free.** Don't require a completed milestone, `LOG.md`, or `.planning/`. Take the source from whatever the user points at — a diff, a session, a decision just made.
+- **Propose, don't impose.** Same rule as in-strand: show the actual draft skill / tag mapping / decision text and let the user confirm. Without approval to write, keep the proposal **in the conversation**; on approval, skills/tags still go to the global `~/.claude/crew/` layer so every project benefits.

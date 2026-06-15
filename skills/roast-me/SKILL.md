@@ -1,6 +1,6 @@
 ---
 name: roast-me
-description: Use during planning to clarify a raw idea — bounded, batched questioning that challenges the idea at a configurable intensity, each question carrying a recommended answer the user can simply confirm. Investigates the codebase instead of asking when answerable.
+description: Bounded, batched questioning that clarifies and challenges a raw idea at a configurable intensity, each question carrying a recommended answer the user can simply confirm — investigates the codebase instead of asking when answerable. Use during planning, or standalone any time to pressure-test an idea: triggers on "roast me" (optionally with a nickname), "roast my idea/plan", "challenge my idea/plan/assumptions".
 origin: crew
 ---
 
@@ -32,3 +32,10 @@ Turn a vague idea into a clear, decided spec by walking the decision tree and ch
 - Continuing to grill after the Spec is writable **and** the intensity's minimum challenge depth (steps 4/6) is met.
 - Deciding structure / sequencing in the brief (that's planning).
 - Open-ended questions with no recommended default.
+
+## Standalone usage
+
+A second entry point: invoke this skill **ad-hoc**, outside `/crew:brief`, to pressure-test any raw idea — no project and no `.planning/` state required. Prefix-free natural-language triggers: **"roast me"** (optionally with a nickname), "roast my idea/plan", "challenge my idea/plan/assumptions".
+
+- **State-free.** Don't require `PROJECT.md`, a milestone folder, or a roadmap. If a `.planning/` brief context happens to exist, use it; otherwise work purely from what the user gives you.
+- **Output inline.** Walk the same decision tree and challenge at the configured `intensity` (default `normal`, honouring the step-6 stop-gate), then hand the clarified result back **in the conversation** — a tight summary of the decided points. Don't write `PROJECT.md` or a `_spec.md` unless asked; if the user wants to capture it into crew's state, point them at `/crew:brief` → `/crew:plan`.
