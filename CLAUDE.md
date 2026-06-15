@@ -54,7 +54,7 @@ The plugin is declarative — the logic lives in Markdown instructions, not comp
 - **State lives in `.planning/`.** PROJECT/ROADMAP/LOG/BACKLOG + `plans/` carry project context across
   sessions so a fresh context can orient at any time (`/crew:resume`). Plans are grouped into
   **numbered milestone folders** — `plans/<n>_<milestone-slug>/` (number-prefixed so they sort and read
-  at a glance when collapsed) holding an optional `_spec.md` plus the numbered `<id>_<title>.md` phase plans.
+  at a glance when collapsed) holding a `_spec.md` (present when a brief produced the milestone, then **permanent** — the milestone Spec, single source of intent, referenced by rather than copied into the phase plans) plus the numbered `<id>_<title>.md` phase plans.
 - **Interactive by convention.** `crew-conventions` is the rule: surface every decision, batch only
   the independent ones into an `AskUserQuestion` stepper, stay sequential on dependencies, never silently
   apply a default — speed comes from good recommended answers.

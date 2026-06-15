@@ -1,6 +1,6 @@
 ---
 name: planning
-description: Conventions for crew roadmaps and plans — milestone/phase structure, status markers, inter-phase dependencies, and the spec-head-in-plan format. Use when writing or adjusting ROADMAP.md and plans/.
+description: Conventions for crew roadmaps and plans — milestone/phase structure, status markers, inter-phase dependencies, and the permanent-`_spec.md`-plus-referencing-phase-plans format. Use when writing or adjusting ROADMAP.md and plans/.
 origin: crew
 ---
 
@@ -23,17 +23,16 @@ Phases are identified by their heading text, **not** by rigid numbers — so ins
 
 ## plans/<n>_<milestone-slug>/<file>.md
 
-One file, two layers (no separate spec file unless `brief.specArtifact: "separate"`):
+The spec/plan concern is **split across two kinds of file** in the milestone folder, not stacked in one — a single source of intent that phase plans reference rather than copy:
+
+- **`_spec.md` — the milestone Spec (permanent).** Written by `/crew:brief`, it owns the **intent**: Goal/problem, Requirements, Acceptance criteria, Out of scope. It is the single source of truth and stays for the life of the milestone — co-located with `_roadmap.md` once archived, never removed and never duplicated.
+- **`<id>_<title>.md` — a phase plan.** Written by `/crew:plan`, it is the **how** for one phase: a short **Scope of this phase** note (1–3 lines: the deliverable + this phase's own acceptance) that **references `_spec.md`** for the full intent, followed by the Plan body. It does **not** repeat the Spec.
 
 ```markdown
-# <Feature/Phase/Ticket>
+# <id> <Phase title>
 
-## Spec          ← the what/why (from /crew:brief or an external ticket)
-- Goal / problem
-- Requirements
-- Acceptance criteria
-- Out of scope
-- externalRef: <ticket-id>   ← only when pulled via /crew:pull
+> **Scope of this phase:** <deliverable in a line or two; phase-local acceptance>.
+> **Intent / acceptance / out-of-scope:** see `_spec.md`.
 
 ## Plan          ← the how
 - affected files
@@ -41,6 +40,10 @@ One file, two layers (no separate spec file unless `brief.specArtifact: "separat
 - Risks
 - Verify configuration for this phase
 ```
+
+A **ticket plan** (`/crew:pull`) is the exception: there is no `_spec.md` — the ticket is the spec — so the file carries the ticket's intent inline (with `externalRef: <ticket-id>`) above its Plan body.
+
+The ROADMAP milestone section stays lean alongside this — title + a one-line hook + the phase list — so the intent has exactly one home (`_spec.md`), not two.
 
 ### Plan file naming & folders
 
@@ -51,19 +54,19 @@ Plans live in **numbered milestone folders** — `plans/<n>_<milestone-slug>/` �
 ```
 .planning/plans/
   1_fundament/
-    _spec.md            ← Spec root (optional; only when a brief produced this work)
+    _spec.md            ← the milestone Spec (present when a brief produced this milestone; then permanent)
     1.1_backend.md       ← numbered phase plans of this milestone
     1.2_db-schema.md
     1.3_auth.md
 ```
 
-Files inside a folder are told apart by filename. **A leading underscore marks a meta file, not a phase** — `_spec.md` (a brief's Spec root) and `_roadmap.md` (a milestone's archived ROADMAP section, see *Archiving* below); any future `_*.md` is covered by the same rule. Commands that read phase plans skip `_`-prefixed files — they are never a phase. The remaining kinds carry their id up front:
+Files inside a folder are told apart by filename. **A leading underscore marks a meta file, not a phase** — `_spec.md` (the milestone Spec) and `_roadmap.md` (a milestone's archived ROADMAP section, see *Archiving* below); any future `_*.md` is covered by the same rule. Commands that read phase plans skip `_`-prefixed files — they are never a phase. The remaining kinds carry their id up front:
 
-- **Brief / Spec root** (`/crew:brief`, feature in an existing project): `_spec.md` — Spec head only (Goal/problem, Requirements, Acceptance, Out of scope). The folder is `<n>_<brief-slug>/`, where `<n>` is the next milestone number; no fake phase number is invented. The Plan body is filled later by `/crew:plan`.
+- **Brief / milestone Spec** (`/crew:brief`, feature in an existing project): `_spec.md` — the **permanent** milestone Spec (Goal/problem, Requirements, Acceptance, Out of scope). The folder is `<n>_<brief-slug>/`, where `<n>` is the next milestone number; no fake phase number is invented. `/crew:plan` later adds the phase plans beside it — they **reference** this `_spec.md` rather than copy it.
 - **Phase plan** (`/crew:plan`): roadmap phase id + short title — `1.2_db-schema.md`. Sorts naturally, ties straight to the roadmap id.
 - **Ticket plan** (`/crew:pull`): external ticket id + title — `LIN-42_realtime-notifications.md`; no `_spec.md` (the ticket is the spec).
 
-**New project:** `/crew:plan` creates one `<n>_<milestone-slug>/` folder per roadmap milestone and writes the numbered phase plans into it; the brief itself is `PROJECT.md` (no `_spec.md` in `plans/`). **Feature in an existing project:** the brief's `_spec.md` and its numbered phase plans share one `plans/<n>_<milestone-slug>/` folder; once every phase is captured, the `_spec.md` may be removed. All plans-reading commands glob **recursively** (`plans/**/*.md`).
+**New project:** `/crew:plan` creates one `<n>_<milestone-slug>/` folder per roadmap milestone and writes the numbered phase plans into it; the brief itself is `PROJECT.md` (no `_spec.md` in `plans/`). **Feature in an existing project:** the brief's `_spec.md` and its numbered phase plans share one `plans/<n>_<milestone-slug>/` folder; the `_spec.md` is **permanent** — it stays as the milestone's single source of intent (like `_roadmap.md` after archiving), never removed. All plans-reading commands glob **recursively** (`plans/**/*.md`).
 
 ## Rename & reference-migration phases
 
@@ -96,5 +99,5 @@ One milestone = one folder: the archived ROADMAP section lands **inside** the mo
 
 A second entry point: ask this skill to draft a plan **ad-hoc** — "plan this", "write me a plan" — without `/crew:plan`'s roadmap orchestration.
 
-- **State-free.** Don't require an existing `ROADMAP.md`, a milestone folder, or `.planning/` at all. Apply the milestone→phase structure and the spec-head-in-plan format as **conventions**, not as files that must already exist.
+- **State-free.** Don't require an existing `ROADMAP.md`, a milestone folder, or `.planning/` at all. Apply the milestone→phase structure and the `_spec.md`/phase-plan split as **conventions**, not as files that must already exist.
 - **Output inline by default.** Emit the plan **in the conversation** rather than writing `plans/<n>_<slug>/` files or touching `ROADMAP.md`. Only persist into `.planning/` when the user asks — or hand off to `/crew:plan` for the full, tracked path.

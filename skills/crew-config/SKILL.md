@@ -22,8 +22,7 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
     "mode": "manual",                  // "manual" | "auto" — Level 1: manual = do the one called step and stop (run-gates dormant); auto = walk the chain, each step firing per its run
     "brief": {                         // always interactive — no run gate (see "Safety boundary")
       "depth": "normal",               // "light" | "normal" | "deep" — how broad (coverage)
-      "intensity": "normal",           // "gentle" | "normal" | "brutal" — how hard Roast-Me pushes back
-      "specArtifact": "section"        // "section" | "separate" | "off"
+      "intensity": "normal"            // "gentle" | "normal" | "brutal" — how hard Roast-Me pushes back
     },
     "plan": {},                        // always interactive — no run gate
     "execute": {
@@ -227,7 +226,7 @@ The schema-diff is generic, but some changes are **renames/splits/moves** where 
 
 | change | mapping |
 |---|---|
-| `clarify` → `brief` | values 1:1 (`depth`/`intensity`/`specArtifact`; `askOnlyWhenStuck` is **dropped by the workflow-nesting migration** — see Group 2) |
+| `clarify` → `brief` | values 1:1 (`depth`/`intensity`; `askOnlyWhenStuck` is **dropped by the workflow-nesting migration** — see Group 2) |
 | `execution` → `execute` | values 1:1 (`parallel`/`maxConcurrent`/`onDeviation`) |
 | `deploy` → `ship` | values 1:1 — includes the legacy `deploy.mode` submigration below |
 | `learn` → `retro` | values 1:1 (`enabled`) — **reversed again by the workflow-nesting migration** (`retro` → `learn`); a 0.7.0 `learn` ends up at `workflow.learn` net |
@@ -237,7 +236,7 @@ The schema-diff is generic, but some changes are **renames/splits/moves** where 
 
 | change | mapping |
 |---|---|
-| `brief` → `workflow.brief` | move; carry `depth`/`intensity`/`specArtifact`; **drop** `askOnlyWhenStuck` (removed) |
+| `brief` → `workflow.brief` | move; carry `depth`/`intensity`; **drop** `askOnlyWhenStuck` (removed) |
 | `execute` → `workflow.execute` | move; `parallel`/`maxConcurrent`/`onDeviation` 1:1 |
 | `verify` → `workflow.execute.verify` | move **and nest under execute**; in the `default` stage list rename the first stage `"verify"` → `"test"` (`perPhaseOverride` stays a boolean; the same stage-name rename applies to any per-phase override lists, which live in plan files, not here) |
 | `ship` → `workflow.ship` | move 1:1; its new `run` is seeded from `finish.ship` (below) |
@@ -245,6 +244,7 @@ The schema-diff is generic, but some changes are **renames/splits/moves** where 
 | `complete` → `workflow.complete` | new section; its `run` is seeded from `finish.complete` |
 | `finish.{ship,retro,complete}` → `workflow.{ship,learn,complete}.run` | the tri-state `finish` values map 1:1 onto the steps' `run`; the `config.finish` block then **disappears** (no longer a section) |
 | removed: `config.loop`, `config.state`, `brief.askOnlyWhenStuck` | **dropped** — `loop.maxIterations`/`state.commitSessions` were never read (dead); `brief.askOnlyWhenStuck` is superseded. Flag & confirm the drop; never silently keep. |
+| removed: `specArtifact` (in any vintage — `workflow.brief.specArtifact`, the pre-nesting `brief.specArtifact`, or the 0.7.0 `clarify.specArtifact`) | **dropped on reconcile with a note** — `_spec.md` is now always written and permanent, so the artifact choice is moot. A prior value of `off` is **ignored** (the always-write behaviour is intended). Remove the key; surface the change in the reconcile summary. |
 
 **Genuinely new fields** (no predecessor → offered via the per-new-field question, never set silently): `workflow.mode` (default `manual`), `workflow.execute.loop` (default `all`), and `run` on any close-out step lacking a `finish.*` source — e.g. a pristine 0.7.0 config (no `finish` block) gets `ship.run`/`learn.run`/`complete.run` from this schema's defaults (`ask`/`ask`/`ask`).
 
