@@ -55,8 +55,11 @@ What makes it more than a prompt collection:
   simplify`, each in a fresh sub-agent context with the right model.
 - **Model management.** Cheap models for trivial work, strong models for planning/review — chosen
   automatically or pinned per task type.
-- **Parallel dispatch.** Independent phases run concurrently in isolated git worktrees and roll up
-  through an integration branch.
+- **Parallel dispatch & opt-in isolation.** Independent phases run concurrently in isolated git
+  worktrees and roll up through an integration branch. Isolation is **opt-in** (off by default) and
+  also comes at a coarser **per-milestone** granularity — one worktree+branch per milestone, so
+  different people/agents can take a whole milestone in parallel — forking from a configurable
+  `git.baseBranch` (e.g. a long-lived `redesign` branch) instead of hardcoded `main`.
 - **Self-learning.** `/crew:learn` distills reusable patterns into skills/tags in your global
   registry, so knowledge compounds across projects instead of getting stranded in one repo.
 
@@ -277,8 +280,10 @@ reports and proposes `/crew:finish` for the close-out.
 **`dispatch [ids]` — parallel worktree run.** Builds the DAG from the milestone's phases and their
 `depends:` edges, computes waves of independent phases, confirms the split, then dispatches a wave
 (up to `config.workflow.execute.maxConcurrent` phases, each in an isolated worktree worked by a sub-agent).
-The `merge-coordinator` agent rolls completed branches into an integration branch with intent-aware
-conflict resolution. Backed by `planning` (DAG) + `git-merge`, plus the `merge-coordinator` agent.
+The `merge-coordinator` agent rolls completed branches into an integration branch — targeting
+`config.git.baseBranch`, or the **milestone branch** when milestone isolation nests dispatch under it —
+with intent-aware conflict resolution. Backed by `planning` (DAG) + `git-merge`, plus the
+`merge-coordinator` agent.
 
 #### `/crew:quick` &nbsp;`<what to do>`
 > The quick lane: a small fix or chore that shouldn't go through the full brief→plan→execute flow and
@@ -493,7 +498,7 @@ and their defaults:
 | `workflow.ship` | `run: "ask"`, `enabled: true`, `runDeploy: "off"`, `releaseTool: "auto"`, `finishRelease: "off"` | `/crew:ship` release/deploy + its close-out gate (`config.git` stays the git authority) |
 | `workflow.learn` | `run: "ask"`, `enabled: true` | `/crew:learn` self-learning + its close-out gate |
 | `workflow.complete` | `run: "ask"` | `/crew:complete` milestone close-out + its gate within `/crew:finish` |
-| `git` | `autoCommitPerPhase: true`, `autoPush: false`, `isolation: "worktree-per-feature"`, `mergeStrategy: "integration-branch"` | Commit/branch/merge behavior; the **sole** git/remote authority for every `run` — never touches the remote without approval |
+| `git` | `autoCommitPerPhase: true`, `autoPush: false`, `isolation: "off"`, `baseBranch: "main"`, `mergeStrategy: "integration-branch"` | Commit/branch/merge behavior; **opt-in** isolation (`*-per-milestone` \| `*-per-phase`, `worktree-`/`branch-` mechanism) forking from / merging to `baseBranch`; the **sole** git/remote authority for every `run` — never touches the remote without approval |
 | `models` | `mode: "auto"`; planning/review→`opus`, execution/simplify→`sonnet`, trivial→`haiku` | Model per task type (auto tiers or manual pins) |
 | `tasks` | `provider: "local"`, `writeBack: false` | External PM integration for `/crew:pull` |
 | `testing` | `policy: "from-archetype"` | TDD / tests-required / optional |
