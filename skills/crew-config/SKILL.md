@@ -200,7 +200,7 @@ The inherit option **names the value it currently resolves to**, e.g. *"take fro
 | way | when | scope |
 |---|---|---|
 | **Reset** | any time, in the reconcile | a single already-set override → inherit (key removed) |
-| **One-time M8 cleanup** | once, at the pre-M8 → M8 schema transition (version-gated; see *Known migrations*) | batched: all inherited-looking fields a pre-M8 config over-seeded |
+| **One-time inherit-first cleanup** | once, at the inherit-first schema transition (gated on `crewVersion` < `0.16.0`; see *Known migrations*) | batched: all inherited-looking fields a pre-inherit-first config over-seeded |
 | **Revisit pass** | opt-in step on any re-run | re-asks *every* inheritable/workflow field (same inherit-first form, current value pre-selected) → change or reset any |
 
 ## Config versioning & migration
@@ -213,7 +213,7 @@ The inherit option **names the value it currently resolves to**, e.g. *"take fro
   1. **Schema-diff.** Compare the existing config's keys against this schema (the contract). Classify each: **new** (in the schema, missing from the config), **removed** (in the config, no longer in the schema), **unchanged**. A changed *default* in this schema is never written back over a value the user already has.
   2. **Ask per new field — inherit-first.** For every new key, show the user its purpose and recommended default (from this schema) and ask what they want — as the fitting question type (single-select for enums like `responseStyle`, free-text for open values), following `crew-conventions`. Per *Inherit-first writes*, the **inherit** choice is the first, pre-selected option and writes nothing when chosen. Never silently apply a default.
   3. **Flag removed fields.** List keys that no longer exist in the schema; offer to drop them.
-  4. **One-time cleanup of legacy over-seeding.** When the config predates M8 (see the M8 entry under *Known migrations*), offer — **once** — a batched reset of all inheritable fields whose written value equals the resolved inherited value (the old write logic over-seeded them). Candidates are pre-selected; deliberate freezes the user keeps stay as values. This is **version-gated** (runs only at the pre-M8 → M8 transition) and does **not** recur on later reconciles.
+  4. **One-time cleanup of legacy over-seeding.** When the config predates the inherit-first release (`crewVersion` < `0.16.0`; see the inherit-first entry under *Known migrations*), offer — **once** — a batched reset of all inheritable fields whose written value equals the resolved inherited value (the old write logic over-seeded them). Candidates are pre-selected; deliberate freezes the user keeps stay as values. This is **version-gated** (runs only at that transition) and does **not** recur on later reconciles.
   5. **Reset & revisit (any re-run).** Independently of the one-time cleanup: a single already-set override can be **reset** to inherit (key removed) at any time, and the reconcile offers an **opt-in revisit pass** — re-ask *every* inheritable/workflow field with the same inherit-first form (current value pre-selected) so any parameter can be changed or reset. Declining leaves the reconcile purely additive (lossless). The revisit reuses the first-run question form — no second question logic.
   6. **Stamp the version.** After applying confirmed changes, set `crewVersion` to the current plugin version.
 
@@ -221,19 +221,19 @@ The inherit option **names the value it currently resolves to**, e.g. *"take fro
 
 ### Known migrations
 
-The schema-diff is generic, but some changes are **renames/splits/moves** where a blind new/removed diff would drop the user's value. Apply these explicitly *before* the generic diff. The chain must carry a config from `crewVersion 0.7.0` (flat legacy keys) **through M4** (section renames) **to M5** (into `config.workflow`) **losslessly** — apply the two groups in order (a config of any vintage lands on the same M5 shape).
+The schema-diff is generic, but some changes are **renames/splits/moves** where a blind new/removed diff would drop the user's value. Apply these explicitly *before* the generic diff. The chain must carry a config from `crewVersion 0.7.0` (flat legacy keys) **through the section-rename migration to the workflow-nesting migration** (into `config.workflow`) **losslessly** — apply the two groups in order (a config of any vintage lands on the same post-nesting shape).
 
-**Group 1 — 0.7.0 → M4 section renames** (lift flat legacy keys to their M4 names):
+**Group 1 — 0.7.0 → section renames** (lift flat legacy keys to their renamed sections):
 
 | change | mapping |
 |---|---|
-| `clarify` → `brief` | values 1:1 (`depth`/`intensity`/`specArtifact`; `askOnlyWhenStuck` is **dropped in M5** — see Group 2) |
+| `clarify` → `brief` | values 1:1 (`depth`/`intensity`/`specArtifact`; `askOnlyWhenStuck` is **dropped by the workflow-nesting migration** — see Group 2) |
 | `execution` → `execute` | values 1:1 (`parallel`/`maxConcurrent`/`onDeviation`) |
 | `deploy` → `ship` | values 1:1 — includes the legacy `deploy.mode` submigration below |
-| `learn` → `retro` | values 1:1 (`enabled`) — **reversed again in M5** (`retro` → `learn`); a 0.7.0 `learn` ends up at `workflow.learn` net |
+| `learn` → `retro` | values 1:1 (`enabled`) — **reversed again by the workflow-nesting migration** (`retro` → `learn`); a 0.7.0 `learn` ends up at `workflow.learn` net |
 | `deploy.mode` removed → `ship.enabled` + `ship.runDeploy` | `off` → `enabled: false` · `orchestrate` → `enabled: true, runDeploy: off` · `execute` → `enabled: true, runDeploy: ask` |
 
-**Group 2 — M4 → M5: into `config.workflow`** (then move the M4-named sections under `workflow`, nest verify, dissolve finish):
+**Group 2 — section renames → workflow-nesting: into `config.workflow`** (then move the renamed sections under `workflow`, nest verify, dissolve finish):
 
 | change | mapping |
 |---|---|
@@ -243,12 +243,12 @@ The schema-diff is generic, but some changes are **renames/splits/moves** where 
 | `ship` → `workflow.ship` | move 1:1; its new `run` is seeded from `finish.ship` (below) |
 | `retro` → `workflow.learn` | rename **and** move; `enabled` 1:1; its new `run` is seeded from `finish.retro` |
 | `complete` → `workflow.complete` | new section; its `run` is seeded from `finish.complete` |
-| `finish.{ship,retro,complete}` → `workflow.{ship,learn,complete}.run` | the M4 tri-state values map 1:1 onto the steps' `run`; the `config.finish` block then **disappears** (no longer a section) |
+| `finish.{ship,retro,complete}` → `workflow.{ship,learn,complete}.run` | the tri-state `finish` values map 1:1 onto the steps' `run`; the `config.finish` block then **disappears** (no longer a section) |
 | removed: `config.loop`, `config.state`, `brief.askOnlyWhenStuck` | **dropped** — `loop.maxIterations`/`state.commitSessions` were never read (dead); `brief.askOnlyWhenStuck` is superseded. Flag & confirm the drop; never silently keep. |
 
 **Genuinely new fields** (no predecessor → offered via the per-new-field question, never set silently): `workflow.mode` (default `manual`), `workflow.execute.loop` (default `all`), and `run` on any close-out step lacking a `finish.*` source — e.g. a pristine 0.7.0 config (no `finish` block) gets `ship.run`/`learn.run`/`complete.run` from this schema's defaults (`ask`/`ask`/`ask`).
 
-**M8 — one-time inherit-first cleanup** (gated on `crewVersion` predating `0.16.0`, the M8 inherit-first release; runs **once** at that transition, like the M4/M5 groups above). Before M8, init/setup wrote inheritable leaf fields explicitly even when the user chose "inherit", so pre-M8 configs over-seed the layer below. A written value that equals the resolved inherited value is **not** distinguishable after the fact from a deliberate freeze → **no auto-strip**. Instead, at the pre-M8 → M8 reconcile, detect every inheritable leaf field whose written value equals the resolved inherited value (project: vs. global; global: vs. built-in default) and present them as **one batched multi-select** — *"these look inherited — reset to inherit? (key removed)"* — with candidates **pre-selected**. The user un-checks deliberate freezes (kept as values). After the choice and the `crewVersion` stamp the migration does **not** re-run — later reconciles have nothing to flag, since M8+ write logic never over-seeds. This is distinct from the always-available per-field **reset** and the opt-in **revisit pass** (see *Inherit-first writes* → the three ways a field drops back to inheritance).
+**Inherit-first cleanup — one-time** (gated on `crewVersion` predating `0.16.0`, the inherit-first release; runs **once** at that transition, like the groups above). Before that release, init/setup wrote inheritable leaf fields explicitly even when the user chose "inherit", so configs from before it over-seed the layer below. A written value that equals the resolved inherited value is **not** distinguishable after the fact from a deliberate freeze → **no auto-strip**. Instead, at the inherit-first reconcile, detect every inheritable leaf field whose written value equals the resolved inherited value (project: vs. global; global: vs. built-in default) and present them as **one batched multi-select** — *"these look inherited — reset to inherit? (key removed)"* — with candidates **pre-selected**. The user un-checks deliberate freezes (kept as values). After the choice and the `crewVersion` stamp the migration does **not** re-run — later reconciles have nothing to flag, since the inherit-first write logic never over-seeds. This is distinct from the always-available per-field **reset** and the opt-in **revisit pass** (see *Inherit-first writes* → the three ways a field drops back to inheritance).
 
 **`git.commitStyle` → `git.commitPattern`** — rename, value 1:1. The field was effectively single-value (`"conventional"` was the only meaning), so a pre-existing config can only carry `"conventional"` — which stays a valid `commitPattern` (the keyword shortcut). After the rename `commitPattern` additionally accepts a free template (placeholders `{type}`/`{scope}`/`{ticket}`/`{subject}`/`{body}`). Carry the old value under the new key; never silently drop it.
 
