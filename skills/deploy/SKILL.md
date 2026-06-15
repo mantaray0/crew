@@ -1,5 +1,5 @@
 ---
-name: crew-deploy
+name: deploy
 description: How crew turns a verified commit into a release/deployment — config.workflow.ship (enabled + runDeploy + releaseTool), config.git as the single git authority, provider handling (gh/glab), and the safety rules. Use during /crew:ship.
 origin: crew
 ---

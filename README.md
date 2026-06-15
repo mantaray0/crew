@@ -210,7 +210,7 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
 - Drafts/extends `ROADMAP.md` as milestones → phases with status markers
   `[ ]` open · `[>]` active · `[x]` done · `[~]` deferred, keeping phases **independently mergeable**
   and recording inter-phase `depends:` edges (used later for parallel dispatch).
-- Writes per-plan files under `.planning/plans/`. Backed by `crew-planning` + `crew-conventions`.
+- Writes per-plan files under `.planning/plans/`. Backed by `planning` + `crew-conventions`.
 
 #### `/crew:backlog` &nbsp;`[idea text | list | new | empty → ask & add]`
 > A frictionless idea inbox so the active plan stays undisturbed and nothing gets lost.
@@ -267,7 +267,7 @@ The three "auto" granularities are distinct fields: the **phase loop** (`workflo
 the `auto` argument), the **strategy** (`workflow.execute.parallel`, the `dispatch` argument), and the
 **step chain** (`workflow.mode`; see *Configuration*). If `config.workflow.execute.parallel` is `auto` and
 independent phases are detected, it offers to hand off to `/crew:execute dispatch`. Backed by `crew-context`
-+ `crew-planning`.
++ `planning`.
 
 **`auto` — sequential autonomous run.** Runs a phase in the main context, then `/clear` +
 `/crew:execute auto`, carrying continuity through `.planning/` state (no sub-agents). Loops until the
@@ -278,7 +278,7 @@ reports and proposes `/crew:finish` for the close-out.
 `depends:` edges, computes waves of independent phases, confirms the split, then dispatches a wave
 (up to `config.workflow.execute.maxConcurrent` phases, each in an isolated worktree worked by a sub-agent).
 The `merge-coordinator` agent rolls completed branches into an integration branch with intent-aware
-conflict resolution. Backed by `crew-planning` (DAG) + `git-merge`, plus the `merge-coordinator` agent.
+conflict resolution. Backed by `planning` (DAG) + `git-merge`, plus the `merge-coordinator` agent.
 
 #### `/crew:quick` &nbsp;`<what to do>`
 > The quick lane: a small fix or chore that shouldn't go through the full brief→plan→execute flow and
@@ -304,7 +304,7 @@ conflict resolution. Backed by `crew-planning` (DAG) + `git-merge`, plus the `me
      `type-design-analyzer`)
    - **simplify** — tidy without changing behavior (`code-simplifier`)
 
-Backed by the `verification-loop` skill.
+Backed by the `verify` skill.
 
 #### `/crew:rollback` &nbsp;`[phase id or commit, optional]`
 > Undo a botched phase. Atomic per-phase commits make this cheap.
@@ -356,7 +356,7 @@ Backed by the `verification-loop` skill.
 2. **Distill** recurring patterns into a proposed **skill** (reusable procedure), a **tag** (a
    capability that activates skills/rules), or a `PROJECT.md` decision update.
 3. **Propose, don't impose** — each proposal is presented for explicit confirmation before anything is
-   written to your global registry. Active when `config.workflow.learn.enabled`. Backed by `crew-learn`.
+   written to your global registry. Active when `config.workflow.learn.enabled`. Backed by `learn`.
 
 Also the **Learn step** of the `/crew:finish` strand (`config.workflow.learn.run`), where it runs once per
 milestone — see `/crew:finish` below.
@@ -385,7 +385,7 @@ never pushes, opens a PR, or commits in a way your git config disables; it asks 
 `runDeploy` defaults to `off` — in a push-triggered setup the push from step 4 *is* the deploy, so
 there's nothing extra to run. Set it to `ask`/`auto` only for imperative deploys (Vercel/Fly). For
 bot-PR tools, `ship.finishRelease` (default `off`) controls whether ship also merges the open
-version-PR to finish the release. Backed by `crew-deploy`.
+version-PR to finish the release. Backed by `deploy`.
 
 ship is also the **Ship step** of the `/crew:finish` strand (`config.workflow.ship.run`, additionally gated
 by `config.workflow.ship.enabled`); finish adds no new push/release axis — it calls this same command.
@@ -399,7 +399,7 @@ by `config.workflow.ship.enabled`); finish adds no new push/release axis — it 
 - **Moves** (a folder `mv` + writing one meta file): `plans/<n>_<slug>/` →
   `.planning/archive/plans/<n>_<slug>/`, with the `ROADMAP.md` section written **into** it as `_roadmap.md`.
 - **Leaves** a one-line pointer in `ROADMAP.md` (`✓ archiviert YYYY-MM-DD → archive/…`). `LOG.md` is
-  never archived — it stays append-only. Backed by `crew-planning`.
+  never archived — it stays append-only. Backed by `planning`.
 
 #### `/crew:complete` &nbsp;`[milestone slug, optional]`
 > Close out a finished milestone — audit that all phases are done, summarize what shipped, update `PROJECT.md`, then archive it.
@@ -409,7 +409,7 @@ by `config.workflow.ship.enabled`); finish adds no new push/release axis — it 
 - **Complete ⊃ Archive** — it calls `/crew:archive` as its last step (delegate, not duplicate);
   `/crew:archive` stays usable on its own for pure tidy-up. They are **not** aliases of each other.
 - As the **Complete step** of `/crew:finish` its gate is `config.workflow.complete.run`; invoked
-  directly it always runs. Backed by `crew-context` + `crew-planning`.
+  directly it always runs. Backed by `crew-context` + `planning`.
 
 #### `/crew:finish` &nbsp;`[milestone slug, optional]`
 > Close out a milestone end-to-end in one strand: **Ship → Learn → Complete**, each step gated by its `run`.
@@ -554,21 +554,21 @@ The reusable knowledge the commands lean on:
 | `crew-conventions` | **Every** command — the one-decision-at-a-time interaction + language rules |
 | `crew-config` | `setup`, `init`, `update` — config schema + project-type/tag registry |
 | `crew-context` | `execute`, `resume` — the `.planning/` state model |
-| `crew-planning` | `plan`, `execute`, `adjust` — roadmap/phase/spec conventions + DAG |
-| `verification-loop` | `verify`, `execute` — the test→review→harden→simplify pipeline |
+| `planning` | `plan`, `execute`, `adjust` — roadmap/phase/spec conventions + DAG |
+| `verify` | `verify`, `execute` — the test→review→harden→simplify pipeline |
 | `model-management` | `execute dispatch` + pipeline — task-types and model selection |
 | `git-merge` | `execute dispatch` — worktree isolation, claims, rolling integration |
 | `roast-me` | `brief`, `init` — bounded clarifying questions with recommended answers |
-| `crew-learn` | `learn` — distilling work into proposed skills/tags |
+| `learn` | `learn` — distilling work into proposed skills/tags |
 
 #### Skills as standalone tools
 
 Four of these skills carry a **second entry point** — invoke them ad-hoc, with no `/crew:` command and no `.planning/` state, straight from natural language:
 
 - **`roast-me`** — *the headliner.* Pressure-test any idea on the spot: say **"roast me"** (optionally with a nickname), "roast my idea/plan", or "challenge my idea/plan/assumptions". Works well outside a brief — any time you want a bounded, recommended-answer-carrying challenge.
-- **`crew-planning`** — "plan this" / "write me a plan": drafts a milestone→phase plan inline, no roadmap files required.
-- **`verification-loop`** — "verify this" / "review my changes": runs test→review→harden→simplify on any diff, no active phase required.
-- **`crew-learn`** — "what's worth keeping here?" / "learn from this": distils reusable skills/tags/decisions from any diff, no finished milestone required.
+- **`planning`** — "plan this" / "write me a plan": drafts a milestone→phase plan inline, no roadmap files required.
+- **`verify`** — "verify this" / "review my changes": runs test→review→harden→simplify on any diff, no active phase required.
+- **`learn`** — "what's worth keeping here?" / "learn from this": distils reusable skills/tags/decisions from any diff, no finished milestone required.
 
 Each writes nothing to `.planning/` unless you ask — the standalone path returns its result in the conversation.
 

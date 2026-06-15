@@ -1,5 +1,5 @@
 ---
-name: verification-loop
+name: verify
 description: How crew verifies a change — the test → review → harden → simplify pipeline, run in fresh contexts, with config-driven steps and model selection. Use after implementing any phase.
 origin: crew
 ---

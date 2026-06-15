@@ -40,7 +40,7 @@ The plugin is declarative — the logic lives in Markdown instructions, not comp
 - **`commands/`** — the `/crew:*` slash commands (brief, plan, execute, verify, dispatch, …).
 - **`agents/`** — specialized sub-agent definitions (reviewer, planner, executor, …).
 - **`skills/`** — reusable knowledge that commands load (`crew-config`, `crew-conventions`,
-  `crew-planning`, `verification-loop`, `git-merge`, `roast-me`, …). **The skills are the source of truth.**
+  `planning`, `verify`, `git-merge`, `roast-me`, …). **The skills are the source of truth.**
 - **`hooks/`** — session-lifecycle hooks (incl. config-version reconciliation at session start).
 - **`scripts/`** — Node helper scripts (e.g. `sync-version.mjs` for the release process).
 - **`.claude-plugin/`** — plugin manifest (`plugin.json`, version).

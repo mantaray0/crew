@@ -1,5 +1,5 @@
 ---
-name: crew-planning
+name: planning
 description: Conventions for crew roadmaps and plans — milestone/phase structure, status markers, inter-phase dependencies, and the spec-head-in-plan format. Use when writing or adjusting ROADMAP.md and plans/.
 origin: crew
 ---
