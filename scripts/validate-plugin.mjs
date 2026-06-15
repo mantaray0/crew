@@ -80,6 +80,10 @@ for (const ref of new Set(refs)) {
 // not shipped — deliberately not scanned here.
 const milestoneLabel = /\bM\d+\b/;
 const shippedRoots = ["commands", "agents", "skills", "hooks", ".claude-plugin", "README.md"];
+// Also scan pending changesets: an internal label there becomes permanent once
+// `changeset version` folds it into CHANGELOG.md (the real 0.16.0 leak). Catch it
+// while it's still editable. CHANGELOG.md itself is immutable history — not scanned.
+const labelScanRoots = [...shippedRoots, ".changeset"];
 const scannableExt = new Set([".md", ".json", ".mjs"]);
 
 async function* walkShipped(entry) {
@@ -92,7 +96,7 @@ async function* walkShipped(entry) {
 }
 
 const errorsBeforeCheck5 = errors;
-for (const root of shippedRoots) {
+for (const root of labelScanRoots) {
   try {
     for await (const file of walkShipped(root)) {
       const lines = (await fs.readFile(file, "utf8")).split("\n");
@@ -105,10 +109,49 @@ for (const root of shippedRoots) {
   } catch (e) {
     // Surface a scan failure as a proper error (not an unhandled rejection) so the
     // clean signal below cannot fire on an incompletely scanned tree.
-    fail(`check 5: could not scan shipped root "${root}": ${e.message}`);
+    fail(`check 5: could not scan root "${root}": ${e.message}`);
   }
 }
-if (errors === errorsBeforeCheck5) ok("no internal milestone labels in shipped content");
+if (errors === errorsBeforeCheck5) ok("no internal milestone labels in shipped content or pending changesets");
+
+// 6. Inherit-sentinel leak protection — crew-config is the source of truth (read-side contract).
+// (A) The defaults block must stay concrete: an "inherit" there would have nothing to resolve
+//     down to and would leak as an effective value (Anf. 7). (B) The canonical read-side
+//     resolution rule must stay present (a stable marker) so every reader can keep referencing it.
+const CREW_CONFIG = "skills/crew-config/SKILL.md";
+const RESOLUTION_MARKER = "inherit-resolution-contract"; // stable marker in crew-config; this guard keeps it present
+try {
+  const skill = await fs.readFile(CREW_CONFIG, "utf8");
+  const lines = skill.split("\n");
+
+  // (A) Extract the "## `config.json` (full defaults)" fenced block — the FIRST fence after the
+  //     heading, which is the defaults block; the later "full inherit form" example is excluded.
+  const headingIdx = lines.findIndex(
+    (l) => l.startsWith("## ") && l.includes("config.json") && l.includes("(full defaults)"),
+  );
+  const openIdx = headingIdx === -1 ? -1 : lines.findIndex((l, i) => i > headingIdx && l.startsWith("```"));
+  const closeIdx = openIdx === -1 ? -1 : lines.findIndex((l, i) => i > openIdx && l.trim() === "```");
+  const defaultsBlock = closeIdx === -1 ? null : lines.slice(openIdx + 1, closeIdx).join("\n");
+  if (defaultsBlock === null || !defaultsBlock.includes('"stack"')) {
+    // Fail loudly rather than skip — a missing heading/fence OR a truncated/empty extraction
+    // (e.g. a stray ``` between the fences shortening the slice) must not pass as clean.
+    // "stack" is the block's last key, so its absence means we did not capture the whole block.
+    fail(`${CREW_CONFIG}: could not extract the complete "config.json (full defaults)" block — cannot verify the defaults layer stays concrete`);
+  } else if (defaultsBlock.includes('"inherit"')) {
+    fail(`${CREW_CONFIG}: the defaults block must resolve to a concrete value — "inherit" in the defaults layer would leak as an effective value`);
+  } else {
+    ok('crew-config defaults block is concrete (no "inherit")');
+  }
+
+  // (B) The canonical read-side resolution rule must stay present.
+  if (skill.includes(RESOLUTION_MARKER)) {
+    ok("canonical inherit-resolution rule present");
+  } else {
+    fail(`${CREW_CONFIG}: canonical inherit-resolution marker "${RESOLUTION_MARKER}" missing — the read-side contract every reader references must stay present`);
+  }
+} catch (e) {
+  fail(`check 6: could not read ${CREW_CONFIG}: ${e.message}`);
+}
 
 if (errors > 0) {
   console.error(`\n${errors} problem(s) found.`);
