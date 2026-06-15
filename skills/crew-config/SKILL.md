@@ -74,7 +74,7 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
     "simplify": "sonnet", "trivial": "haiku"
   },
   "tasks": { "provider": "local", "writeBack": false, "projectKey": null },
-  "testing": { "policy": "from-archetype" }, // | "tdd" | "tests-required" | "optional"
+  "testingPolicy": "from-archetype",   // | "tdd" | "tests-required" | "optional" — top-level leaf (beside language/security/responseStyle)
   "security": { "auto": false },       // never auto; recommended on sensitive scope
   "notifications": {
     "enabled": true,
@@ -90,9 +90,61 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
 }
 ```
 
+This block is the **layer contract** — the built-in defaults, always **concrete**. Being the bottom layer, it may **never** carry `"inherit"` (a `"inherit"` here would have nothing to resolve down to; `validate-plugin` enforces it). It is **not** what a project file looks like: `/crew:init`/`/crew:setup` write the **full inherit form** (see *A written project config* below).
+
 **`config.git` isolation & base branch.** `isolation` encodes **two axes** in one enum value: the *mechanism* prefix (`worktree-` preferred, or `branch-`) × the *granularity* suffix (`-milestone` = one worktree+branch per milestone, so different people/agents can take a whole milestone in parallel; `-phase` = per-phase, as `dispatch` already does within a milestone). `off` (the default) is **linear** — isolation is **opt-in**, so an unconfigured project is never surprised with a branch. A set value now takes effect in the **sequential** `/crew:execute` too, not only in `dispatch`. Isolation branches **fork from** and **merge back into** `baseBranch` (default `main`) — set `baseBranch: "redesign"` and nothing lands on `main` automatically (the final merge to `main` stays manual). The full mechanic lives in the `git-merge` skill; here only the contract and defaults. *(`git.baseBranch` is unrelated to the same-named Changesets option in `.changeset/config.json`.)*
 
 Auto model tiers: planning/review → strongest, execution/simplify → mid, trivial → cheap. `manual` uses the per-type ids. Override precedence: ad-hoc > project > global > built-in default. The `models.*` keys are model **tiers** (e.g. `models.execution` = the execution-task tier) — not to be confused with the `workflow.execute` step section.
+
+## A written project config (full inherit form)
+
+The `config.json (full defaults)` block above is the **layer contract** (built-in defaults, always concrete). What `/crew:init` and `/crew:setup` actually **write** is the *full inherit form*: every inheritable leaf present, inheriting ones as the sentinel `"inherit"`, project facts concrete (see *Inherit-first writes* for the rule). A fresh project `config.json` looks like this:
+
+```jsonc
+{
+  "crewVersion": "0.19.0",              // project fact — concrete (illustrative: the reconciled plugin version)
+  "workflow": {
+    "mode": "inherit",
+    "brief":   { "depth": "inherit", "intensity": "inherit" },
+    "plan":    {},
+    "execute": {
+      "parallel": "inherit", "loop": "inherit", "maxConcurrent": "inherit",
+      "onDeviation": "inherit",
+      "verify": { "default": "inherit", "perPhaseOverride": "inherit" }
+    },
+    "ship": {
+      "run": "inherit", "enabled": "inherit", "provider": "inherit",
+      "tagPattern": "inherit", "environments": "inherit", "runDeploy": "inherit",
+      "releaseTool": "inherit", "finishRelease": "inherit"
+    },
+    "learn":    { "run": "inherit", "enabled": "inherit" },
+    "complete": { "run": "inherit" },
+    "finish":   {}
+  },
+  "git": {
+    "autoCommitPerPhase": "inherit", "autoPush": "inherit", "autoPR": "inherit",
+    "commitPattern": "inherit", "branchPattern": "inherit", "baseBranch": "inherit",
+    "isolation": "inherit", "mergeStrategy": "inherit", "askBeforeMerge": "inherit",
+    "conflictPolicy": "inherit"
+  },
+  "models": {
+    "mode": "inherit", "planning": "inherit", "execution": "inherit",
+    "review": "inherit", "simplify": "inherit", "trivial": "inherit"
+  },
+  "tasks": { "provider": "inherit", "writeBack": "inherit", "projectKey": "inherit" },
+  "testingPolicy": "tests-required",    // archetype suggestion — written concrete when picked, else "inherit"
+  "security": { "auto": "inherit" },
+  "notifications": { "enabled": "inherit", "events": "inherit", "channel": "inherit" },
+  "observability": { "trackCost": "inherit" },
+  "language": { "files": "inherit" },
+  "responseStyle": "inherit",
+  "projectType": "cli",                 // project fact — concrete
+  "tags": ["bun"],                      // project fact — concrete
+  "stack": { "language": "TypeScript", "runtime": "Bun" } // project fact — concrete
+}
+```
+
+Only **leaf** fields take `"inherit"`; container objects (`workflow`, `git`, …) stay as nesting, and leafless ones (`plan`, `finish`) stay `{}`. A leaf whose value is itself a list or object (e.g. `workflow.execute.verify.default`, `notifications.events`) inherits **as a whole** — `"inherit"` replaces the entire value, never a per-element merge. At `/crew:setup` the same form is written one layer down (leaves inherit the **built-in default** instead of global). This example is illustrative — it must **never** be confused with the concrete defaults block; the guard in `validate-plugin` keeps the two apart.
 
 ## Workflow model (canonical vocabulary)
 
@@ -186,24 +238,58 @@ How `/crew:init`, `/crew:setup`, and the reconcile path (`/crew:update`) **write
 
 The inherit option **names the value it currently resolves to**, e.g. *"take from global (currently: `normal`)"*. The command reads the layer below to show it (`/crew:init` reads `~/.claude/crew/config.json`; `/crew:setup` shows the built-in default); if nothing is set there, it shows the built-in default. Below the inherit option follow the actual value choices.
 
-**Inherit → write nothing.** Choosing inherit **omits the key** — it does not exist in the written `config.json`; resolution happens at runtime through the layering. **No blind seeding:** a field is either *actively asked* with inherit-first or *left out entirely* — never written silently as a value (so `language.files` set to inherit means the key is absent, not stored as `"inherit"`).
+**Inherit → write the sentinel `"inherit"`.** Choosing inherit writes the field with the literal value **`"inherit"`** — it is **present** in the written `config.json`, so the user sees the knob exists and that it inherits; resolution still happens at runtime through the layering (a reader treats `"inherit"` exactly like a missing key — see *Resolving inherited fields*). This deliberately **reverses** the older "omit the key" rule: inheritance is now **visible in the file**, not implied by absence.
+
+**Full form — every inheritable leaf is written.** A fresh `config.json` contains **all** inheritable leaf fields with full object nesting (`workflow.*`, `git.*`, `models.*`, `notifications.*`, `testingPolicy`, `language`, `responseStyle`, …); each is either a **concrete value** (freeze) or **`"inherit"`**. **Project facts** — `projectType`, `tags`, `stack`, `crewVersion` — are always **concrete**, never `"inherit"` (they describe *this* project; they don't inherit). See *A written project config* for the full shape.
+
+**Tri-rule (backward-compatible).** Three written states, two of which resolve identically:
+
+| written | meaning |
+|---|---|
+| concrete value | **frozen** — fixed for this level even if the layer below later drifts |
+| `"inherit"` | **dynamically inherits** the layer below |
+| key missing / deleted | **≡ `"inherit"`** — inherits identically |
+
+So every existing minimal `config.json` stays correct **unchanged**: the sentinel is purely **additive visibility**, not a new runtime path.
 
 **Explicit value → always write, even when equal to the inherited value.** Picking a concrete value writes it — *even if it equals what the layer below currently resolves to*. That is the deliberate **freeze**: the value stays fixed for this project/level if the lower layer later drifts. **Not** choosing inherit **is** the freeze decision.
 
 **Recommended answer = inherit, except detected/project-specific values.** The pre-selected answer is inherit, so fast click-through *inherits* rather than freezes. Two exceptions recommend the concrete value instead:
 
 - `workflow.ship.releaseTool` when `auto`-detection identified a tool from the repo,
-- `testing.policy` from the chosen archetype — despite its `"from-archetype"` default sentinel it follows the same form: the inherit choice first (the level-dependent label above), the archetype's suggestion (e.g. `tests-required`) is the **recommended** explicit choice, written as a snapshot when picked. (The archetype exception is an init-time concept; at `/crew:setup` — no archetype — `testing.policy` recommends inherit like any other field.)
+- `testingPolicy` from the chosen archetype — now an ordinary top-level leaf in the same inherit-first flow (no nested special-case): the inherit choice first (the level-dependent label above), the archetype's suggestion (e.g. `tests-required`) is the **recommended** explicit choice, written as a snapshot when picked. Its `"from-archetype"` default is just the built-in value the inherit option resolves to. (Archetype exception is init-time only; `/crew:setup` treats it like any other inherit-first field.)
 
 **ship is asked per leaf field.** `workflow.ship.*` (`enabled`, `provider`, `releaseTool`, `runDeploy`, `tagPattern`, `environments`, `finishRelease`, `run`) each gets its own inherit-first question — **no** block-level shortcut, consistent with the other workflow gates (`execute.loop`/`parallel`, the `run`s). The one dependency: `enabled` is asked **first** (trunk-before-leaves); if it resolves to off, the dependent ship fields are skipped; the independent ones are batched.
 
-**Three ways a field drops back to inheritance** — all the same underlying act (omit the key), distinct in *when* and *scope*:
+**Three ways a field drops back to inheritance** — all the same underlying act (set the field to `"inherit"`; a deleted key inherits identically), distinct in *when* and *scope*:
 
 | way | when | scope |
 |---|---|---|
-| **Reset** | any time, in the reconcile | a single already-set override → inherit (key removed) |
+| **Reset** | any time, in the reconcile | a single already-set override → `"inherit"` |
 | **One-time inherit-first cleanup** | once, at the inherit-first schema transition (gated on `crewVersion` < `0.16.0`; see *Known migrations*) | batched: all inherited-looking fields a pre-inherit-first config over-seeded |
 | **Revisit pass** | opt-in step on any re-run | re-asks *every* inheritable/workflow field (same inherit-first form, current value pre-selected) → change or reset any |
+
+## Resolving inherited fields (read-side contract)
+
+**Canonical resolution rule — every reader obeys this.** A field whose written value is `"inherit"` **and** a field whose key is **absent** resolve **identically**: to the value one layer down — `project → global → built-in defaults`, and `global → built-in defaults`. A **concrete** value resolves to itself (freeze). **No reader ever yields `"inherit"` as an effective value** — resolution always bottoms out at the built-in defaults (always concrete), so the literal sentinel can never survive to a consumer. This holds at **both** the project and the global level.
+
+<!-- inherit-resolution-contract: stable marker for validate-plugin (leak-protection guard); keep the sentence above intact -->
+
+**Readers that implement this rule:**
+
+- **Commands** — `/crew:init`, `/crew:setup`, `/crew:update` (reconcile), `/crew:status`, and any command that surfaces a resolved value. They follow the contract **mentally** (markdown-first, no compiled normalizer).
+- **The `notify` hook** (JavaScript) — resolves `notifications.*` layer-by-layer at runtime; it implements the rule **locally** in JS. It must never compare against, nor emit, the literal `"inherit"`.
+- **The reconcile procedure** — diffs the live config and renders resolved values + their source.
+
+**Not a reader of inheritable fields:** `session-start.mjs` reads only `crewVersion` — a **project fact**, always concrete, never `"inherit"` — so it needs no resolution logic and **no change**.
+
+**Mechanic: per-reader, no central normalization point.** There is deliberately **no** single `resolve()` chokepoint — consistent with crew's *no-compiled-validator / markdown-first* architecture. Agents and commands honor the contract by reading this section; the one runtime reader (the JS hook) implements it inline. This section is the **single source** of the rule; every reader **references** it rather than re-deriving it.
+
+**Surfacing the source (resolved value + origin).** Because `config.json` is strict JSON (no comments), the file value of an inheriting field stays the bare `"inherit"`; the **resolved value and where it came from** are shown by a command/report, in this one canonical form:
+
+> `` `language.files`: inherit → `de` (from global) `` · `` `responseStyle`: inherit → `concise` (from default) ``
+
+A frozen (concrete) field shows just its value, no arrow. This single phrasing is what the reconcile report (init/setup/update) and `/crew:status` reuse — they do not re-invent it.
 
 ## Config versioning & migration
 
@@ -255,7 +341,11 @@ The schema-diff is generic, but some changes are **renames/splits/moves** where 
 
 **`git.commitStyle` → `git.commitPattern`** — rename, value 1:1. The field was effectively single-value (`"conventional"` was the only meaning), so a pre-existing config can only carry `"conventional"` — which stays a valid `commitPattern` (the keyword shortcut). After the rename `commitPattern` additionally accepts a free template (placeholders `{type}`/`{scope}`/`{ticket}`/`{subject}`/`{body}`). Carry the old value under the new key; never silently drop it.
 
+**`testing.policy` → top-level `testingPolicy`** — rename + flatten, value 1:1. The single-field `testing` section collapses to one top-level leaf (beside `language`/`security`/`responseStyle`). Carry the existing `testing.policy` value under the new `testingPolicy` key (`from-archetype`/`tdd`/`tests-required`/`optional`); never silently drop. The old nested inherit special-case disappears — `testingPolicy` is now an ordinary inherit-first leaf.
+
 **`git.isolation` enum extended** (feature → phase granularity, new milestone values, default flips to `off`) — gated on `crewVersion` predating the isolation-model release (`< 0.18.0`; if ship cuts a different version, align this number there — describe it as "the isolation-model release", never by an internal label). Map the old values 1:1 under the same key, **never silently drop**: `worktree-per-feature` → `worktree-per-phase`, `branch-per-feature` → `branch-per-phase`, `linear` → `off`. **Document the default flip:** a config *without* an `isolation` key now inherits `off` (previously `worktree-per-feature`). This changes no real behavior — the sequential path ignored the key until this release, and `dispatch` still isolates per phase intrinsically — but surface it in the reconcile summary so the user sees the resolved default moved.
+
+**`config.json` → full inherit form (opt-in expansion)** — gated on `crewVersion` predating the explicit-inherit-sentinel release (`< 0.19.0`; if ship cuts a different version, align this number there — describe it as "the explicit-inherit-sentinel release", never by an internal label). **No automatic rewrite:** a pre-sentinel config (inheriting fields simply *absent*) keeps working unchanged (missing ≡ `"inherit"`; see *Tri-rule*). At reconcile, `/crew:update` **offers once** to **expand** the config to the full inherit form — write every inheritable leaf that is currently absent as `"inherit"`, leaving existing concrete values (deliberate freezes) untouched. The user may decline; declining leaves the config minimal and equally correct. This is **opt-in additive visibility**, never forced. (Fresh `/crew:init`/`/crew:setup` already write the full form.)
 
 Also: if a `.planning/DEPLOY.md` exists, note in the reconcile that its content now belongs in `reference/deploy.md` (structured fields → `config.workflow.ship`); offer to move it (a `mv` + the user trims to prose). Never auto-delete it.
 
@@ -267,7 +357,7 @@ Also: if a `.planning/DEPLOY.md` exists, note in the reconcile that its content 
 
 ## `project-types.json` (starter registry — global layer)
 
-A **tag** is atomic and activates skills/rules; a **project type (archetype)** is a curated tag bundle + defaults. Pick one at `/crew:init`; the project's resolved tag-set drives which rules/skills are active.
+A **tag** is atomic and activates skills/rules; a **project type (archetype)** is a curated tag bundle + defaults. Pick one at `/crew:init`; the project's resolved tag-set drives which rules/skills are active. (An archetype's `defaults.testing` deliberately keeps its short name here but seeds the config's top-level `testingPolicy` — see `resolveArchetype` below.)
 
 ```jsonc
 {
@@ -305,4 +395,4 @@ A **tag** is atomic and activates skills/rules; a **project type (archetype)** i
 }
 ```
 
-`resolveArchetype(name)` = look up the archetype → seed `projectType`, `tags`, `stack`, and `testing.policy` into the project's `config.json`. Stack-specific skill names (hono-api, drizzle-postgres, …) are referenced here for when those skills are added; they don't need to exist yet.
+`resolveArchetype(name)` = look up the archetype → seed `projectType`, `tags`, `stack`, and `testingPolicy` (from the archetype's `defaults.testing`) into the project's `config.json`. Stack-specific skill names (hono-api, drizzle-postgres, …) are referenced here for when those skills are added; they don't need to exist yet.
