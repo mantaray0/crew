@@ -175,7 +175,7 @@ Run this once per machine. Backed by the `crew-config` and `crew-conventions` sk
 
 - **Guard:** if `.planning/` already exists it stops (overwrite only on request).
 - **Pick a project type** from your global registry (or the starter archetypes), or "decide later".
-  The chosen archetype seeds `tags`, `stack`, and `testing.policy`.
+  The chosen archetype seeds `tags`, `stack`, and `testingPolicy`.
 - **Stack interview:** confirm/adjust DB, frontend, UI, backend-API, queue, deploy — pre-filled from
   the archetype and your defaults, with the escape hatch "you decide → I propose → you approve".
 - **Scaffolds** `.planning/` with `config.json`, an empty `PROJECT.md`/`ROADMAP.md`/`LOG.md`/
@@ -483,6 +483,13 @@ built-in defaults  <  ~/.claude/crew/config.json (global)  <  .planning/config.j
 with ad-hoc overrides (e.g. a per-phase verify override) winning over all of them. The full schema is
 the source of truth in the **`crew-config`** skill.
 
+**Inheritance is visible in the file.** A fresh `config.json` is written in *full inherit form* — every
+inheritable leaf is present, each either a concrete value (a **freeze**) or the sentinel `"inherit"`. The
+tri-rule: a concrete value freezes, `"inherit"` dynamically inherits the layer below, and a **missing key
+is identical to `"inherit"`** — so older minimal configs keep working unchanged. What each inheriting field
+resolves to, and from where, is surfaced by `/crew:status` and the `/crew:update` reconcile report
+(`` `language.files`: inherit → `de` (from global) ``). The resolution rule lives in `crew-config` (the source of truth) — this only summarizes it.
+
 **Two levels (so "auto" is never ambiguous).** The workflow steps live under `config.workflow.*`;
 cross-cutting config stays top-level. **`workflow.mode`** (`manual|auto`) advances the *step* chain
 (brief → … → complete); each gateable close-out step's **`run`** (`off|ask|auto|smart`) decides how it's
@@ -501,7 +508,7 @@ and their defaults:
 | `git` | `autoCommitPerPhase: true`, `autoPush: false`, `isolation: "off"`, `baseBranch: "main"`, `mergeStrategy: "integration-branch"` | Commit/branch/merge behavior; **opt-in** isolation (`*-per-milestone` \| `*-per-phase`, `worktree-`/`branch-` mechanism) forking from / merging to `baseBranch`; the **sole** git/remote authority for every `run` — never touches the remote without approval |
 | `models` | `mode: "auto"`; planning/review→`opus`, execution/simplify→`sonnet`, trivial→`haiku` | Model per task type (auto tiers or manual pins) |
 | `tasks` | `provider: "local"`, `writeBack: false` | External PM integration for `/crew:pull` |
-| `testing` | `policy: "from-archetype"` | TDD / tests-required / optional |
+| `testingPolicy` | `"from-archetype"` | TDD / tests-required / optional |
 | `security` | `auto: false` | Security pass is **never** automatic — recommended on sensitive scope, run only on approval |
 | `notifications` | `enabled: true`, `events: ["blocker","completion"]`, `channel: "os"` | Desktop/push notifications (see hooks) |
 | `language` | `files: "en"` | Language of generated project files (separate from conversation language) |
@@ -513,8 +520,10 @@ Override precedence: ad-hoc > project > global > built-in default.
 
 **Staying current.** `crewVersion` records the plugin version a config was reconciled with. On session
 start crew warns if a project's config is behind the installed plugin; re-running `/crew:init`
-(project) or `/crew:setup` (global) enters a **reconcile mode** that schema-diffs the existing config
-and asks you about each new field rather than silently applying defaults.
+(project) or `/crew:setup` (global) — or the dedicated `/crew:update` — enters a **reconcile mode** that
+schema-diffs the existing config and asks you about each new field rather than silently applying defaults.
+The reconcile can also **offer once** to expand a minimal pre-sentinel config to the full inherit form
+(opt-in — existing concrete freezes are never touched, and a declined config stays minimal and correct).
 
 **Registry (`project-types.json`, global layer):** a **tag** is atomic and activates skills/rules; a
 **project type (archetype)** is a curated tag bundle + defaults. Picked at `/crew:init`; the resolved
