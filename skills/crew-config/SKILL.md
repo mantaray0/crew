@@ -138,13 +138,13 @@ Only the gateable close-out steps carry `run` (`ship`, `learn`, `complete`). `br
 
 Resolved through the normal layering — a project's `.planning/config.json` overrides the global default (e.g. global `concise`, one project `detailed`).
 
-**`config.workflow.brief.intensity`** controls how hard Roast-Me challenges an idea during `/crew:brief` — **orthogonal** to `workflow.brief.depth` (depth = how *broad* the questioning, intensity = how *hard* it pushes back). The recommended answer carries in every level (in `brutal` it may be "drop this"). Default `"normal"`. Ask at `/crew:setup` (global) or `/crew:init` (per project), resolved project > global > default — like `language.files`.
+**`config.workflow.brief.intensity`** controls how hard Roast-Me challenges an idea during `/crew:brief` — it drives **both the tone** of the pushback **and the drill-depth** (how many forced challenge rounds must happen before Roast-Me's Spec-Probe is allowed to stop). **Orthogonal** to `workflow.brief.depth`: `depth` = how *broad* the questioning (which branches get covered), `intensity` = how *hard* it pushes back **and how deep it drills before it may stop**. The recommended answer carries in every level (in `brutal` it may be "drop this"). Default `"normal"`. Ask at `/crew:setup` (global) or `/crew:init` (per project), resolved project > global > default — like `language.files`.
 
-| value | behavior |
+| value | tone + minimum drill-depth |
 |---|---|
-| `gentle` | Pure clarification: fill gaps, recommend a default, don't push back. |
-| `normal` (default) | Push on the load-bearing weak spots, name obvious scope-creep, question one or two load-bearing assumptions. |
-| `brutal` | Attack assumptions ("do you actually need this?"), surface contradictions, steelman cutting scope, name every scope risk. |
+| `gentle` | Pure clarification: fill gaps, recommend a default, don't push back. Spec-Probe stops as soon as the Spec is writable — **no** forced rounds. |
+| `normal` (default) | Push on the load-bearing weak spots, name obvious scope-creep, question one or two load-bearing assumptions. **At least one** forced challenge round before the Spec-Probe may stop. |
+| `brutal` | Attack assumptions ("do you actually need this?"), surface contradictions, steelman cutting scope, name every scope risk. **Several** mandatory rounds — every load-bearing assumption explicitly attacked — before stopping. |
 
 **`config.workflow.ship`** drives `/crew:ship` (release/deploy). Layered global < project; ask at `/crew:setup` and `/crew:init`. Provider `gh-actions` (via `gh`) or `gitlab-ci` (via `glab`). Its `run` (off/ask/auto/smart) is the close-out gate; the fields below are ship's own mechanics.
 
