@@ -14,7 +14,7 @@ Explicitly run the verification pipeline (it also runs automatically inside `/cr
 1. **Scope.** Determine what to verify: the current uncommitted diff, or a named phase's change.
 2. **Resolve steps.** Read `config.workflow.execute.verify.default` (and any phase override). Default: `["test","review","harden","simplify"]`.
 3. **Run each step in a fresh sub-agent context**, choosing the model per `config.models` (see `model-management`):
-   - **test** — run the project's tests / build / typecheck (from `PROJECT.md`); test-strictness per `config.testing.policy`.
+   - **test** — run the project's tests / build / typecheck (from `PROJECT.md`); test-strictness per `config.testingPolicy`.
    - **review** — dispatch `code-reviewer` plus stack reviewers matching the project's `tags` (`typescript-reviewer`, `react-reviewer`, `database-reviewer`).
    - **harden** — dispatch `silent-failure-hunter` and `type-design-analyzer`.
    - **simplify** — dispatch `code-simplifier`.
