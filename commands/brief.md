@@ -1,5 +1,5 @@
 ---
-description: Start a new project or feature — clarify the intent via Roast-Me questioning, capture the stack, and write the brief (PROJECT.md or a plan's Spec head).
+description: Start a new project or feature — clarify the intent via Roast-Me questioning, capture the stack, and write the brief (PROJECT.md or a milestone's `_spec.md`).
 argument-hint: "[free-form idea or feature description]"
 ---
 
@@ -16,7 +16,7 @@ Turn a raw idea into a clarified brief before any planning. This is the entry po
 3. **Capture the stack (new project only).** Ask for DB / frontend / UI / backend-API / queue / deploy, pre-filled with the user's defaults. Offer the escape "you decide → I propose → you approve". If `/crew:init` already seeded `config.stack`/`tags` from an archetype, confirm rather than re-ask.
 4. **Write the brief.**
    - **New project:** write/refresh `.planning/PROJECT.md` — Stack, Architektur-Entscheidungen (the *why*), Aktueller Stand, Constraints.
-   - **Feature in an existing project:** create `.planning/plans/<n>_<slug>/_spec.md` — a **numbered milestone folder** (`<n>` = next milestone number, then the brief slug), holding `_spec.md` with the **Spec** head only (Ziel/Problem, Anforderungen, Akzeptanzkriterien, Out of Scope). No phase number is invented — `/crew:plan` later fills the *same folder* with numbered phase plans (`<id>_<title>.md`). The folder is `<n>_<brief-slug>` (see `planning` file naming). Honour `brief.specArtifact` (`section` = spec head in the plan, `separate` = own file, `off` = skip). The Plan body is filled by `/crew:plan`.
+   - **Feature in an existing project:** **always** create `.planning/plans/<n>_<slug>/_spec.md` — a **numbered milestone folder** (`<n>` = next milestone number, then the brief slug), holding `_spec.md` with the **Spec** (Ziel/Problem, Anforderungen, Akzeptanzkriterien, Out of Scope). This `_spec.md` is the milestone's **permanent** source of intent — it stays for the life of the milestone (like `_roadmap.md` after archiving). No phase number is invented — `/crew:plan` later fills the *same folder* with numbered phase plans (`<id>_<title>.md`) that **reference** this `_spec.md` rather than copy it. The folder is `<n>_<brief-slug>` (see `planning` file naming). The Plan body is filled by `/crew:plan`.
 5. **Confirm.** Show the brief and wait for the user's OK before suggesting `/crew:plan`.
 
 Do not write implementation code in this command.

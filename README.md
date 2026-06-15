@@ -198,14 +198,14 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
 - Runs **Roast-Me clarification** (`roast-me` skill): sharp questions one at a time, each carrying a
   recommended answer you can just confirm. Honors `config.workflow.brief.depth` (`light`/`normal`/`deep`).
   When a question is answerable from the codebase, it investigates instead of asking.
-- For a new project, captures the stack and writes `PROJECT.md`. For a feature, writes the **Spec
-  head** of a plan file. Stops when shared understanding is reached.
+- For a new project, captures the stack and writes `PROJECT.md`. For a feature, writes the milestone's
+  permanent **`_spec.md`** (its single source of intent). Stops when shared understanding is reached.
 
 #### `/crew:plan` &nbsp;`[feature/plan slug, optional]`
 > Turns a clarified brief into an executable plan: a roadmap of milestones → phases, plus detailed
 > plan files. **Waits for your approval before any execution.**
 
-- Reads `PROJECT.md`, the relevant plan's Spec head, `ROADMAP.md`, and `BACKLOG.md`.
+- Reads `PROJECT.md`, the relevant milestone's `_spec.md`, `ROADMAP.md`, and `BACKLOG.md`.
 - **Triages the backlog** — surfaces relevant ideas and asks (multi-select) which to fold in now.
 - Drafts/extends `ROADMAP.md` as milestones → phases with status markers
   `[ ]` open · `[>]` active · `[x]` done · `[~]` deferred, keeping phases **independently mergeable**
@@ -237,7 +237,7 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
 - Resolves `config.tasks.provider` (`local` · `mcp:linear` · `mcp:jira` · `mcp:clickup` · `crew-pm`).
 - Fetches the ticket and normalizes it to `{ id, title, description, acceptanceCriteria, status,
   externalRef }`.
-- Writes `.planning/plans/<id>.md` with the Spec head filled from the ticket and `externalRef: <id>`,
+- Writes `.planning/plans/<id>.md` with the ticket's spec filled in inline and `externalRef: <id>`,
   and adds a roadmap entry. **The ticket is the spec** — it won't re-run Roast-Me unless the ticket is
   too thin. `.planning/` stays the working layer; the external ticket is the north-star + sync
   boundary.
@@ -452,8 +452,8 @@ UPPERCASE** (like `README`/`CHANGELOG`), **data files and directories are lowerc
 ├── claims.json       # which phase is claimed by which worktree (parallel safety)
 ├── plans/            # one folder per milestone
 │   └── <n>_<milestone-slug>/ # the milestone's plan files (number-prefixed, e.g. 1_fundament/)
-│       ├── _spec.md          # spec root: Spec head only (from /crew:brief)
-│       └── <id>_<title>.md   # numbered phase plan (from /crew:plan), e.g. 1.2_db-schema.md
+│       ├── _spec.md          # the milestone Spec, permanent (from /crew:brief) — single source of intent
+│       └── <id>_<title>.md   # numbered phase plan (from /crew:plan): scope note + _spec.md ref + plan body
 ├── archive/          # completed milestones moved out of live state (/crew:archive)
 │   └── plans/<n>_<slug>/     # its plan folder, moved verbatim
 │       ├── _roadmap.md       # the archived milestone's ROADMAP section (written in)
