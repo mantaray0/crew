@@ -1,5 +1,15 @@
 # @mantaray0/crew
 
+## 0.16.1
+
+### Patch Changes
+
+- [`f1f3b23`](https://github.com/mantaray0/crew/commit/f1f3b23f194bec8558a7cedc94bec26691717f68) Thanks [@mantaray0](https://github.com/mantaray0)! - Name config migrations by public version, not internal milestones.
+
+  The config-reconcile instructions in `/crew:init`, `/crew:setup`, `/crew:update`, and the `crew-config` skill referred to crew's internal development milestones when describing the known config migrations — labels that surfaced to users at reconcile time. They are replaced with descriptive names plus the public version gate that was always the real boundary: the "section-rename migration", the "workflow-nesting migration", and the one-time "inherit-first cleanup" gated on `crewVersion` < `0.16.0`. Migration logic, mappings, and version gates are unchanged.
+
+  The `planning` skill's separator example no longer uses a real internal slug and gains a "rename & reference-migration phases" convention (whole-tree grep exit gate). A new `scripts/validate-plugin.mjs` check, run in CI, fails if an internal milestone label reappears anywhere in shipped content.
+
 ## 0.16.0
 
 ### Minor Changes
