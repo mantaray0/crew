@@ -10,4 +10,4 @@ A new `config.git.baseBranch` (default `main`) sets the fork/integration target 
 
 The **sequential** `/crew:execute` now honors isolation too (previously a no-op — only `dispatch` consulted it): entering a milestone creates the milestone worktree+branch once. `dispatch` keeps its per-phase parallelism and, when milestone isolation is active, nests phase worktrees under the milestone branch. Per-phase **fresh context** (`/clear` between phases) is documented as reliable loop behavior, decoupled from the `auto`-only framing.
 
-The `crew-config` and `git-merge` skills, `commands/execute.md`, and the README are updated to the new model; the new keys are added on reconcile, version-gated and inherit-first.
+The `crew-config` and `git-merge` skills, `commands/execute.md`, and the README are updated to the new model. `/crew:init` and `/crew:setup` now surface `git.isolation` and `git.baseBranch` as inherit-first questions (default `off` / `main`), so the capability is discoverable on a fresh setup; existing configs get the new keys on reconcile, version-gated and inherit-first.
