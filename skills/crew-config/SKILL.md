@@ -173,6 +173,36 @@ A step whose `run` is `off`, or that is disabled/not-applicable, is **skipped cl
 
 **`config.stack`** is the **single source of truth** for the project's stack *facts* (language / app / db / orm / …) — it drives tag-based reviewer selection and grounding. `PROJECT.md` shows the stack as a **derived mirror** and carries the *why* (architecture decisions); it is **not** a second place to edit the facts. Change the stack in `config.stack`; crew updates the `PROJECT.md` table to match. The stack is standing context — it stays in the auto-loaded `PROJECT.md`, never in load-on-demand `reference/`.
 
+## Inherit-first writes (canonical)
+
+How `/crew:init`, `/crew:setup`, and the reconcile path (`/crew:update`) **write** config. The runtime read-side (`defaults < global < project` layering) is unchanged — this governs only what gets *written* into a `config.json`, so a project stays dynamically coupled to the layer below unless the user deliberately freezes a value. init/setup/update **reference** this section rather than restating it.
+
+**Inherit-first per leaf field.** Every config-driven question offers, as its **first and pre-selected** option, the *inherit* choice:
+
+- project level (`/crew:init`): **"take from global"**,
+- global level (`/crew:setup`): **"take the built-in default"** — same mechanic, only the label differs (there is no layer under global except the schema defaults).
+
+The inherit option **names the value it currently resolves to**, e.g. *"take from global (currently: `normal`)"*. The command reads the layer below to show it (`/crew:init` reads `~/.claude/crew/config.json`; `/crew:setup` shows the built-in default); if nothing is set there, it shows the built-in default. Below the inherit option follow the actual value choices.
+
+**Inherit → write nothing.** Choosing inherit **omits the key** — it does not exist in the written `config.json`; resolution happens at runtime through the layering. **No blind seeding:** a field is either *actively asked* with inherit-first or *left out entirely* — never written silently as a value (so `language.files` set to inherit means the key is absent, not stored as `"inherit"`).
+
+**Explicit value → always write, even when equal to the inherited value.** Picking a concrete value writes it — *even if it equals what the layer below currently resolves to*. That is the deliberate **freeze**: the value stays fixed for this project/level if the lower layer later drifts. **Not** choosing inherit **is** the freeze decision.
+
+**Recommended answer = inherit, except detected/project-specific values.** The pre-selected answer is inherit, so fast click-through *inherits* rather than freezes. Two exceptions recommend the concrete value instead:
+
+- `workflow.ship.releaseTool` when `auto`-detection identified a tool from the repo,
+- `testing.policy` from the chosen archetype — despite its `"from-archetype"` default sentinel it follows the same form: the inherit choice first (the level-dependent label above), the archetype's suggestion (e.g. `tests-required`) is the **recommended** explicit choice, written as a snapshot when picked. (The archetype exception is an init-time concept; at `/crew:setup` — no archetype — `testing.policy` recommends inherit like any other field.)
+
+**ship is asked per leaf field.** `workflow.ship.*` (`enabled`, `provider`, `releaseTool`, `runDeploy`, `tagPattern`, `environments`, `finishRelease`, `run`) each gets its own inherit-first question — **no** block-level shortcut, consistent with the other workflow gates (`execute.loop`/`parallel`, the `run`s). The one dependency: `enabled` is asked **first** (trunk-before-leaves); if it resolves to off, the dependent ship fields are skipped; the independent ones are batched.
+
+**Three ways a field drops back to inheritance** — all the same underlying act (omit the key), distinct in *when* and *scope*:
+
+| way | when | scope |
+|---|---|---|
+| **Reset** | any time, in the reconcile | a single already-set override → inherit (key removed) |
+| **One-time M8 cleanup** | once, at the pre-M8 → M8 schema transition (version-gated; see *Known migrations*) | batched: all inherited-looking fields a pre-M8 config over-seeded |
+| **Revisit pass** | opt-in step on any re-run | re-asks *every* inheritable/workflow field (same inherit-first form, current value pre-selected) → change or reset any |
+
 ## Config versioning & migration
 
 `crewVersion` records the crew plugin version this config was last reconciled with. The **current** plugin version lives in `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` (`version`).
@@ -181,11 +211,13 @@ A step whose `run` is `off`, or that is disabled/not-applicable, is **skipped cl
 - **On session start:** the `session-start` hook compares the project's `config.crewVersion` against the plugin version and, if they differ (or `crewVersion` is missing), prints a one-line "config may be out of date — run `/crew:update` to reconcile" notice.
 - **On re-run** of `/crew:setup` (global config) or `/crew:init` (project config): if the config already exists, enter **reconcile mode** instead of scaffolding:
   1. **Schema-diff.** Compare the existing config's keys against this schema (the contract). Classify each: **new** (in the schema, missing from the config), **removed** (in the config, no longer in the schema), **unchanged**. A changed *default* in this schema is never written back over a value the user already has.
-  2. **Ask per new field.** For every new key, show the user its purpose and recommended default (from this schema) and ask what they want — as the fitting question type (single-select for enums like `responseStyle`, free-text for open values), following `crew-conventions`. Never silently apply a default.
+  2. **Ask per new field — inherit-first.** For every new key, show the user its purpose and recommended default (from this schema) and ask what they want — as the fitting question type (single-select for enums like `responseStyle`, free-text for open values), following `crew-conventions`. Per *Inherit-first writes*, the **inherit** choice is the first, pre-selected option and writes nothing when chosen. Never silently apply a default.
   3. **Flag removed fields.** List keys that no longer exist in the schema; offer to drop them.
-  4. **Stamp the version.** After applying confirmed changes, set `crewVersion` to the current plugin version.
+  4. **One-time cleanup of legacy over-seeding.** When the config predates M8 (see the M8 entry under *Known migrations*), offer — **once** — a batched reset of all inheritable fields whose written value equals the resolved inherited value (the old write logic over-seeded them). Candidates are pre-selected; deliberate freezes the user keeps stay as values. This is **version-gated** (runs only at the pre-M8 → M8 transition) and does **not** recur on later reconciles.
+  5. **Reset & revisit (any re-run).** Independently of the one-time cleanup: a single already-set override can be **reset** to inherit (key removed) at any time, and the reconcile offers an **opt-in revisit pass** — re-ask *every* inheritable/workflow field with the same inherit-first form (current value pre-selected) so any parameter can be changed or reset. Declining leaves the reconcile purely additive (lossless). The revisit reuses the first-run question form — no second question logic.
+  6. **Stamp the version.** After applying confirmed changes, set `crewVersion` to the current plugin version.
 
-  This is a procedure, not a coded migration: there is no compiled migrator — diff the live config against this schema and drive the questions from it.
+  This is a procedure, not a coded migration: there is no compiled migrator — diff the live config against this schema and drive the questions from it. See *Inherit-first writes* for the write rule these steps follow.
 
 ### Known migrations
 
@@ -215,6 +247,8 @@ The schema-diff is generic, but some changes are **renames/splits/moves** where 
 | removed: `config.loop`, `config.state`, `brief.askOnlyWhenStuck` | **dropped** — `loop.maxIterations`/`state.commitSessions` were never read (dead); `brief.askOnlyWhenStuck` is superseded. Flag & confirm the drop; never silently keep. |
 
 **Genuinely new fields** (no predecessor → offered via the per-new-field question, never set silently): `workflow.mode` (default `manual`), `workflow.execute.loop` (default `all`), and `run` on any close-out step lacking a `finish.*` source — e.g. a pristine 0.7.0 config (no `finish` block) gets `ship.run`/`learn.run`/`complete.run` from this schema's defaults (`ask`/`ask`/`ask`).
+
+**M8 — one-time inherit-first cleanup** (gated on `crewVersion` predating the M8 inherit-first release; runs **once** at that transition, like the M4/M5 groups above). Before M8, init/setup wrote inheritable leaf fields explicitly even when the user chose "inherit", so pre-M8 configs over-seed the layer below. A written value that equals the resolved inherited value is **not** distinguishable after the fact from a deliberate freeze → **no auto-strip**. Instead, at the pre-M8 → M8 reconcile, detect every inheritable leaf field whose written value equals the resolved inherited value (project: vs. global; global: vs. built-in default) and present them as **one batched multi-select** — *"these look inherited — reset to inherit? (key removed)"* — with candidates **pre-selected**. The user un-checks deliberate freezes (kept as values). After the choice and the `crewVersion` stamp the migration does **not** re-run — later reconciles have nothing to flag, since M8+ write logic never over-seeds. This is distinct from the always-available per-field **reset** and the opt-in **revisit pass** (see *Inherit-first writes* → the three ways a field drops back to inheritance).
 
 Also: if a `.planning/DEPLOY.md` exists, note in the reconcile that its content now belongs in `reference/deploy.md` (structured fields → `config.workflow.ship`); offer to move it (a `mv` + the user trims to prose). Never auto-delete it.
 
