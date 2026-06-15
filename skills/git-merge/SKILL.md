@@ -1,6 +1,6 @@
 ---
 name: git-merge
-description: How crew isolates parallel work and integrates it — worktree-/branch-per-milestone-or-phase, claims, rolling integration, and intent-aware conflict resolution. Use during `/crew:execute dispatch` and merging.
+description: How crew isolates parallel work and integrates it — worktree-/branch-per-milestone, claims, rolling integration, and intent-aware conflict resolution. Use during `/crew:execute dispatch` and merging.
 origin: crew
 ---
 
@@ -8,19 +8,15 @@ origin: crew
 
 ## Isolation
 
-`config.git.isolation` encodes **two axes** in one value — *granularity* × *mechanism* — and is **opt-in** (default `off` = linear, no isolation, everything on the current branch):
+`config.git.isolation` decides whether a **whole milestone** gets its own worktree/branch, and is **opt-in** (default `off` = linear, no isolation, everything on the current branch). Phase-level isolation is **not** a config value — it lives intrinsically in `dispatch` (see *Composition with dispatch*).
 
-**Granularity** — how coarse the unit of isolation is:
-- `*-per-milestone` — **one** worktree+branch for a *whole milestone*, so different people/agents can each take a milestone in parallel. The coarse, **outer** axis.
-- `*-per-phase` — one per phase. The fine, **inner** axis — intrinsic to `dispatch` (see *Composition with dispatch*).
+**Mechanism** — how the milestone unit is separated:
+- `worktree-per-milestone` — its own git worktree + branch (creates the branch automatically; no file collisions between concurrent sub-agents). **The preferred mechanism when isolation is on.**
+- `branch-per-milestone` — a branch without a separate worktree.
 
-**Mechanism** — how the unit is separated:
-- `worktree-` — its own git worktree + branch (creates the branch automatically; no file collisions between concurrent sub-agents). **The preferred mechanism when isolation is on.**
-- `branch-` — a branch without a separate worktree (one working tree).
+Valid values: `worktree-per-milestone`, `branch-per-milestone`, or `off`. Concurrency cap: `config.workflow.execute.maxConcurrent`.
 
-Valid values: `worktree-per-milestone`, `branch-per-milestone`, `worktree-per-phase`, `branch-per-phase`, or `off`. Concurrency cap: `config.workflow.execute.maxConcurrent`.
-
-### Milestone granularity
+### Milestone isolation
 
 With `*-per-milestone`, the worktree+branch is created **when the milestone starts** (not per phase), named by `config.git.branchPattern`. It **forks from `config.git.baseBranch`** and at the end **merges back into it** (manual / `mergeStrategy`-driven) — never automatically into `main` when `baseBranch ≠ main`.
 
@@ -33,7 +29,7 @@ Phase-level worktrees are **intrinsic to `dispatch`** — they exist only in par
 ## Collision-safe state
 
 - One `plans/<n>_<milestone-slug>/` folder per milestone (different folders/files → no conflict).
-- `LOG.md` is append-only (or per-phase files under a `logs/` directory).
+- `LOG.md` is append-only (or one file per phase under a `logs/` directory).
 - `claims.json` records which worktree owns which phase; the roadmap shows `[>] @worktree-id`.
 
 ## Rolling integration
