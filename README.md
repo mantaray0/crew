@@ -56,9 +56,9 @@ What makes it more than a prompt collection:
 - **Model management.** Cheap models for trivial work, strong models for planning/review — chosen
   automatically or pinned per task type.
 - **Parallel dispatch & opt-in isolation.** Independent phases run concurrently in isolated git
-  worktrees and roll up through an integration branch. Isolation is **opt-in** (off by default) and
-  also comes at a coarser **per-milestone** granularity — one worktree+branch per milestone, so
-  different people/agents can take a whole milestone in parallel — forking from a configurable
+  worktrees — intrinsic to `dispatch` — and roll up through an integration branch.
+  **Milestone isolation** is additionally **opt-in** (off by default) — one worktree+branch per milestone, so
+  different people/agents can take a milestone in parallel — forking from a configurable
   `git.baseBranch` (e.g. a long-lived `redesign` branch) instead of hardcoded `main`.
 - **Self-learning.** `/crew:learn` distills reusable patterns into skills/tags in your global
   registry, so knowledge compounds across projects instead of getting stranded in one repo.
@@ -505,7 +505,7 @@ and their defaults:
 | `workflow.ship` | `run: "ask"`, `enabled: true`, `runDeploy: "off"`, `releaseTool: "auto"`, `finishRelease: "off"` | `/crew:ship` release/deploy + its close-out gate (`config.git` stays the git authority) |
 | `workflow.learn` | `run: "ask"`, `enabled: true` | `/crew:learn` self-learning + its close-out gate |
 | `workflow.complete` | `run: "ask"` | `/crew:complete` milestone close-out + its gate within `/crew:finish` |
-| `git` | `autoCommitPerPhase: true`, `autoPush: false`, `isolation: "off"`, `baseBranch: "main"`, `mergeStrategy: "integration-branch"` | Commit/branch/merge behavior; **opt-in** isolation (`*-per-milestone` \| `*-per-phase`, `worktree-`/`branch-` mechanism) forking from / merging to `baseBranch`; the **sole** git/remote authority for every `run` — never touches the remote without approval |
+| `git` | `autoCommitPerPhase: true`, `autoPush: false`, `isolation: "off"`, `baseBranch: "main"`, `mergeStrategy: "integration-branch"` | Commit/branch/merge behavior; **opt-in** isolation (`*-per-milestone`, `worktree-`/`branch-` mechanism) forking from / merging to `baseBranch`; the **sole** git/remote authority for every `run` — never touches the remote without approval |
 | `models` | `mode: "auto"`; planning/review→`opus`, execution/simplify→`sonnet`, trivial→`haiku` | Model per task type (auto tiers or manual pins) |
 | `tasks` | `provider: "local"`, `writeBack: false` | External PM integration for `/crew:pull` |
 | `testingPolicy` | `"from-archetype"` | TDD / tests-required / optional |
