@@ -7,8 +7,8 @@ argument-hint: "[milestone slug, optional — passed through to the Complete ste
 
 The milestone-close strand: run **Ship → Learn → Complete** in that fixed order, each step
 individually gated by its own `config.workflow.<step>.run`. Uses the `crew-conventions`, `crew-config`,
-`crew-context`, and `crew-planning` skills; **all three steps delegate to their own commands** —
-`/crew:ship`, `/crew:learn`, and `/crew:complete` (`crew-deploy` / `crew-learn` / the close-out flow).
+`crew-context`, and `planning` skills; **all three steps delegate to their own commands** —
+`/crew:ship`, `/crew:learn`, and `/crew:complete` (`deploy` / `learn` / the close-out flow).
 Whether finish is *chained* automatically after `execute` is governed by `workflow.mode` (see
 `commands/execute.md` → *Milestone end*); finish itself just runs the step `run`s in order.
 
@@ -50,7 +50,7 @@ same `run`s (`crew-conventions` → *Catch-up rule*).
    with a logged note (`skipped: ship (ship.enabled=false)`) and continue to the next step. finish adds
    **no** new push/release axis beyond `config.git`.
 2. **Learn** — run only when `config.workflow.learn.run ≠ off` **and** `config.workflow.learn.enabled`.
-   Execute `commands/learn.md` (the `crew-learn` flow). Cadence is **per milestone** — there is no
+   Execute `commands/learn.md` (the `learn` flow). Cadence is **per milestone** — there is no
    per-phase learn. If `config.workflow.learn.enabled` is `false`, **skip** it with a logged note
    (`skipped: learn (learn.enabled=false)`) and continue.
 3. **Complete** — run when `config.workflow.complete.run ≠ off`. Execute the steps of

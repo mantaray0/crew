@@ -5,13 +5,13 @@ argument-hint: "[feature/plan slug, optional]"
 
 # /crew:plan
 
-Produce the executable plan from a brief. Uses the `crew-planning` and `crew-conventions` skills.
+Produce the executable plan from a brief. Uses the `planning` and `crew-conventions` skills.
 
 **Follow `crew-conventions`:** surface decisions as explicit questions (which backlog items to fold in = multi-select; approach choices = single-select), don't silently decide; respond in the user's language.
 
 ## Steps
 
-1. **Read context.** Read `.planning/PROJECT.md`, the originating brief `.planning/plans/<n>_<slug>/_spec.md` Spec head (if any — see `crew-planning` file naming), `.planning/ROADMAP.md`, and `.planning/BACKLOG.md`. **Trust the Spec as locked intent** — plan *structure/sequencing*, do not re-clarify the what/why. If you hit a genuine **intent** gap (a missing requirement, an undecided goal), bounce it back to the brief ("this belongs in `/crew:brief`") instead of silently deciding it.
+1. **Read context.** Read `.planning/PROJECT.md`, the originating brief `.planning/plans/<n>_<slug>/_spec.md` Spec head (if any — see `planning` file naming), `.planning/ROADMAP.md`, and `.planning/BACKLOG.md`. **Trust the Spec as locked intent** — plan *structure/sequencing*, do not re-clarify the what/why. If you hit a genuine **intent** gap (a missing requirement, an undecided goal), bounce it back to the brief ("this belongs in `/crew:brief`") instead of silently deciding it.
 2. **Triage the backlog.** Surface backlog items relevant to this plan; ask the user which to fold in now vs. leave parked. Remove folded items from `BACKLOG.md`.
 3. **Draft the roadmap.** Write/extend `.planning/ROADMAP.md` as milestones → phases using markers `[ ]` open · `[>]` active · `[x]` done · `[~]` deferred. Keep phases independently mergeable. Record inter-phase **dependencies** (for later parallel dispatch).
 4. **Write the plan.** For each phase, write a **numbered** plan file into the numbered milestone folder `.planning/plans/<n>_<milestone-slug>/<id>_<kebab-title>.md` (folder prefixed with the milestone number `<n>`; file named by the roadmap phase id, e.g. `1_fundament/1.2_db-schema.md`) with a **Spec** head (carried from the `_spec.md` brief or the source ticket) followed by a **Plan** body: affected files, tasks (Action / pattern to mirror / validation command), risks, and this phase's verify configuration. For a **new project**, create one `<n>_<milestone-slug>/` folder per roadmap milestone; for a **feature**, write into the brief's existing `<n>_<slug>/` folder. Follow `brief.specArtifact`. Once a brief's phases are all captured, the `_spec.md` may be removed (it has become the numbered plans).

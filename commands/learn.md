@@ -5,7 +5,7 @@ argument-hint: "[phase/milestone, optional — defaults to recent work]"
 
 # /crew:learn
 
-Make the harness learn from completed work so knowledge compounds across projects instead of getting stranded in one repo. Uses the `crew-learn` skill. Active when `config.workflow.learn.enabled`; in the milestone-close strand its gate is `config.workflow.learn.run`.
+Make the harness learn from completed work so knowledge compounds across projects instead of getting stranded in one repo. Uses the `learn` skill. Active when `config.workflow.learn.enabled`; in the milestone-close strand its gate is `config.workflow.learn.run`.
 
 **Follow `crew-conventions`:** present each learning/skill/tag proposal as an explicit confirm (the user approves each before it's written); respond in the user’s language.
 

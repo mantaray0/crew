@@ -14,7 +14,7 @@ The execution verb. `$ARGUMENTS` selects how execute runs the milestone's **phas
 
 These are two of the **three granularities** (see `crew-conventions` → *Workflow vocabulary*): the **phase loop** (all vs one) and the **execution strategy** (sequential vs parallel). The **third** — `workflow.mode` (`manual | auto`) — is a *separate* axis: it governs whether, once the milestone's phases are done, execute **advances the step chain** into the close-out (Ship → Learn → Complete) or stops and only suggests it (see *Milestone end* below). So "auto" is never ambiguous: the `auto` **argument** loops phases; `workflow.mode: auto` chains steps.
 
-Uses `crew-context` and `crew-planning`; `dispatch` additionally uses `git-merge` and the `merge-coordinator` agent.
+Uses `crew-context` and `planning`; `dispatch` additionally uses `git-merge` and the `merge-coordinator` agent.
 
 **Follow `crew-conventions`:** respond in the user’s language; when a decision is needed, ask it explicitly (single-select / multi-select / free-text) rather than assuming.
 
@@ -70,7 +70,7 @@ This keeps the `auto` **argument** identical to the manual loop (`/crew:execute`
 
 ## dispatch [ids] — parallel autonomous run
 
-Parallelize the phases that can safely run at once. Uses `crew-planning` (DAG) and the `git-merge` skill — **`git-merge` is the source of truth** for worktree isolation, claims, and integration; this mode drives it, it does not restate it. `[ids]` optionally narrows to specific phases or a milestone; default = the active milestone. Obeys the **autonomy contract** above — under `manual` it never enters ship/learn/complete; under `auto` it chains the close-out per each step's `run`; the remote/prod boundary (`config.git`) holds in either mode.
+Parallelize the phases that can safely run at once. Uses `planning` (DAG) and the `git-merge` skill — **`git-merge` is the source of truth** for worktree isolation, claims, and integration; this mode drives it, it does not restate it. `[ids]` optionally narrows to specific phases or a milestone; default = the active milestone. Obeys the **autonomy contract** above — under `manual` it never enters ship/learn/complete; under `auto` it chains the close-out per each step's `run`; the remote/prod boundary (`config.git`) holds in either mode.
 
 1. **Build the DAG.** Parse the active milestone's phases and their `depends:` edges from `ROADMAP.md`. Compute waves of independent phases.
 2. **Confirm the plan.** Show which phases will run in parallel and which are sequential; wait for OK (or proceed if explicitly invoked).

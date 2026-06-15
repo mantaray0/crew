@@ -156,7 +156,7 @@ Resolved through the normal layering — a project's `.planning/config.json` ove
 | `provider` | `gh-actions` (PRs/status via `gh`) or `gitlab-ci` (MRs/status via `glab`). |
 | `tagPattern` | Release tag shape, e.g. `v{version}`. |
 | `environments` | Optional named environments (prod, staging, …). |
-| `releaseTool` (default `auto`) | How the version is decided — `changesets` / `release-please` (a CI bot opens a version-PR) · `semantic-release` (CI decides autonomously, no PR) · `manual` (local `npm version`/equivalent) · `none` (no versioning). `auto` detects from the repo (see `crew-deploy` → Release mechanics). Replaces ship's old hardcoded Changesets check. |
+| `releaseTool` (default `auto`) | How the version is decided — `changesets` / `release-please` (a CI bot opens a version-PR) · `semantic-release` (CI decides autonomously, no PR) · `manual` (local `npm version`/equivalent) · `none` (no versioning). `auto` detects from the repo (see `deploy` → Release mechanics). Replaces ship's old hardcoded Changesets check. |
 | `finishRelease` (default `off`) | Bot-PR tools only: does ship merge an **open** version/release-PR (phase 2 → CI tags+releases)? `off`/`ask`/`auto`. Meaningless for `manual`/`semantic-release`/`none`. |
 
 **`config.git` is the single git authority.** ship has **no** deploy-specific push axis: every git step (commit/push/PR/merge) defers to `config.git` (`autoCommitPerPhase` / `autoPush` / `autoPR` / `mergeStrategy`). In a push-triggered setup the prod trigger *is* the push — so it belongs to `git.autoPush` (default false → ask), i.e. to the user. ship degrades gracefully — a local `version+commit+tag` is a valid partial result when push/PR are declined.

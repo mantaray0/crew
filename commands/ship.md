@@ -5,19 +5,19 @@ argument-hint: "[environment, optional]"
 
 # /crew:ship
 
-Turn a verified commit into a release/deployment. Uses the `crew-deploy`, `crew-conventions`, and `git-merge` skills.
+Turn a verified commit into a release/deployment. Uses the `deploy`, `crew-conventions`, and `git-merge` skills.
 
 **Follow `crew-conventions`:** every remote/prod action is a deliberate, confirmed step; respond in the user's language.
 
-**`config.git` is the single git authority** — every git step (commit/push/PR/merge) defers to `config.git`; ship has no deploy-specific push axis. See `crew-deploy`.
+**`config.git` is the single git authority** — every git step (commit/push/PR/merge) defers to `config.git`; ship has no deploy-specific push axis. See `deploy`.
 
 As the **Ship step** of the `/crew:finish` close-out strand its gate is `config.workflow.ship.run` (`off|ask|auto|smart`), but `config.git` stays the sole push/PR authority regardless of `run`. When invoked directly, apply the canonical **Catch-up rule** (`crew-conventions`) — offer any missing earlier close-out step per its `run`.
 
 ## Steps
 
-1. **Read config.** Read `config.workflow.ship` (enabled/provider/tagPattern/environments/runDeploy/releaseTool/finishRelease), `config.git`, and `reference/deploy.md` (if present). If `config.workflow.ship.enabled` is `false`, explain how to enable it (`/crew:init` → deploy, or set `config.workflow.ship.enabled`) and **stop**. Resolve `releaseTool` — if `auto`, detect it from the repo per `crew-deploy` → Release mechanics.
+1. **Read config.** Read `config.workflow.ship` (enabled/provider/tagPattern/environments/runDeploy/releaseTool/finishRelease), `config.git`, and `reference/deploy.md` (if present). If `config.workflow.ship.enabled` is `false`, explain how to enable it (`/crew:init` → deploy, or set `config.workflow.ship.enabled`) and **stop**. Resolve `releaseTool` — if `auto`, detect it from the repo per `deploy` → Release mechanics.
 2. **Gate on verify.** Check the last `verify` result in `.planning/LOG.md`. If it is not green, recommend `/crew:verify` and **stop** — never ship on a red verify.
-3. **Release per `releaseTool`** (see `crew-deploy` → Release mechanics; every git step defers to `config.git`):
+3. **Release per `releaseTool`** (see `deploy` → Release mechanics; every git step defers to `config.git`):
    - **`manual`** — version locally (`npm version` / language equivalent, command from `reference/deploy.md`) → release commit (`config.git.commitStyle`; if `autoCommitPerPhase` is false, **ask**) → tag from `config.workflow.ship.tagPattern` (e.g. `v1.4.0`).
    - **`changesets` / `release-please`** — **no** local bump or tag. For `changesets`: ensure a changeset exists (`.changeset/*.md` other than `README`/`config`); if none, offer `changeset add` or **stop**. Commit it if uncommitted. (release-please needs no file — it reads Conventional Commits.)
    - **`semantic-release`** — no version/commit/tag here; CI does it. Proceed to push.

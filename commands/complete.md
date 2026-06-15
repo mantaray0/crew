@@ -7,7 +7,7 @@ argument-hint: "[milestone slug, optional — defaults to the active/latest mile
 
 The milestone close-out: take a finished milestone from "phases done" to "archived and recorded" —
 **audit → summarize → update `PROJECT.md` → archive**. Uses the `crew-conventions`, `crew-context`,
-`crew-planning`, and `crew-config` skills.
+`planning`, and `crew-config` skills.
 
 As the **Complete step** of the `/crew:finish` close-out strand its gate is `config.workflow.complete.run`
 (`off|ask|auto|smart`); invoked directly it always runs and applies the canonical **Catch-up rule**

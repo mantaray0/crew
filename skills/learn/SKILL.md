@@ -1,5 +1,5 @@
 ---
-name: crew-learn
+name: learn
 description: How crew turns finished work into reusable assets — distilling patterns/decisions into proposed skills, tags, or PROJECT.md updates. Use during /crew:learn.
 origin: crew
 ---

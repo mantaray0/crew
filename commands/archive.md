@@ -5,7 +5,7 @@ argument-hint: "[milestone slug, optional — defaults to the latest completed m
 
 # /crew:archive
 
-Move a finished milestone out of the live state into `.planning/archive/`, so `ROADMAP.md` and `plans/` stay small and cheap to read. Uses the `crew-planning` and `crew-conventions` skills.
+Move a finished milestone out of the live state into `.planning/archive/`, so `ROADMAP.md` and `plans/` stay small and cheap to read. Uses the `planning` and `crew-conventions` skills.
 
 **Follow `crew-conventions`:** confirm the target before moving anything; respond in the user's language.
 
