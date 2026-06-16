@@ -1,5 +1,31 @@
 # @mantaray0/crew
 
+## 0.20.0
+
+### Minor Changes
+
+- [`8b86887`](https://github.com/mantaray0/crew/commit/8b86887c0f9d70526ebde5da891883218153268f) Thanks [@mantaray0](https://github.com/mantaray0)! - Reduce `git.isolation` to a milestone-level switch: `off` ·
+  `worktree-per-milestone` · `branch-per-milestone`. The `*-per-phase`
+  values are dropped — phase-level isolation is intrinsic to `dispatch`
+  (parallelism always isolates per phase), so it never needed a config
+  value. Existing configurations migrate losslessly: any earlier value
+  (`worktree-per-feature`/`branch-per-feature`, `linear`, and the
+  `*-per-phase` values) maps to one of the three.
+
+- [`464607f`](https://github.com/mantaray0/crew/commit/464607f47565a677e87bbffe0faa1590e5b512b2) Thanks [@mantaray0](https://github.com/mantaray0)! - Add two acceptance mechanics at their proper layers:
+
+  - A **`smoke` verify stage** (after `test`) that runs the built app
+    end-to-end — command sourced from `PROJECT.md`, the agent self-assesses
+    into the findings loop, and the stage skips cleanly when no smoke/E2E
+    command is defined (so a project without a runtime harness stays green).
+  - A **human `workflow.usertest` acceptance gate** owned by execute at the
+    milestone boundary. `cadence` (`off`/`per-phase`/`per-milestone`,
+    default `per-milestone`) decides when it fires; crew proposes a 2–10
+    checkpoint checklist derived from what was built, the user confirms each,
+    and an unaccepted milestone doesn't advance to ship — the gate holds
+    under `auto` and `dispatch`. It is cadence-based, not a `run`-gate, and
+    is neither a verify stage nor a chain step.
+
 ## 0.19.0
 
 ### Minor Changes
