@@ -1,6 +1,6 @@
 ---
 name: verify
-description: How crew verifies a change — the test → review → harden → simplify pipeline, run in fresh contexts, with config-driven steps and model selection. Use after implementing any phase.
+description: How crew verifies a change — the test → smoke → review → harden → simplify pipeline, run in fresh contexts, with config-driven steps and model selection. Use after implementing any phase.
 origin: crew
 ---
 
@@ -11,9 +11,10 @@ Every implemented phase passes through a verification pipeline before it is trus
 ## The stages
 
 1. **test** — run tests / build / typecheck (commands from `PROJECT.md`). Test-strictness from `config.testingPolicy` (an `api-service` archetype may require TDD; a `marketing-site` may be optional).
-2. **review** — `code-reviewer` + stack reviewers selected by the project's `tags`.
-3. **harden** — `silent-failure-hunter` (swallowed errors) + `type-design-analyzer` (illegal states).
-4. **simplify** — `code-simplifier` (behavior-preserving cleanup; tests stay green).
+2. **smoke** — run the built app end-to-end (command from `PROJECT.md`). Like `review`, the agent **self-assesses** the result and feeds findings into the findings loop (fix → re-verify). **Graceful skip:** if `PROJECT.md` defines **no** smoke/E2E command, the stage is **skipped with a note** — not red (so a project without a runtime harness, like crew itself, stays green).
+3. **review** — `code-reviewer` + stack reviewers selected by the project's `tags`.
+4. **harden** — `silent-failure-hunter` (swallowed errors) + `type-design-analyzer` (illegal states).
+5. **simplify** — `code-simplifier` (behavior-preserving cleanup; tests stay green).
 
 **Security** is *not* a default stage. The planner recommends it when scope is sensitive (auth/payments/tokens); it runs only with approval.
 
@@ -31,4 +32,4 @@ Every implemented phase passes through a verification pipeline before it is trus
 A second entry point: run the pipeline **ad-hoc** on any diff or working tree — "verify this", "review my changes" — without an active phase.
 
 - **State-free.** Don't require a phase plan, a claim, or `.planning/`. Take the target from the user — a diff, staged changes, or the whole working tree — instead of a roadmap phase.
-- **Same stages, advisory output.** Run test → review → harden → simplify (or just the subset the user names) in fresh contexts and report findings **in the conversation**. Skip the `LOG.md` write when there's no phase to record against; the findings-loop and advisory-not-binding rules above still apply.
+- **Same stages, advisory output.** Run test → smoke → review → harden → simplify (or just the subset the user names) in fresh contexts and report findings **in the conversation**. Skip the `LOG.md` write when there's no phase to record against; the findings-loop and advisory-not-binding rules above still apply.

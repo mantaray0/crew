@@ -1,5 +1,5 @@
 ---
-description: Run the verify pipeline on the current change — test → review → harden → simplify — in fresh sub-agent contexts, per config.
+description: Run the verify pipeline on the current change — test → smoke → review → harden → simplify — in fresh sub-agent contexts, per config.
 argument-hint: "[phase id or 'diff', optional]"
 ---
 
@@ -12,9 +12,10 @@ Explicitly run the verification pipeline (it also runs automatically inside `/cr
 ## Steps
 
 1. **Scope.** Determine what to verify: the current uncommitted diff, or a named phase's change.
-2. **Resolve steps.** Read `config.workflow.execute.verify.default` (and any phase override). Default: `["test","review","harden","simplify"]`.
+2. **Resolve steps.** Read `config.workflow.execute.verify.default` (and any phase override). Default: `["test","smoke","review","harden","simplify"]`.
 3. **Run each step in a fresh sub-agent context**, choosing the model per `config.models` (see `model-management`):
    - **test** — run the project's tests / build / typecheck (from `PROJECT.md`); test-strictness per `config.testingPolicy`.
+   - **smoke** — run the built app end-to-end (command from `PROJECT.md`); **skipped with a note** when no smoke/E2E command is defined (graceful — see the `verify` skill for the full stage semantics).
    - **review** — dispatch `code-reviewer` plus stack reviewers matching the project's `tags` (`typescript-reviewer`, `react-reviewer`, `database-reviewer`).
    - **harden** — dispatch `silent-failure-hunter` and `type-design-analyzer`.
    - **simplify** — dispatch `code-simplifier`.
