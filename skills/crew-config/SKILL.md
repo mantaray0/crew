@@ -31,9 +31,12 @@ crew is **config-driven**: behavior comes from `config.json`, layered **defaults
       "maxConcurrent": 3,
       "onDeviation": "small-self-major-ask", // | "always-ask" | "autonomous"
       "verify": {                      // verify is PART of execute (runs every phase); also callable standalone via /crew:verify. NOT a run-gated step — never auto-skipped.
-        "default": ["test", "review", "harden", "simplify"], // first stage is "test" (build/typecheck/tests); the pipeline & command stay named "verify"
+        "default": ["test", "smoke", "review", "harden", "simplify"], // first stage is "test" (build/typecheck/tests); "smoke" runs the built app (command from PROJECT.md) and is skipped cleanly when no smoke/E2E command is defined; the pipeline & command stay named "verify"
         "perPhaseOverride": true
       }
+    },
+    "usertest": {                      // human acceptance gate — NOT a chain step, NOT a verify stage; execute owns it at the milestone boundary (see commands/execute.md)
+      "cadence": "per-milestone"       // "off" | "per-phase" | "per-milestone" — when the human-test gate fires; cadence-based, NOT a run-gate (a human can't be "auto"-run)
     },
     "ship": {
       "run": "ask",                    // "off" | "ask" | "auto" | "smart" — Level 2 gate (fires under mode:auto / the finish strand)
@@ -112,6 +115,7 @@ The `config.json (full defaults)` block above is the **layer contract** (built-i
       "onDeviation": "inherit",
       "verify": { "default": "inherit", "perPhaseOverride": "inherit" }
     },
+    "usertest": { "cadence": "inherit" },
     "ship": {
       "run": "inherit", "enabled": "inherit", "provider": "inherit",
       "tagPattern": "inherit", "environments": "inherit", "runDeploy": "inherit",
@@ -335,7 +339,9 @@ The schema-diff is generic, but some changes are **renames/splits/moves** where 
 | removed: `config.loop`, `config.state`, `brief.askOnlyWhenStuck` | **dropped** — `loop.maxIterations`/`state.commitSessions` were never read (dead); `brief.askOnlyWhenStuck` is superseded. Flag & confirm the drop; never silently keep. |
 | removed: `specArtifact` (in any vintage — `workflow.brief.specArtifact`, the pre-nesting `brief.specArtifact`, or the 0.7.0 `clarify.specArtifact`) | **dropped on reconcile with a note** — `_spec.md` is now always written and permanent, so the artifact choice is moot. A prior value of `off` is **ignored** (the always-write behaviour is intended). Remove the key; surface the change in the reconcile summary. |
 
-**Genuinely new fields** (no predecessor → offered via the per-new-field question, never set silently): `workflow.mode` (default `manual`), `workflow.execute.loop` (default `all`), `git.baseBranch` (default `main` — recommend inherit; the explicit value is only for a project collecting work on a non-`main` integration branch), and `run` on any close-out step lacking a `finish.*` source — e.g. a pristine 0.7.0 config (no `finish` block) gets `ship.run`/`learn.run`/`complete.run` from this schema's defaults (`ask`/`ask`/`ask`).
+**Genuinely new fields** (no predecessor → offered via the per-new-field question, never set silently): `workflow.mode` (default `manual`), `workflow.execute.loop` (default `all`), `workflow.usertest.cadence` (default `per-milestone`; `off`/`per-phase`/`per-milestone`), `git.baseBranch` (default `main` — recommend inherit; the explicit value is only for a project collecting work on a non-`main` integration branch), and `run` on any close-out step lacking a `finish.*` source — e.g. a pristine 0.7.0 config (no `finish` block) gets `ship.run`/`learn.run`/`complete.run` from this schema's defaults (`ask`/`ask`/`ask`).
+
+The new `smoke` stage in `workflow.execute.verify.default` needs **no** migration line — the stage list inherits **as a whole** (`"inherit"` keeps resolving to the current default, now including `smoke`). A config that has **frozen** `verify.default` to a concrete array gets `smoke` only via the opt-in revisit pass; a frozen array without `smoke` means "this project pinned its stages", **not** "smoke off".
 
 **Inherit-first cleanup — one-time** (gated on `crewVersion` predating `0.16.0`, the inherit-first release; runs **once** at that transition, like the groups above). Before that release, init/setup wrote inheritable leaf fields explicitly even when the user chose "inherit", so configs from before it over-seed the layer below. A written value that equals the resolved inherited value is **not** distinguishable after the fact from a deliberate freeze → **no auto-strip**. Instead, at the inherit-first reconcile, detect every inheritable leaf field whose written value equals the resolved inherited value (project: vs. global; global: vs. built-in default) and present them as **one batched multi-select** — *"these look inherited — reset to inherit? (key removed)"* — with candidates **pre-selected**. The user un-checks deliberate freezes (kept as values). After the choice and the `crewVersion` stamp the migration does **not** re-run — later reconciles have nothing to flag, since the inherit-first write logic never over-seeds. This is distinct from the always-available per-field **reset** and the opt-in **revisit pass** (see *Inherit-first writes* → the three ways a field drops back to inheritance).
 
