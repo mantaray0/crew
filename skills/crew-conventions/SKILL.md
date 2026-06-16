@@ -53,7 +53,7 @@ Per step:
 
 - **brief** (`config.workflow.brief`) / **plan** (`config.workflow.plan`, uses `models.planning`) — **always interactive**, no `run` gate.
 - **execute** (`config.workflow.execute`) — pure plan-execution, no skip-gate; it only *produces* commits. Owns its phase loop (`execute.loop` `one|all`), strategy (`execute.parallel`), and the verify pipeline.
-- **verify** (`config.workflow.execute.verify`) — the **test → review → harden → simplify** pipeline, run inside execute per phase; a list, **never** a `run`-gate, never auto-skipped. Also callable standalone via `/crew:verify`.
+- **verify** (`config.workflow.execute.verify`) — the **test → smoke → review → harden → simplify** pipeline, run inside execute per phase; a list, **never** a `run`-gate, never auto-skipped. Also callable standalone via `/crew:verify`.
 - **ship / learn / complete** (`config.workflow.{ship,learn,complete}`) — the gateable close-out steps, each carrying `run`. `/crew:finish` orchestrates them (Ship → Learn → Complete) by reading their `run`s. execute *suggests* finish at a milestone's end under `manual`, never runs it.
 
 Cross-cutting config (`git`, `models`, `tasks`, `testing`, …) stays **top-level**, not under `workflow`. **Safety boundary:** `config.git` is the sole git/remote authority for **every** `run` including `auto`/`smart` — "run the step?" and "touch the remote/prod?" are orthogonal axes (see `crew-config`).

@@ -51,7 +51,7 @@ What makes it more than a prompt collection:
 
 - **Cross-session context.** A living `PROJECT.md` + `ROADMAP.md` + `LOG.md`, so `/crew:resume`
   reconstitutes full context in a clean window.
-- **A configurable verify pipeline.** Every change can pass through `test → review → harden →
+- **A configurable verify pipeline.** Every change can pass through `test → smoke → review → harden →
   simplify`, each in a fresh sub-agent context with the right model.
 - **Model management.** Cheap models for trivial work, strong models for planning/review — chosen
   automatically or pinned per task type.
@@ -111,7 +111,7 @@ day-to-day is mostly `brief → plan → execute`, closing each milestone with `
         │ /crew:execute │ ──────────────────────▶ /crew:execute dispatch (parallel worktrees)
         └───────┬───────┘
                 ▼
-   test → review → harden → simplify   (/crew:verify, runs inside execute)
+   test → smoke → review → harden → simplify   (/crew:verify, runs inside execute)
                 ▼
         atomic commit + LOG.md update
                 │
@@ -300,10 +300,11 @@ with intent-aware conflict resolution. Backed by `planning` (DAG) + `git-merge`,
 > Explicitly run the verification pipeline (it also runs automatically inside `/crew:execute`).
 
 1. **Scope** — the current uncommitted diff, or a named phase's change.
-2. **Resolve steps** — from `config.workflow.execute.verify.default`, default `["test","review","harden","simplify"]`,
+2. **Resolve steps** — from `config.workflow.execute.verify.default`, default `["test","smoke","review","harden","simplify"]`,
    with optional per-phase overrides.
 3. **Run each step in a fresh sub-agent context**, picking the model per `config.models`:
    - **test** — does it do what the phase intended? (tests/build/behavior)
+   - **smoke** — run the built app end-to-end (command from `PROJECT.md`); skipped with a note when no smoke/E2E command is defined
    - **review** — logic errors, edge cases, convention drift (language-specific reviewer agents)
    - **harden** — hunt swallowed errors and weak type design (`silent-failure-hunter`,
      `type-design-analyzer`)
@@ -501,7 +502,8 @@ and their defaults:
 |---|---|---|
 | `workflow.mode` | `"manual"` | Whether the step chain advances between steps (`manual` stops after the called step; `auto` walks brief → … → complete, firing each step's `run`) |
 | `workflow.brief` | `depth: "normal"`, `intensity: "normal"` | How broad/hard Roast-Me pushes during `/crew:brief` |
-| `workflow.execute` | `parallel: "auto"`, `loop: "all"`, `maxConcurrent: 3`, `onDeviation: "small-self-major-ask"`, `verify: {default: ["test","review","harden","simplify"], perPhaseOverride: true}` | The phase loop, parallel strategy, deviation handling, and the nested verify pipeline |
+| `workflow.execute` | `parallel: "auto"`, `loop: "all"`, `maxConcurrent: 3`, `onDeviation: "small-self-major-ask"`, `verify: {default: ["test","smoke","review","harden","simplify"], perPhaseOverride: true}` | The phase loop, parallel strategy, deviation handling, and the nested verify pipeline |
+| `workflow.usertest` | `cadence: "per-milestone"` | The **human** acceptance gate at execute's milestone boundary (`off`/`per-phase`/`per-milestone`) — crew proposes a derived 2–10 checkpoint checklist you confirm before ship; holds under `auto`/`dispatch`. A boundary gate, **not** a verify stage or chain step |
 | `workflow.ship` | `run: "ask"`, `enabled: true`, `runDeploy: "off"`, `releaseTool: "auto"`, `finishRelease: "off"` | `/crew:ship` release/deploy + its close-out gate (`config.git` stays the git authority) |
 | `workflow.learn` | `run: "ask"`, `enabled: true` | `/crew:learn` self-learning + its close-out gate |
 | `workflow.complete` | `run: "ask"` | `/crew:complete` milestone close-out + its gate within `/crew:finish` |
@@ -569,7 +571,7 @@ The reusable knowledge the commands lean on:
 | `crew-config` | `setup`, `init`, `update` — config schema + project-type/tag registry |
 | `crew-context` | `execute`, `resume` — the `.planning/` state model |
 | `planning` | `plan`, `execute`, `adjust` — roadmap/phase/spec conventions + DAG |
-| `verify` | `verify`, `execute` — the test→review→harden→simplify pipeline |
+| `verify` | `verify`, `execute` — the test→smoke→review→harden→simplify pipeline |
 | `model-management` | `execute dispatch` + pipeline — task-types and model selection |
 | `git-merge` | `execute dispatch` — worktree isolation, claims, rolling integration |
 | `roast-me` | `brief`, `init` — bounded clarifying questions with recommended answers |
@@ -581,7 +583,7 @@ Four of these skills carry a **second entry point** — invoke them ad-hoc, with
 
 - **`roast-me`** — *the headliner.* Pressure-test any idea on the spot: say **"roast me"** (optionally with a nickname), "roast my idea/plan", or "challenge my idea/plan/assumptions". Works well outside a brief — any time you want a bounded, recommended-answer-carrying challenge.
 - **`planning`** — "plan this" / "write me a plan": drafts a milestone→phase plan inline, no roadmap files required.
-- **`verify`** — "verify this" / "review my changes": runs test→review→harden→simplify on any diff, no active phase required.
+- **`verify`** — "verify this" / "review my changes": runs test→smoke→review→harden→simplify on any diff, no active phase required.
 - **`learn`** — "what's worth keeping here?" / "learn from this": distils reusable skills/tags/decisions from any diff, no finished milestone required.
 
 Each writes nothing to `.planning/` unless you ask — the standalone path returns its result in the conversation.
@@ -602,9 +604,17 @@ Two Node scripts wired in `hooks/hooks.json`:
 them. Because `.planning/` is committed, this works across machines and teammates — not just within one
 chat.
 
-**The verify pipeline.** `test → review → harden → simplify`, each in a *fresh* sub-agent context
+**The verify pipeline.** `test → smoke → review → harden → simplify`, each in a *fresh* sub-agent context
 so reviewers aren't biased by the implementer's reasoning, and each with a model chosen for its task
-type. Steps are configurable globally and per-phase.
+type. Steps are configurable globally and per-phase. `smoke` runs the built app (command from `PROJECT.md`)
+and skips cleanly when none is defined, so a project without a runtime harness stays green.
+
+**The user-test gate.** Distinct from the automated pipeline, `workflow.usertest.cadence`
+(`off`/`per-phase`/`per-milestone`, default per-milestone) fires a **human** acceptance checkpoint at
+execute's milestone boundary: crew proposes a 2–10 item checklist derived from what was actually built,
+you confirm each, and an unaccepted milestone doesn't advance to ship — the gate holds even under
+`auto`/`dispatch`. Separate axis from verify: `smoke` is an automated stage, the user-test gate
+is a human boundary.
 
 **Parallelism without chaos.** `depends:` edges in `ROADMAP.md` form a DAG; `/crew:execute dispatch`
 runs independent phases in isolated worktrees, `claims.json` prevents collisions, and the
