@@ -184,7 +184,7 @@ Only the gateable close-out steps carry `run` (`ship`, `learn`, `complete`). `br
 
 **Safety boundary (load-bearing).** `config.git` stays the **sole git/remote authority** for **every** `run` value, including `auto` **and** `smart`: "run the step?" (`run`) and "touch the remote/prod?" (`git.autoPush`/`autoPR`, `workflow.ship.enabled`) are orthogonal axes. Even if a `smart` step "decides to ship", crew does **not** push/PR without approval when `git.autoPush=false`. And `verify` is **never** auto-skipped — it is a pipeline list, not a `run`-gate.
 
-**`language.files`** sets the language of the project files crew writes (`PROJECT.md`, `ROADMAP.md`, `LOG.md`, `BACKLOG.md`, `plans/`). Default `"en"`; ask the user at `/crew:setup` (global) or `/crew:init` (per project). This is separate from the *conversation* language (see `crew-conventions`): the plugin repo and config keys stay English, but the user's own project files may be written in their language.
+**`language.files`** sets the language of the project files crew writes (`PROJECT.md`, `ROADMAP.md`, `LOG.md`, `plans/`, `backlog/`). Default `"en"`; ask the user at `/crew:setup` (global) or `/crew:init` (per project). This is separate from the *conversation* language (see `crew-conventions`): the plugin repo and config keys stay English, but the user's own project files may be written in their language.
 
 **`responseStyle`** controls how verbose and how formatted the assistant's command replies are. `crew-conventions` enforces it. Default `"concise"`.
 
@@ -353,13 +353,15 @@ The new `smoke` stage in `workflow.execute.verify.default` needs **no** migratio
 
 **`config.json` → full inherit form (opt-in expansion)** — gated on `crewVersion` predating the explicit-inherit-sentinel release (`< 0.19.0`; if ship cuts a different version, align this number there — describe it as "the explicit-inherit-sentinel release", never by an internal label). **No automatic rewrite:** a pre-sentinel config (inheriting fields simply *absent*) keeps working unchanged (missing ≡ `"inherit"`; see *Tri-rule*). At reconcile, `/crew:update` **offers once** to **expand** the config to the full inherit form — write every inheritable leaf that is currently absent as `"inherit"`, leaving existing concrete values (deliberate freezes) untouched. The user may decline; declining leaves the config minimal and equally correct. This is **opt-in additive visibility**, never forced. (Fresh `/crew:init`/`/crew:setup` already write the full form.)
 
+**`BACKLOG.md` → `backlog/*.md` (content migration)** — gated on `crewVersion` predating the backlog-folder release (`< 0.21.0`; if ship cuts a different version, align this number there — describe it as "the backlog-folder release", never by an internal label). **crew's first *content* migration** — the reconcile otherwise only touches `config.json`. Runs **only** when a legacy free-text `.planning/BACKLOG.md` exists; a project that already has no `BACKLOG.md` and a `backlog/` folder is **skipped** (a re-run creates no duplicates → idempotent). Convert **losslessly**: each backlog entry (a `## <title>` section or a dated `- [YYYY-MM-DD] <idea>` bullet) → one `backlog/<NNN>_<slug>.md` (frontmatter + body, format → `crew-context` → *The backlog*): assign **running IDs** from `001`; derive `created` from a leading `[YYYY-MM-DD]` prefix (else ask — never guess a date; leave empty only if there is genuinely none to recover); default `priority: medium`, `status: open`; the prose → `description` (one sentence) + the **Key Facts** block (the remaining context, with a best-effort "Why"). **Interactive on ambiguity** — unclear titles/dates/splits → ask (`crew-conventions`), never guess. After a **confirmed** conversion, **remove** the old `.planning/BACKLOG.md` and **note it in the reconcile summary** — never silently drop it (convert → confirm → remove).
+
 Also: if a `.planning/DEPLOY.md` exists, note in the reconcile that its content now belongs in `reference/deploy.md` (structured fields → `config.workflow.ship`); offer to move it (a `mv` + the user trims to prose). Never auto-delete it.
 
 ## File naming in `.planning/`
 
-- **Documents are UPPERCASE:** `PROJECT.md`, `ROADMAP.md`, `LOG.md`, `BACKLOG.md` (like `README`/`CHANGELOG`).
+- **Documents are UPPERCASE:** `PROJECT.md`, `ROADMAP.md`, `LOG.md` (like `README`/`CHANGELOG`).
 - **Data files are lowercase:** `config.json`, `claims.json`.
-- **Directories are lowercase:** `plans/`.
+- **Directories are lowercase:** `plans/`, `backlog/` (item files: `<NNN>_<slug>.md` — see `crew-context` → *The backlog*).
 
 ## `project-types.json` (starter registry — global layer)
 
