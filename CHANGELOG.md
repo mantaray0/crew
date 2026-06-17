@@ -1,5 +1,11 @@
 # @mantaray0/crew
 
+## 0.21.0
+
+### Minor Changes
+
+- [`93f8a5b`](https://github.com/mantaray0/crew/commit/93f8a5b93b04b1da45d5ec095bec66bed97a222a) Thanks [@mantaray0](https://github.com/mantaray0)! - Replace `BACKLOG.md` with a `backlog/` folder: one Markdown file per idea (frontmatter + a Key-Facts body). `/crew:backlog add` asks three skippable prompts (why · affected area · priority) and always produces a valid item — full or stub. `/crew:backlog list` now returns a deterministic, priority-sorted table of all items; promoted items leave the backlog, and there is no generated index file. `/crew:brief` and `/crew:plan` seed from an item's Key Facts on promote, asking only the gaps. A version-gated reconcile migration converts an existing `BACKLOG.md` into the new structure losslessly and removes the old file after confirmation.
+
 ## 0.20.0
 
 ### Minor Changes
