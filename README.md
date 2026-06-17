@@ -178,8 +178,8 @@ Run this once per machine. Backed by the `crew-config` and `crew-conventions` sk
   The chosen archetype seeds `tags`, `stack`, and `testingPolicy`.
 - **Stack interview:** confirm/adjust DB, frontend, UI, backend-API, queue, deploy — pre-filled from
   the archetype and your defaults, with the escape hatch "you decide → I propose → you approve".
-- **Scaffolds** `.planning/` with `config.json`, an empty `PROJECT.md`/`ROADMAP.md`/`LOG.md`/
-  `BACKLOG.md`, and the `plans/` directory.
+- **Scaffolds** `.planning/` with `config.json`, an empty `PROJECT.md`/`ROADMAP.md`/`LOG.md`,
+  and the `plans/` and `backlog/` directories.
 
 Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventions`.
 
@@ -208,8 +208,8 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
 > Turns a clarified brief into an executable plan: a roadmap of milestones → phases, plus detailed
 > plan files. **Waits for your approval before any execution.**
 
-- Reads `PROJECT.md`, the relevant milestone's `_spec.md`, `ROADMAP.md`, and `BACKLOG.md`.
-- **Triages the backlog** — surfaces relevant ideas and asks (multi-select) which to fold in now.
+- Reads `PROJECT.md`, the relevant milestone's `_spec.md`, `ROADMAP.md`, and the `backlog/` items.
+- **Triages the backlog** — surfaces relevant ideas and asks (multi-select) which to fold in now. On promote it **seeds** the plan from the item's Key Facts (asking only the gaps); the folded item then leaves the backlog.
 - Drafts/extends `ROADMAP.md` as milestones → phases with status markers
   `[ ]` open · `[>]` active · `[x]` done · `[~]` deferred, keeping phases **independently mergeable**
   and recording inter-phase `depends:` edges (used later for parallel dispatch).
@@ -218,18 +218,22 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
 #### `/crew:backlog` &nbsp;`[idea text | list | new | empty → ask & add]`
 > A frictionless idea inbox so the active plan stays undisturbed and nothing gets lost.
 
-- **`<text>`:** appends a dated bullet to `BACKLOG.md` (`- [YYYY-MM-DD] <idea>`) and does nothing
-  else — no planning, no interrupting the active phase. One-line confirmation.
+- **`<text>`:** captures the idea as a new item file in the `backlog/` folder (`backlog/<NNN>_<slug>.md`,
+  frontmatter + a Key-Facts body) and asks three **skippable** prompts — why, affected area, priority — so
+  the item carries enough context to seed a plan later; skip all three and the result is still a valid item
+  file. No planning, no interrupting the active phase. One-line confirmation.
 - **empty or `new`:** prompts you for the idea, then adds it the same way.
-- **`list`:** lists the backlog and offers, per item: **do it now (promote)** — routed by size
-  (small → `/crew:quick`, with **no roadmap entry** · feature → `/crew:brief`/`plan` · roadmap-worthy →
-  `/crew:adjust`) — **plan it**, **keep parked**, or **drop**. Promoting closes the gap from "captured"
-  to "in work" without the roadmap detour; the promoted item then leaves `BACKLOG.md`.
+- **`list`:** returns a **deterministic, priority-sorted table** of all items and offers, per item:
+  **do it now (promote)** — routed by size (small → `/crew:quick`, with
+  **no roadmap entry** · feature → `/crew:brief`/`plan` · roadmap-worthy → `/crew:adjust`) — **plan it**,
+  **keep parked**, or **drop**. Promoting closes the gap from "captured" to "in work" without the roadmap
+  detour; the promoted item then leaves the backlog (its file is removed). There is **no** generated
+  `BACKLOG.md` index — the item files are the source of truth.
 
 #### `/crew:adjust` &nbsp;`[what to change, free-form]`
 > Change the roadmap mid-flight — insert, reorder, defer, or drop phases — without renumbering pain.
 
-- Reads `ROADMAP.md` + `BACKLOG.md`.
+- Reads `ROADMAP.md` + the `backlog/` items.
 - Applies the change as a plain Markdown edit. Phases are identified by **text/heading, not rigid
   numbers**, so there's no global renumber; status markers and completion timestamps of untouched
   phases are preserved. Can also pull a backlog idea straight into the roadmap.
@@ -453,13 +457,14 @@ UPPERCASE** (like `README`/`CHANGELOG`), **data files and directories are lowerc
 ├── PROJECT.md        # what we're building + key decisions (the living north-star)
 ├── ROADMAP.md        # milestones → phases with status markers + depends: edges
 ├── LOG.md            # append-only execution log (phases, deviations, token/cost)
-├── BACKLOG.md        # dated idea inbox (/crew:backlog)
 ├── config.json       # project-layer config (overrides global + defaults)
 ├── claims.json       # which phase is claimed by which worktree (parallel safety)
 ├── plans/            # one folder per milestone
 │   └── <n>_<milestone-slug>/ # the milestone's plan files (number-prefixed, e.g. 1_fundament/)
 │       ├── _spec.md          # the milestone Spec, permanent (from /crew:brief) — single source of intent
 │       └── <id>_<title>.md   # numbered phase plan (from /crew:plan): scope note + _spec.md ref + plan body
+├── backlog/          # idea inbox (/crew:backlog)
+│   └── <NNN>_<slug>.md       # frontmatter (id · priority · status · created) + a Key-Facts body
 ├── archive/          # completed milestones moved out of live state (/crew:archive)
 │   └── plans/<n>_<slug>/     # its plan folder, moved verbatim
 │       ├── _roadmap.md       # the archived milestone's ROADMAP section (written in)
@@ -526,6 +531,8 @@ start crew warns if a project's config is behind the installed plugin; re-runnin
 schema-diffs the existing config and asks you about each new field rather than silently applying defaults.
 The reconcile can also **offer once** to expand a minimal pre-sentinel config to the full inherit form
 (opt-in — existing concrete freezes are never touched, and a declined config stays minimal and correct).
+It also offers a one-time, version-gated **content migration** that converts a legacy `BACKLOG.md` into
+`backlog/` item files — lossless and interactive, removing the old file only after you confirm.
 
 **Registry (`project-types.json`, global layer):** a **tag** is atomic and activates skills/rules; a
 **project type (archetype)** is a curated tag bundle + defaults. Picked at `/crew:init`; the resolved
