@@ -276,8 +276,9 @@ the `auto` argument), the **strategy** (`workflow.execute.parallel`, the `dispat
 independent phases are detected, it offers to hand off to `/crew:execute dispatch`. Backed by `crew-context`
 + `planning`.
 
-**`auto` — sequential autonomous run.** Runs a phase in the main context, then `/clear` +
-`/crew:execute auto`, carrying continuity through `.planning/` state (no sub-agents). Loops until the
+**`auto` — sequential autonomous run.** Runs each phase's work core (implement → verify → commit) in
+its own fresh sub-agent while the main context orchestrates, carrying continuity through `.planning/`
+state — same shape as `dispatch`, only sequential and on one branch (no worktrees). Loops until the
 milestone is done or a stop condition is hit; never self-ships, self-completes, or self-finishes —
 reports and proposes `/crew:finish` for the close-out.
 
