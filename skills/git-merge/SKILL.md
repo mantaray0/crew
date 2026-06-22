@@ -42,4 +42,4 @@ The merge **target** moves to `baseBranch` (or the milestone branch when nesting
 
 ## Conflict resolution
 
-The `merge-coordinator` carries each side's **phase intent**, so it resolves by what the code was meant to do, not by textual diff alone. `config.git.conflictPolicy`: `resolve-or-ask` (default — resolve the clear ones, ask on genuine ambiguity), `always-ask`, or `autonomous`. Always verify after resolving.
+The `crew:merge-coordinator` carries each side's **phase intent**, so it resolves by what the code was meant to do, not by textual diff alone. `config.git.conflictPolicy`: `resolve-or-ask` (default — resolve the clear ones, ask on genuine ambiguity), `always-ask`, or `autonomous`. Always verify after resolving.

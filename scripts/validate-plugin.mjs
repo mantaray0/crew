@@ -153,6 +153,37 @@ try {
   fail(`check 6: could not read ${CREW_CONFIG}: ${e.message}`);
 }
 
+// 7. Dispatched sub-agents must be addressed by their crew:-namespaced type.
+// Every place a command or skill names one of crew's own agents in backticks must write it as
+// `crew:<name>`, never the bare `<name>`. A bare name lets the platform resolve the spawn against
+// the global agent namespace, where a third-party plugin's same-named agent (e.g. GSD's
+// gsd-executor shadowing the work-core spawn) can be picked instead. Scanning the executable layer
+// (commands/ + skills/) — not README, which is documentation — keeps the check to the real spawn
+// surface. The regex requires a backtick immediately before the name, so `crew:<name>` (preceded
+// by ":") never matches.
+const agentNames = (await fs.readdir("agents")).filter((f) => f.endsWith(".md")).map((f) => f.slice(0, -3));
+const bareAgentRef = new RegExp("`(" + agentNames.join("|") + ")`", "g");
+const dispatchRoots = ["commands", "skills"];
+const errorsBeforeCheck7 = errors;
+for (const root of dispatchRoots) {
+  try {
+    for await (const file of walkShipped(root)) {
+      const lines = (await fs.readFile(file, "utf8")).split("\n");
+      lines.forEach((line, i) => {
+        const hits = line.match(bareAgentRef);
+        if (hits) {
+          fail(
+            `${file}:${i + 1}: bare agent reference ${[...new Set(hits)].join(", ")} — address crew's own agents as \`crew:<name>\` so a third-party plugin can't shadow the spawn: ${line.trim()}`,
+          );
+        }
+      });
+    }
+  } catch (e) {
+    fail(`check 7: could not scan root "${root}": ${e.message}`);
+  }
+}
+if (errors === errorsBeforeCheck7) ok("dispatched sub-agents are crew:-namespaced");
+
 if (errors > 0) {
   console.error(`\n${errors} problem(s) found.`);
   process.exit(1);

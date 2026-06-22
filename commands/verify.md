@@ -16,9 +16,9 @@ Explicitly run the verification pipeline (it also runs automatically inside `/cr
 3. **Run each step in a fresh sub-agent context**, choosing the model per `config.models` (see `model-management`):
    - **test** — run the project's tests / build / typecheck (from `PROJECT.md`); test-strictness per `config.testingPolicy`.
    - **smoke** — run the built app end-to-end (command from `PROJECT.md`); **skipped with a note** when no smoke/E2E command is defined (graceful — see the `verify` skill for the full stage semantics).
-   - **review** — dispatch `code-reviewer` plus stack reviewers matching the project's `tags` (`typescript-reviewer`, `react-reviewer`, `database-reviewer`).
-   - **harden** — dispatch `silent-failure-hunter` and `type-design-analyzer`.
-   - **simplify** — dispatch `code-simplifier`.
-4. **Security (conditional).** If the change touches sensitive areas (auth/payments/tokens) and the user approved a security pass, dispatch `security-reviewer`. Never run it automatically (`config.security.auto` is false by default).
+   - **review** — dispatch `crew:code-reviewer` plus stack reviewers matching the project's `tags` (`crew:typescript-reviewer`, `crew:react-reviewer`, `crew:database-reviewer`).
+   - **harden** — dispatch `crew:silent-failure-hunter` and `crew:type-design-analyzer`.
+   - **simplify** — dispatch `crew:code-simplifier`.
+4. **Security (conditional).** If the change touches sensitive areas (auth/payments/tokens) and the user approved a security pass, dispatch `crew:security-reviewer`. Never run it automatically (`config.security.auto` is false by default).
 5. **Resolve findings.** Critical/Important findings are fixed (re-dispatch the implementer or fix), then re-verified, before the phase can be committed. Minor findings are listed.
 6. **Summarize.** Report per-step results and the final state (green/blocked). Record the outcome in `LOG.md`.

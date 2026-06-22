@@ -285,10 +285,10 @@ reports and proposes `/crew:finish` for the close-out.
 **`dispatch [ids]` — parallel worktree run.** Builds the DAG from the milestone's phases and their
 `depends:` edges, computes waves of independent phases, confirms the split, then dispatches a wave
 (up to `config.workflow.execute.maxConcurrent` phases, each in an isolated worktree worked by a sub-agent).
-The `merge-coordinator` agent rolls completed branches into an integration branch — targeting
+The `crew:merge-coordinator` agent rolls completed branches into an integration branch — targeting
 `config.git.baseBranch`, or the **milestone branch** when milestone isolation nests dispatch under it —
 with intent-aware conflict resolution. Backed by `planning` (DAG) + `git-merge`, plus the
-`merge-coordinator` agent.
+`crew:merge-coordinator` agent.
 
 #### `/crew:quick` &nbsp;`<what to do>`
 > The quick lane: a small fix or chore that shouldn't go through the full brief→plan→execute flow and
@@ -311,9 +311,9 @@ with intent-aware conflict resolution. Backed by `planning` (DAG) + `git-merge`,
    - **test** — does it do what the phase intended? (tests/build/behavior)
    - **smoke** — run the built app end-to-end (command from `PROJECT.md`); skipped with a note when no smoke/E2E command is defined
    - **review** — logic errors, edge cases, convention drift (language-specific reviewer agents)
-   - **harden** — hunt swallowed errors and weak type design (`silent-failure-hunter`,
-     `type-design-analyzer`)
-   - **simplify** — tidy without changing behavior (`code-simplifier`)
+   - **harden** — hunt swallowed errors and weak type design (`crew:silent-failure-hunter`,
+     `crew:type-design-analyzer`)
+   - **simplify** — tidy without changing behavior (`crew:code-simplifier`)
 
 Backed by the `verify` skill.
 
@@ -553,22 +553,24 @@ numbered `## Steps` recipe that Claude follows.
 
 ### Agents (`agents/*.md`)
 Specialist sub-agents the commands dispatch into fresh contexts. Each declares a task-type so
-`model-management` can pick a model.
+`model-management` can pick a model. Commands address them by their **`crew:`-namespaced** type
+(e.g. `crew:code-reviewer`) so an installed third-party plugin can never shadow crew's own agent.
 
 | Agent | Role |
 |---|---|
-| `architect` | Break features into phases, design data flow, choose an approach grounded in the codebase |
-| `code-explorer` | Read-only investigator: trace execution paths, map architecture, document conventions |
-| `code-reviewer` | General code-quality review (the pipeline's review stage) |
-| `typescript-reviewer` | TS idioms, async correctness, module boundaries, API ergonomics |
-| `react-reviewer` | React/Next.js: hooks rules, render correctness, server/client boundaries, TanStack Query |
-| `database-reviewer` | Drizzle/Postgres: schema, migrations, queries, indexes, transactions |
-| `security-reviewer` | Security pass for auth/payments/tokens/input — only when recommended **and** approved |
-| `code-simplifier` | Simplify/tidy without changing behavior (the simplify stage) |
-| `silent-failure-hunter` | Hunt swallowed errors, ignored returns, empty catches (the harden stage) |
-| `type-design-analyzer` | Make illegal states unrepresentable; surface `any`/unsafe casts (the harden stage) |
-| `build-error-resolver` | Fix build/typecheck/lint failures when the toolchain is red |
-| `merge-coordinator` | Integrate parallel worktrees with intent-aware conflict resolution (during `execute dispatch`) |
+| `crew:executor` | Execute one phase's work core (implement → verify → commit → stamp) — the phase sub-agent in the auto-loop and dispatch |
+| `crew:architect` | Break features into phases, design data flow, choose an approach grounded in the codebase |
+| `crew:code-explorer` | Read-only investigator: trace execution paths, map architecture, document conventions |
+| `crew:code-reviewer` | General code-quality review (the pipeline's review stage) |
+| `crew:typescript-reviewer` | TS idioms, async correctness, module boundaries, API ergonomics |
+| `crew:react-reviewer` | React/Next.js: hooks rules, render correctness, server/client boundaries, TanStack Query |
+| `crew:database-reviewer` | Drizzle/Postgres: schema, migrations, queries, indexes, transactions |
+| `crew:security-reviewer` | Security pass for auth/payments/tokens/input — only when recommended **and** approved |
+| `crew:code-simplifier` | Simplify/tidy without changing behavior (the simplify stage) |
+| `crew:silent-failure-hunter` | Hunt swallowed errors, ignored returns, empty catches (the harden stage) |
+| `crew:type-design-analyzer` | Make illegal states unrepresentable; surface `any`/unsafe casts (the harden stage) |
+| `crew:build-error-resolver` | Fix build/typecheck/lint failures when the toolchain is red |
+| `crew:merge-coordinator` | Integrate parallel worktrees with intent-aware conflict resolution (during `execute dispatch`) |
 
 ### Skills (`skills/*/SKILL.md`)
 The reusable knowledge the commands lean on:
@@ -626,7 +628,7 @@ is a human boundary.
 
 **Parallelism without chaos.** `depends:` edges in `ROADMAP.md` form a DAG; `/crew:execute dispatch`
 runs independent phases in isolated worktrees, `claims.json` prevents collisions, and the
-`merge-coordinator` performs intent-aware integration. Atomic per-phase commits make `/crew:rollback`
+`crew:merge-coordinator` performs intent-aware integration. Atomic per-phase commits make `/crew:rollback`
 trivial.
 
 **Self-learning.** `/crew:learn` lifts patterns out of one repo into your global registry as skills
