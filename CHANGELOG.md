@@ -1,5 +1,18 @@
 # @mantaray0/crew
 
+## 0.21.2
+
+### Patch Changes
+
+- [#37](https://github.com/mantaray0/crew/pull/37) [`64ca12c`](https://github.com/mantaray0/crew/commit/64ca12c7d9af929e8d34dddf0d8b2dbe85a58608) Thanks [@mantaray0](https://github.com/mantaray0)! - fix(agents): add a dedicated `crew:executor` and pin every sub-agent spawn to a `crew:`-namespaced type
+
+  The per-phase work core in `/crew:execute` (auto-loop and dispatch) was spawned as an _unnamed_ sub-agent, so the platform could resolve it against the global agent namespace and free-pick a foreign-plugin agent (e.g. GSD's `gsd-executor`). This closes that shadowing leak as a class:
+
+  - **New `crew:executor` agent** — owns the implement → verify → commit work core and the verify pipeline; every phase-spawn site in `/crew:execute` is pinned to `subagent_type: crew:executor`.
+  - **All dispatch references are now `crew:`-namespaced** across `commands/` and `skills/` (`crew:code-reviewer`, `crew:merge-coordinator`, …) so an installed third-party plugin can never shadow crew's own agent.
+  - **`validate-plugin.mjs` (check 7)** enforces it in CI: any bare backticked agent reference in the executable layer fails the build.
+  - **`/crew:plan`** can now optionally dispatch the (previously unwired) read-only `crew:code-explorer` / `crew:architect` to ground a plan, while the planning conversation stays interactive in the main context.
+
 ## 0.21.1
 
 ### Patch Changes
