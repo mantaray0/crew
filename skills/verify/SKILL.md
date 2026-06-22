@@ -12,9 +12,9 @@ Every implemented phase passes through a verification pipeline before it is trus
 
 1. **test** — run tests / build / typecheck (commands from `PROJECT.md`). Test-strictness from `config.testingPolicy` (an `api-service` archetype may require TDD; a `marketing-site` may be optional).
 2. **smoke** — run the built app end-to-end (command from `PROJECT.md`). Like `review`, the agent **self-assesses** the result and feeds findings into the findings loop (fix → re-verify). **Graceful skip:** if `PROJECT.md` defines **no** smoke/E2E command, the stage is **skipped with a note** — not red (so a project without a runtime harness, like crew itself, stays green).
-3. **review** — `code-reviewer` + stack reviewers selected by the project's `tags`.
-4. **harden** — `silent-failure-hunter` (swallowed errors) + `type-design-analyzer` (illegal states).
-5. **simplify** — `code-simplifier` (behavior-preserving cleanup; tests stay green).
+3. **review** — `crew:code-reviewer` + stack reviewers selected by the project's `tags`.
+4. **harden** — `crew:silent-failure-hunter` (swallowed errors) + `crew:type-design-analyzer` (illegal states).
+5. **simplify** — `crew:code-simplifier` (behavior-preserving cleanup; tests stay green).
 
 **Security** is *not* a default stage. The planner recommends it when scope is sensitive (auth/payments/tokens); it runs only with approval.
 
