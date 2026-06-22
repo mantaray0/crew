@@ -1,6 +1,6 @@
 {
   "name": "@mantaray0/crew",
-  "version": "0.21.1",
+  "version": "0.21.2",
   "private": true,
   "packageManager": "pnpm@11.6.0",
   "description": "Config-driven agentic workflow harness for Claude Code (plugin)",
