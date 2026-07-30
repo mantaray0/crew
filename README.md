@@ -518,7 +518,7 @@ and their defaults:
 | `tasks` | `provider: "local"`, `writeBack: false` | External PM integration for `/crew:pull` |
 | `testingPolicy` | `"from-archetype"` | TDD / tests-required / optional |
 | `security` | `auto: false` | Security pass is **never** automatic — recommended on sensitive scope, run only on approval |
-| `notifications` | `enabled: true`, `events: ["blocker","completion"]`, `channel: "os"` | Desktop/push notifications (see hooks) |
+| `notifications` | `enabled: true`, `events: ["blocker","completion"]`, `channel: "off"` | **Push** notifications on blockers/completions (`off` · `push:ntfy` · `push:pushover`, see hooks) — local/desktop notification stays Claude Code's own |
 | `language` | `files: "en"` | Language of generated project files (separate from conversation language) |
 | `responseStyle` | `"concise"` | Verbosity/format of replies: `concise` (short, tables) · `detailed` (full prose) · `auto` |
 | `crewVersion` | set on init | Plugin version the config was last reconciled with — drives the update flow |
@@ -602,8 +602,11 @@ Each writes nothing to `.planning/` unless you ask — the standalone path retur
 Two Node scripts wired in `hooks/hooks.json`:
 
 - **`SessionStart` → `session-start.mjs`** — primes a new session with crew context.
-- **`Notification` → `notify.mjs blocker`** and **`Stop` → `notify.mjs completion`** — fire desktop/
-  push notifications on blockers and completions, per `config.notifications`.
+- **`Notification` → `notify.mjs blocker`** and **`Stop` → `notify.mjs completion`** — fire **push**
+  notifications on blockers and completions, per `config.notifications`. Off by default; set
+  `channel: "push:ntfy"` (with `CREW_NTFY_TOPIC`) to get pinged off-machine. crew deliberately sends
+  no *local* notification — Claude Code's own handles that, and a plugin-sent one would arrive under
+  a foreign icon and open the wrong app.
 
 ---
 
