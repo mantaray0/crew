@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Notification hook: best-effort desktop/push notification, gated by .planning config.
+// Notification hook: best-effort push notification, gated by .planning config.
 // Usage: node notify.mjs <event>   where <event> is "blocker" or "completion".
 // Never throws — a notification failure must not break the session.
 import { execFile } from "node:child_process";
@@ -11,7 +11,7 @@ const event = process.argv[2] ?? "completion";
 
 // Built-in defaults — the bottom layer (always concrete, never "inherit").
 // Mirror of crew-config's defaults for notifications.*.
-const DEFAULTS = { enabled: true, events: ["blocker", "completion"], channel: "os" };
+const DEFAULTS = { enabled: true, events: ["blocker", "completion"], channel: "off" };
 
 async function readJson(p) {
   try {
@@ -54,18 +54,6 @@ async function main() {
   if (Array.isArray(n.events) && !n.events.includes(event)) return;
 
   const message = titleFor(event);
-  if (n.channel === "os") {
-    if (process.platform === "darwin") {
-      execFile(
-        "osascript",
-        ["-e", `display notification "${message}" with title "crew"`],
-        () => {},
-      );
-    } else if (process.platform === "linux") {
-      execFile("notify-send", ["crew", message], () => {});
-    }
-    return;
-  }
   if (n.channel === "push:ntfy" && process.env.CREW_NTFY_TOPIC) {
     execFile(
       "curl",
