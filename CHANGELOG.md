@@ -1,5 +1,13 @@
 # @mantaray0/crew
 
+## 0.22.0
+
+### Minor Changes
+
+- [#39](https://github.com/mantaray0/crew/pull/39) [`4d43a8d`](https://github.com/mantaray0/crew/commit/4d43a8d72d15c035ccdc037b38c73e01a80f0e8c) Thanks [@mantaray0](https://github.com/mantaray0)! - Notifications are push-only: the local `os` channel is gone. It shelled out to `osascript`/`notify-send`, and on macOS the OS attributes such a notification to the invoking script host — so it showed up under a foreign icon and clicking it opened the Script Editor instead of the session. That attribution cannot be fixed from a plugin (a proper sender needs a signed app bundle), and Claude Code already ships its own local notifications, so nothing is lost.
+
+  `notifications.channel` now takes `off` (the new default) · `push:ntfy` · `push:pushover`. `/crew:update` maps a frozen `"os"` to `"off"` and flags the default flip for configs that inherit the channel — those stop notifying locally and can opt into `push:ntfy` (with `CREW_NTFY_TOPIC`) to get pinged off-machine. The `Notification`/`Stop` hooks stay wired for the push channels.
+
 ## 0.21.2
 
 ### Patch Changes
