@@ -8,6 +8,14 @@ origin: crew
 
 These apply to **every** crew command.
 
+## Resolve the config before step 1
+
+A command that *obeys* a config field must **read it first** — before its first step, not on demand mid-flow. Resolve every `config.*` field its steps reference (`.planning/config.json` → `~/.claude/crew/config.json` → built-in default), per `crew-config` → *Resolving inherited fields*. That section is the rule; don't re-derive it.
+
+- **A written `"inherit"` is not a value** — it resolves one layer down. A field left unresolved is **not** "the default", it is **no instruction at all**, and the behavior it was supposed to steer silently disappears.
+- **Never let a behavior hang on an unresolved field.** Every instruction that scales with a config value carries its own **unconditional baseline** — the built-in default's behavior — so the command still acts correctly outside a crew project or with no `.planning/` at all.
+- **Resolve silently.** This is a read, not a question; it produces no stepper entry. Surface a resolved value only where a command explicitly reports it (`crew-config` → *Surfacing the source*).
+
 ## Interaction flow — drive it, don't shortcut it
 
 crew is interactive on purpose. Do not jump ahead, do not silently apply defaults, and do not let other context pull you out of the flow.

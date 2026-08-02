@@ -25,7 +25,8 @@ Phases are identified by their heading text, **not** by rigid numbers — so ins
 
 The spec/plan concern is **split across two kinds of file** in the milestone folder, not stacked in one — a single source of intent that phase plans reference rather than copy:
 
-- **`_spec.md` — the milestone Spec (permanent).** Written by `/crew:brief`, it owns the **intent**: Goal/problem, Requirements, Acceptance criteria, Out of scope. It is the single source of truth and stays for the life of the milestone — co-located with `_roadmap.md` once archived, never removed and never duplicated.
+- **`_spec.md` — the milestone Spec (permanent).** Written by `/crew:brief`, it owns the **intent**: Goal/problem, Requirements, Acceptance criteria, Out of scope — plus an **optional `Notes for planning`** section (only when the brief actually parked something). It is the single source of truth and stays for the life of the milestone — co-located with `_roadmap.md` once archived, never removed and never duplicated.
+  - **`Notes for planning` — the brief→plan handoff.** `/crew:brief` holds the scope line by *parking* structural / sequencing / phasing ideas instead of deciding them ("that's `/crew:plan`, noted"). A `/clear` sits between the two commands, so a parked idea survives **only** if it is written down: capture each as one line here. It is **input for `/crew:plan`, not intent** — `/crew:plan` reads it, decides it, and does **not** treat it as a requirement. Not a to-do list and never a substitute for a requirement: anything load-bearing belongs in Requirements, decided in the brief.
 - **`<id>_<title>.md` — a phase plan.** Written by `/crew:plan`, it is the **how** for one phase: a short **Scope of this phase** note (1–3 lines: the deliverable + this phase's own acceptance) that **references `_spec.md`** for the full intent, followed by the Plan body. It does **not** repeat the Spec.
 
 ```markdown
@@ -62,7 +63,7 @@ Plans live in **numbered milestone folders** — `plans/<n>_<milestone-slug>/` �
 
 Files inside a folder are told apart by filename. **A leading underscore marks a meta file, not a phase** — `_spec.md` (the milestone Spec) and `_roadmap.md` (a milestone's archived ROADMAP section, see *Archiving* below); any future `_*.md` is covered by the same rule. Commands that read phase plans skip `_`-prefixed files — they are never a phase. The remaining kinds carry their id up front:
 
-- **Brief / milestone Spec** (`/crew:brief`, feature in an existing project): `_spec.md` — the **permanent** milestone Spec (Goal/problem, Requirements, Acceptance, Out of scope). The folder is `<n>_<brief-slug>/`, where `<n>` is the next milestone number; no fake phase number is invented. `/crew:plan` later adds the phase plans beside it — they **reference** this `_spec.md` rather than copy it.
+- **Brief / milestone Spec** (`/crew:brief`, feature in an existing project): `_spec.md` — the **permanent** milestone Spec (Goal/problem, Requirements, Acceptance, Out of scope, optional `Notes for planning`). The folder is `<n>_<brief-slug>/`, where `<n>` is the next milestone number; no fake phase number is invented. `/crew:plan` later adds the phase plans beside it — they **reference** this `_spec.md` rather than copy it.
 - **Phase plan** (`/crew:plan`): roadmap phase id + short title — `1.2_db-schema.md`. Sorts naturally, ties straight to the roadmap id.
 - **Ticket plan** (`/crew:pull`): external ticket id + title — `LIN-42_realtime-notifications.md`; no `_spec.md` (the ticket is the spec).
 

@@ -281,7 +281,8 @@ So every existing minimal `config.json` stays correct **unchanged**: the sentine
 
 **Readers that implement this rule:**
 
-- **Commands** — `/crew:init`, `/crew:setup`, `/crew:update` (reconcile), `/crew:status`, and any command that surfaces a resolved value. They follow the contract **mentally** (markdown-first, no compiled normalizer).
+- **Commands that *surface* a value** — `/crew:init`, `/crew:setup`, `/crew:update` (reconcile), `/crew:status`. They follow the contract **mentally** (markdown-first, no compiled normalizer).
+- **Commands that *obey* a value** — every command whose behavior scales with a field it never prints: `/crew:brief` (`workflow.brief.depth`/`intensity`), `/crew:plan`, `/crew:execute`, `/crew:verify`, `/crew:ship`, … Resolving is **not optional for them**: an unresolved field is no instruction at all, so the behavior it steers silently vanishes. They resolve **before their first step** (`crew-conventions` → *Resolve the config before step 1*), and every config-scaled instruction keeps an **unconditional baseline** so it still works with no `.planning/` present.
 - **The `notify` hook** (JavaScript) — resolves `notifications.*` layer-by-layer at runtime; it implements the rule **locally** in JS. It must never compare against, nor emit, the literal `"inherit"`.
 - **The reconcile procedure** — diffs the live config and renders resolved values + their source.
 

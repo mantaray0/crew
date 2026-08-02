@@ -163,9 +163,9 @@ while keeping repo content in English.
   `postgres`, `tailwind`, `auth`, …). You add / rename / remove until it matches how you actually
   work, then it's written only after you confirm.
 - Optionally writes a **global `config.json`** — going through each config group (`models`, `git`,
-  `notifications`, `tasks.provider`, `execute`, `language.files`, …) one at a time, asking
-  "keep default vs override". Only the values you confirm are written; everything else stays a
-  built-in default.
+  `notifications`, `tasks.provider`, `execute`, `brief`, `language.files`, …) group by group —
+  batching the independent questions — asking "keep default vs override". Only the values you confirm
+  are written; everything else stays a built-in default.
 
 Run this once per machine. Backed by the `crew-config` and `crew-conventions` skills.
 
@@ -198,8 +198,10 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
 
 - Reads `.planning/PROJECT.md` if present (so it knows this is a feature inside an existing project
   vs. a brand-new project).
-- Runs **Roast-Me clarification** (`roast-me` skill): sharp questions one at a time, each carrying a
-  recommended answer you can just confirm. Honors `config.workflow.brief.depth` (`light`/`normal`/`deep`).
+- Runs **Roast-Me clarification** (`roast-me` skill): sharp questions in batched rounds, each carrying a
+  recommended answer you can just confirm. Honors `config.workflow.brief.intensity`
+  (`gentle`/`normal`/`brutal` — how *hard* it challenges, and how deep it drills before it may stop) and
+  `config.workflow.brief.depth` (`light`/`normal`/`deep` — how *broad* the questioning is).
   When a question is answerable from the codebase, it investigates instead of asking.
 - For a new project, captures the stack and writes `PROJECT.md`. For a feature, writes the milestone's
   permanent **`_spec.md`** (its single source of intent). Stops when shared understanding is reached.
@@ -209,6 +211,10 @@ Run this once per repo. Backed by `crew-config`, `roast-me`, and `crew-conventio
 > plan files. **Waits for your approval before any execution.**
 
 - Reads `PROJECT.md`, the relevant milestone's `_spec.md`, `ROADMAP.md`, and the `backlog/` items.
+- **Plans the *how*, not the *what*.** Goal and scope were settled in `/crew:brief`, so this command
+  deliberately runs **no** Roast-Me: it decides phase cut, sequencing and approach, and bounces a
+  genuine intent gap back to `/crew:brief`. Structural ideas the brief parked (the Spec's
+  `Notes for planning`) get decided here.
 - **Triages the backlog** — surfaces relevant ideas and asks (multi-select) which to fold in now. On promote it **seeds** the plan from the item's Key Facts (asking only the gaps); the folded item then leaves the backlog.
 - Drafts/extends `ROADMAP.md` as milestones → phases with status markers
   `[ ]` open · `[>]` active · `[x]` done · `[~]` deferred, keeping phases **independently mergeable**
