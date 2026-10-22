@@ -1,7 +1,7 @@
 # Contributing to crew
 
-Thanks for your interest in improving **crew** — a config-driven agentic workflow harness
-distributed as a pure [Claude Code](https://www.claude.com/product/claude-code) plugin.
+Thanks for your interest in improving **crew**, a small planning plugin for
+[Claude Code](https://www.claude.com/product/claude-code).
 
 crew is **markdown + small Node hook scripts** — there is **no build, no TypeScript, no npm package**.
 Claude runs everything through the plugin against a project's `.planning/` files. That keeps
@@ -12,25 +12,30 @@ contributions approachable: most changes are editing a command, agent, or skill 
 | Path | What it is |
 |------|------------|
 | `commands/*.md` | Slash commands (`/crew:*`) — the user-facing control surface |
-| `agents/*.md` | Specialist sub-agents (reviewers, simplifier, architect, …) |
+| `agents/executor.md` | The phase sub-agent `/crew:execute` spawns |
 | `skills/<name>/SKILL.md` | Reusable knowledge/procedures the workflow relies on |
 | `hooks/` | `hooks.json` + self-contained `.mjs` lifecycle scripts |
 | `.claude-plugin/plugin.json` | The plugin manifest |
-| `scripts/validate-plugin.mjs` | Structure check run in CI |
+| `scripts/validate-plugin.mjs` | Structure, reference and word-budget check run in CI |
+| `scripts/*.test.mjs` | Tests for the SessionStart hook and the config cleanup |
 
 ## Authoring conventions
 
 - **Commands** need YAML frontmatter with a `description` (and optionally `argument-hint`).
 - **Agents** need frontmatter with `name`, `description`, `tools`, `model`, and a clear task focus.
-- **Skills** live at `skills/<name>/SKILL.md` with frontmatter `name`, `description`, `origin: crew`.
-- Keep content focused and process-oriented. crew skills/rules are about **project management
-  and workflow**, not technology specifics — a project's stack lives in its `config.json`/`tags`.
+- **Skills** live at `skills/<name>/SKILL.md` with frontmatter `name` and `description`.
+- The `.planning/` format and the config live in one place, `skills/crew-state/SKILL.md`; commands
+  point there instead of restating it.
+- Write only what changes the model's behavior. The validator enforces a word budget for
+  `commands/`, `agents/` and `skills/`; raise it deliberately, never as a side effect.
 - No references to other harnesses' names or branding.
 
 ## Local checks
 
 ```bash
-node scripts/validate-plugin.mjs   # validates manifest, frontmatter, hook references
+node scripts/validate-plugin.mjs   # manifest, frontmatter, references, word budget
+pnpm test                          # SessionStart hook and config cleanup
+claude plugin validate .           # Claude Code's own manifest check
 ```
 
 Try your change by pointing Claude Code at your fork:

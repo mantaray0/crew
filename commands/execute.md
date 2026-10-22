@@ -1,101 +1,23 @@
 ---
-description: Execute phases — a whole milestone sequentially (default), one named phase by hand, or independent phases in parallel (dispatch).
-argument-hint: "[phase id | auto | dispatch [ids]]"
+description: Run the active milestone's phases, each in a fresh executor sub-agent — all in sequence, or one named phase.
+argument-hint: "[phase id]"
 ---
 
 # /crew:execute
 
-The execution verb. `$ARGUMENTS` selects how execute runs the milestone's **phases**:
+Load the `crew-state` skill. Resolve `workflow.execute.loop`, `workflow.execute.review` and `language.files` before step 1.
 
-- **`/crew:execute`** — work through the active milestone's phases **sequentially** until done. The default (`workflow.execute.loop: all`). With `loop: one` configured it instead runs just the next phase and stops.
-- **`/crew:execute [phase id]`** — run exactly ONE named phase to completion, then stop (whatever `loop` is set to).
-- **`/crew:execute auto`** — force the sequential loop for this run (`workflow.execute.loop: all`), regardless of config — identical to a bare `/crew:execute` under the default.
-- **`/crew:execute dispatch [ids]`** — run independent phases **in parallel** via worktrees (`workflow.execute.parallel`).
+## Steps
 
-These are two of the **three granularities** (see `crew-conventions` → *Workflow vocabulary*): the **phase loop** (all vs one) and the **execution strategy** (sequential vs parallel). The **third** — `workflow.mode` (`manual | auto`) — is a *separate* axis: it governs whether, once the milestone's phases are done, execute **advances the step chain** into the close-out (Ship → Learn → Complete) or stops and only suggests it (see *Milestone end* below). So "auto" is never ambiguous: the `auto` **argument** loops phases; `workflow.mode: auto` chains steps.
+1. **Pick the phase.** A phase id in `$ARGUMENTS` → that phase, and only it. Otherwise the next phase (`crew-state` → ROADMAP). Nothing runnable → say why and route: milestone fully done → step 6; next milestone has no phases → `/crew:plan`; blocked by `depends:` → name the blocker.
+2. **Claim** it: `[>]` in `ROADMAP.md`.
+3. **Run it** in a fresh sub-agent of type `crew:executor`. Its prompt: phase id, plan file path, `_spec.md` path, review effort, `language.files`. Wait for it to hand back.
+4. **Check the hand-back.** The phase is done only when `ROADMAP.md` shows it `[x]`, `LOG.md` has its line, and `git log` has its commit. Anything missing → tell the user what is missing and ask whether to rerun the phase. If the executor reports the `code-review` skill unavailable, run it here on the phase commit with the same effort, settle each finding (fix, or reject with one sentence) and commit the fixes.
+5. **Report** in a few lines: phase, commit, checks, review (fixed count, each rejected finding with its reason). On a `stopped` hand-back, put the executor's options to the user and run no further phase.
+6. **Continue.** With `loop: all`, no phase id given and no stop: back to step 1. When the milestone's phases are all `[x]` or `[~]`, offer to close it (`crew-state` → Closing a milestone); commit the result as `docs(planning): close <milestone>` if `.planning/` is tracked.
 
-Uses `crew-context` and `planning`. The per-phase **work core** runs in the `crew:executor` agent (the named phase sub-agent — see *Fresh context per phase*); `dispatch` additionally uses `git-merge` and the `crew:merge-coordinator` agent.
+Push, pull request and branch changes happen only on the user's explicit request.
 
-**Follow `crew-conventions`:** respond in the user’s language; when a decision is needed, ask it explicitly (single-select / multi-select / free-text) rather than assuming.
+## Hand-off
 
-## Per phase (the building block)
-
-These steps run once per phase — the unit both the default loop (`loop: all`) and a single `/crew:execute [phase id]` are built from. **Where they run differs by mode:** under the sequential auto-loop (`loop: all`) the main context orchestrates — routing, claim, the user-test gate, milestone-end chaining — and delegates the **work core** (implement → verify → commit, steps 3–5) to **one sub-agent per phase**, so each phase gets a genuinely fresh context (see *auto* below). A single-phase run (`loop: one` or a named id) runs all steps in the main context and hands off (see *Hand-off*).
-
-1. **Load context.** Read `.planning/PROJECT.md`, `.planning/ROADMAP.md` (find the active `[>]` phase, else the next `[ ]`), its plan file under `.planning/plans/<n>_<milestone-slug>/<id>_…md` (glob `plans/**/*.md` to locate it by phase id), and the last entries of `.planning/LOG.md`. From these the **exact next step** must be unambiguous. **Idle routing:** if nothing is unambiguously runnable because the active milestone is fully done and the next milestone is **unplanned** (no `[ ]` phases written yet), route the user to `/crew:plan` (write the next phases) or `/crew:resume` (re-orient) instead of asking vaguely. If the next step is ambiguous for any other reason, ask.
-2. **Milestone-boundary guard, then claim.** If the next `[ ]` phase belongs to a *different* milestone than the one just finished **and** that previous milestone is fully `[x]` (treat `[~]` deferred phases as not-blocking), **pause before claiming** and handle the close-out per **`workflow.mode`** (see *Milestone end* below) — under `manual` (default) **offer `/crew:finish`** (the Ship → Learn → Complete close-out strand) and let the user skip; this is also the canonical **Catch-up** behavior (`crew-conventions`). It only *offers*, it never self-finishes under `manual` (`config.git.autoPush`/`autoPR` stay false). Under `auto` advance per *Milestone end* below — the remote/prod boundary still holds either way. Then **claim:** mark the phase `[>]` in `ROADMAP.md` and record the claim in `.planning/claims.json` (so parallel instances don't collide). **Milestone-start isolation (sequential).** When *entering* a milestone (claiming its first phase), consult `config.git.isolation` — the **sequential** run honors it too, not only `dispatch`: under `*-per-milestone`, create **once** a worktree+branch (mechanism per the prefix, `worktree-` preferred) named by `config.git.branchPattern`, forked from `config.git.baseBranch`; **all** the milestone's phases run inside it — no separate worktree per phase in a sequential run. `off` stays linear (today's behavior). Phase-level isolation isn't a config value here — it's intrinsic to `dispatch`. `git-merge` is the source of truth for the *mechanic*; this only says *when* execute triggers it. Creation is **local**: `autoPush`/`autoPR`/merge stay bound to `config.git`, so with `baseBranch ≠ main` nothing reaches `main` automatically.
-3. **Implement.** Do exactly what the plan's phase specifies, mirroring existing patterns. Model = `config.models.execution` (or auto). **Deviation handling (`workflow.execute.onDeviation`):** decide small in-intent deviations yourself and note them in the log; on a real problem, ambiguity, or scope change, **stop and ask**.
-4. **Verify.** Run the verify pipeline per `config.workflow.execute.verify` (phase override allowed): `test` (tests/build/typecheck) → `smoke` (run the built app; skipped cleanly when no command is defined) → `review` → `harden` → `simplify`, each in a fresh sub-agent context. Summarize findings; critical findings block the commit until fixed or consciously waived. `verify` is **never** auto-skipped — it has no `run`-gate. Security pass only if recommended and approved.
-5. **Commit & record.** If `config.git.autoCommitPerPhase`: make one atomic commit shaped by `config.git.commitPattern`. Update `ROADMAP.md` (`[x]` + timestamp), append to `LOG.md` (phase, commit, verify result, and a token/cost note if `observability.trackCost`). Release the claim in `claims.json`.
-6. **Report, then continue or stop.** Summarize what shipped and name the next pending phase. If `config.workflow.usertest.cadence` is `per-phase`, run the **user-test gate** (see *User-test gate* below) for this phase — a tightly focused checklist — and pass it **before** continuing or stopping. **Under the default `workflow.execute.loop: all`** (or `/crew:execute auto`), continue automatically to the next phase — which runs in its own fresh sub-agent (see *auto* below). **Under `loop: one`, or when a single phase id was given,** stop here and let the user trigger the next phase.
-
-Never push or open a PR here — pushing and PRs require explicit approval and are out of this command's scope (`config.git.autoPush`/`autoPR` stay false by default).
-
-### Fresh context per phase (reliable)
-
-Whenever the loop **continues** to a next phase (the default `loop: all`, or `auto`), each phase's **work core** (implement → verify → commit, steps 3–5) runs in a **dedicated sub-agent** — that is how the fresh context per phase is achieved. A running command **cannot** trigger the built-in `/clear` or re-invoke itself in a cleared context, so the loop does **not** rely on that; it uses the one fresh-context mechanism the platform actually provides — sub-agents. The main context stays a thin **orchestrator**: it re-reads `.planning/` state (`ROADMAP.md` + `claims.json` + the phase plan), claims the next phase, spawns the phase sub-agent — **always crew's own `crew:executor` agent** (`subagent_type: crew:executor`), never a free-chosen or foreign-plugin agent — and on return records the result and runs any human gate. Continuity rides entirely on committed state, not conversation memory, so a long milestone never degrades into one bloated context. This is deliberately the **same shape as `dispatch`** — a phase sub-agent that owns implement + the verify pipeline — only **sequential and on one branch**: no worktrees, no `crew:merge-coordinator`. The phase sub-agent **owns the verify pipeline** (its review/harden/simplify spawn as its own fresh sub-agents), per crew's executor-owns-verify rule. A **single-phase** run (`loop: one` or a named phase id) does **not** use a sub-agent — it runs in the main context and hands the `/clear` to the user (see *Hand-off*).
-
-### User-test gate (`workflow.usertest.cadence`)
-
-A **human** acceptance checkpoint, run **in the main context** — never a verify sub-agent and **not** a chain step. `execute` owns it at the boundary; it is **cadence-driven, not `run`-gated** (a human can't be "auto"-run).
-
-- **When it fires** — `config.workflow.usertest.cadence`: `off` (never), `per-phase` (after **every** phase — most useful under `loop: one`, where phases already stop one at a time), `per-milestone` (**default** — at the milestone's end, **before** the close-out strand).
-- **A derived checklist, not "go test it."** On firing, crew **proposes exactly what to test** — a list of **2–10 checkpoints derived from what was actually built** (the phase plan + the commits/diff + `LOG.md`), never generic boilerplate. The user confirms them **one by one** ("works / doesn't").
-- **Count scales with scope × location.** More checkpoints for a large milestone, fewer for a small fix (scope); `per-phase` → tight on that one phase, `per-milestone` → broader, **including integration / cross-phase interaction checks** that no single phase covers.
-- **"Doesn't work" → stop and ask.** A failed checkpoint **halts and asks**; the result becomes a deviation / fix / possibly a rollback — never papered over. The gate **passes only when every checkpoint is confirmed.**
-- **It gates the move to Ship.** A milestone the human hasn't accepted does **not** advance: under `manual` `/crew:finish` is only suggested *after* the gate passes, under `auto` the close-out chain is entered only *after* it passes. The gate **holds under `auto` and `dispatch`** too — a deliberate human checkpoint, a **second absolute boundary** alongside the remote/prod one; autonomy never skips it.
-
-### Milestone end — `workflow.mode` (step chaining)
-
-Once the active milestone's phases are all `[x]`/`[~]`, **first clear the user-test gate** (above): if `workflow.usertest.cadence` is `per-milestone` (or a `per-phase` checkpoint is still open), run it now and proceed only once every checkpoint is confirmed — an unaccepted milestone advances no further. Then **`workflow.mode` decides what happens next** — this is the second granularity axis (step chain), independent of the phase loop:
-
-- **`manual` (default)** — execute **stops** and only **suggests** `/crew:finish`. It never runs ship/learn/complete itself. This reproduces today's safe behavior and keeps the autonomy contract's "never self-finish" literal.
-- **`auto`** — execute **advances the step chain** into the close-out, running **Ship → Learn → Complete** in order, each per its own `run`: `off` skip, `ask` ask at the boundary, `auto` run unasked, `smart` judge and run if worthwhile (`config.workflow.{ship,learn,complete}.run`). **"Run unasked" means entering the step and doing its *local* part only — `config.git` (`autoPush`/`autoPR`) stays the sole push/PR/merge authority regardless of `run`** (see the safety boundary below). The deliberate reversal of the earlier decoupling of execute from the close-out — but **governed by `mode`**, so it only happens when the user opted in. A stop within any chained step (a red `verify` in Ship, open phases blocking Complete) **halts the chain at that step** — the same stop-and-ask rule that applies to phases applies to each chained step; never continue past it.
-
-**Safety boundary (load-bearing), holds under `auto` and `smart` alike:** advancing a step only *enters* it — **`config.git` stays the sole git/remote authority.** Even with `ship.run: auto`/`smart`, crew does **not** push, open a PR, or merge when `config.git.autoPush`/`autoPR` are false; it does the local part and asks. (When a `smart` step "decides to ship", it is deciding to *enter* ship and do the local work — **not** authorizing the push/PR.) And **`verify` is never auto-skipped** (no `run`-gate). "Run the step?" (`run`) and "touch the remote/prod?" (`config.git`) are orthogonal axes.
-
-### Hand-off (single phase — `loop: one` or a named phase id)
-
-When you ran just one phase (because `workflow.execute.loop: one` or a phase id was given), end your reply **in the user's language** by prompting a clean context before the next step:
-
-> **Done?** Run `/clear` to reset the context, then `/crew:execute` again for the next phase — or `/crew:finish` once the milestone is done (the Ship → Learn → Complete close-out strand). Under `workflow.mode: auto` this hand-off chains automatically per each step's `run` — chaining enters each step's *local* work; push/PR still require `config.git` approval.
-
-Under the default `loop: all` you don't stop here — you continue to the next phase yourself (see *auto* below); the close-out hand-off still applies once the milestone's phases are all done.
-
-## Autonomy contract (auto + dispatch)
-
-`auto` and `dispatch` are **both autonomous milestone modes** — they differ only in *sequential* (`auto`) vs *parallel* (`dispatch`). Both obey the **same contract**:
-
-- **Loop** the active milestone's remaining `[ ]`/`[>]` phases until done.
-- **Full verify pipeline per phase** (the per-phase step 4, phase overrides honored).
-- **Stop and ask** on a real deviation, ambiguity, scope change, or a **critical verify finding** — never paper over it.
-- **The remote/prod boundary is absolute.** `config.git.autoPush`/`autoPR` stay false → crew never pushes, PRs, or merges without approval, whatever `workflow.mode`/`run` say. Under `workflow.mode: manual` (default) execute also never enters ship/learn/complete itself — it only **suggests** `/crew:finish`. Under `workflow.mode: auto` chaining into the close-out **is** the configured, pre-authorized action (each step per its `run`) — not a contract violation, because the hard remote boundary above is untouched and `verify` is never skipped.
-- **The user-test gate is a second absolute boundary.** The human acceptance gate (`workflow.usertest.cadence`, see *User-test gate*) fires at the milestone end **before** any chaining into the close-out — and **holds under both `auto` and `dispatch`**: autonomy never skips it. A failed checkpoint halts the chain (the same stop-and-ask rule), exactly as a red verify does.
-- **At the end, report and suggest** the next step — **`/crew:finish`** (the Ship → Learn → Complete close-out strand) — leaving the deliberate action to the user under `manual`; under `auto` it has already chained per the step `run`s.
-
-## auto — sequential autonomous run
-
-`auto` is **the manual loop, automated** — **one sub-agent per phase, run strictly in sequence** (this is also what a bare `/crew:execute` does under the default `loop: all`). It replaces the old manual rhythm (`/crew:execute` → `/clear` → `/crew:execute`) — which *can't* be automated, because a running command cannot trigger the built-in `/clear` or re-invoke itself in a cleared context — with the fresh-context mechanism the platform does provide: sub-agents. The main context orchestrates; each phase's work core runs in its own fresh sub-agent:
-
-1. **Claim the next phase.** In the main context, run the routing/guard steps (1–2 above) — load `.planning/` state, find the next pending phase, apply the milestone-boundary guard, then claim it (`[>]` + `claims.json`).
-2. **Run the phase in a sub-agent.** Spawn crew's **`crew:executor`** agent (`subagent_type: crew:executor`) — never a free-chosen or foreign-plugin agent — to execute the **work core** (steps 3–5): implement → the full verify pipeline (phase overrides honored) → atomic commit → stamp `ROADMAP.md`/`LOG.md`. The sub-agent **owns the verify pipeline** (its review/harden/simplify run as its own fresh sub-agents). On return, the main context **releases the claim** and runs the **user-test gate** if `cadence: per-phase`. A real deviation, ambiguity, scope change, or critical verify finding → the sub-agent reports it and the **main context stops and asks** — it does not spawn the next phase.
-3. **Continue, or stop/chain.** If the active milestone still has pending `[ ]` phases **and** no stop condition fired, **loop to step 1** for the next phase — a new sub-agent, a new fresh context; no `/clear`, no re-invocation needed. Otherwise (no pending phases, or a stop fired) handle the milestone end per **`workflow.mode`** (*Milestone end* above): the **user-test gate** fires first (per its cadence) and must pass, then under `manual` (default) report and **suggest** `/crew:finish`; under `auto` advance the chain (Ship → Learn → Complete per each step's `run`). On a stop condition (deviation/critical finding, or a failed user-test checkpoint), do **not** loop or chain.
-
-Same branch, no worktrees, strictly sequential — `auto` differs from `dispatch` only in being **sequential rather than parallel**; both isolate each phase in a sub-agent. The phase loop and `workflow.mode` stay independent. If `config.workflow.execute.parallel` is `auto` and the milestone has independent phases, you may propose switching to `/crew:execute dispatch` (with confirmation) instead of looping sequentially.
-
-## dispatch [ids] — parallel autonomous run
-
-Parallelize the phases that can safely run at once. Uses `planning` (DAG) and the `git-merge` skill — **`git-merge` is the source of truth** for worktree isolation, claims, and integration; this mode drives it, it does not restate it. `[ids]` optionally narrows to specific phases or a milestone; default = the active milestone. Obeys the **autonomy contract** above — under `manual` it never enters ship/learn/complete; under `auto` it chains the close-out per each step's `run`; the remote/prod boundary (`config.git`) holds in either mode.
-
-1. **Build the DAG.** Parse the active milestone's phases and their `depends:` edges from `ROADMAP.md`. Compute waves of independent phases.
-2. **Confirm the plan.** Show which phases will run in parallel and which are sequential; wait for OK (or proceed if explicitly invoked).
-3. **Dispatch a wave.** For each independent phase in the current wave, up to `config.workflow.execute.maxConcurrent` at a time:
-   - Create a worktree + branch **per phase** — `dispatch` always isolates per phase (parallelism requires it), mechanism per the `config.git.isolation` prefix (`worktree-` preferred). When **milestone isolation** is active, the phase worktree **nests under the milestone branch** (forks from it); otherwise it forks from `config.git.baseBranch`. See `git-merge` for the mechanic.
-   - Claim the phase in `claims.json` (`@<worktree-id>`).
-   - Run the phase as a sub-agent — crew's **`crew:executor`** agent (`subagent_type: crew:executor`), never a free-chosen or foreign-plugin agent — implement + the verify pipeline, in isolation.
-4. **Rolling integration.** As soon as a phase finishes **and verifies**, hand it to the `crew:merge-coordinator` to integrate per `config.git.mergeStrategy` (`integration-branch` rolling · `pr` per phase · `ask-each`) — the merge **target** is the milestone branch when nesting under milestone isolation, else `config.git.baseBranch` (`git-merge` is the source of truth; the merge *permission* stays with `config.git`). Verify after each merge. In-flight worktrees rebase onto the new integration state to minimize drift.
-5. **Next wave.** When a wave's phases are integrated, unlock the dependent phases (their deps are now done) and dispatch the next wave.
-6. **Finish.** Report integrated phases, update `ROADMAP.md`/`LOG.md`, release claims, and clean up worktrees.
-7. **Close-out.** Handle the milestone end per **`workflow.mode`** (*Milestone end* above): the **user-test gate** fires first (per its cadence and **holds under dispatch** too) and must pass, then under `manual` (default) report and **suggest** `/crew:finish`; under `auto` advance the chain (Ship → Learn → Complete) per each step's `run`, with the same remote/prod boundary — `config.git` stays sole authority. On any stop condition (including a failed user-test checkpoint), do **not** chain.
-
-If a merge conflict is genuinely ambiguous, the `crew:merge-coordinator` asks (`config.git.conflictPolicy`). On a real problem in any phase, stop and ask.
+After a single phase or a stop: "Run `/clear`, then `/crew:execute` for the next phase."

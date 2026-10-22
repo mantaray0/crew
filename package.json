@@ -3,7 +3,7 @@
   "version": "0.23.0",
   "private": true,
   "packageManager": "pnpm@11.6.0",
-  "description": "Config-driven agentic workflow harness for Claude Code (plugin)",
+  "description": "Planning state for Claude Code: .planning/ across sessions, one fresh executor per phase (plugin)",
   "type": "module",
   "license": "MIT",
   "author": "Daniel Baumert",
@@ -23,6 +23,7 @@
     "ai"
   ],
   "scripts": {
+    "test": "node --test scripts/session-start.test.mjs scripts/prune-config.test.mjs",
     "changeset": "changeset",
     "version": "changeset version && node scripts/sync-version.mjs"
   },
