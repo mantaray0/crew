@@ -1,56 +1,25 @@
 ---
-description: Initialize crew in the current project — pick a project type, capture the stack, and scaffold the committed .planning/ state.
+description: Set up crew's .planning/ state in the current project.
 ---
 
 # /crew:init
 
-Set up `.planning/` for this project. Uses the `crew-config` skill (config schema + archetypes), `roast-me` for the stack interview, and `crew-conventions`.
-
-**Follow `crew-conventions`:** walk step by step, ask each decision explicitly (archetype = single-select; tags = multi-select; stack values = free-text or confirm), never silently apply defaults, and respond in the user's language.
+Load the `crew-state` skill.
 
 ## Steps
 
-1. **Detect the mode.** If `.planning/config.json` already exists, this is a **re-run → reconcile mode**, *not* a re-scaffold: bring the project config up to date with the installed plugin (see `crew-config` → **Config versioning & migration**). Read the current plugin version from `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`; schema-diff the existing `config.json` (classify keys new / removed / unchanged); **first apply the known migrations** from `crew-config` → **Known migrations** (the section renames plus the workflow-nesting moves into `config.workflow.*` — e.g. `ship`→`workflow.ship`, `retro`→`workflow.learn`, `verify`→`workflow.execute.verify`, `finish.*`→step `run`s) so renamed/split/moved keys keep their value; **ask per new field — inherit-first** (`crew-config` → *Inherit-first writes*): the **take-from-global** choice is first and pre-selected, and writing the sentinel `"inherit"` when chosen; use its purpose + recommended default from the `crew-config` schema (single-select for enums like `responseStyle` and the new `workflow.mode`/`run` gates, free-text for open values); offer to drop removed keys (`loop`/`state`/`brief.askOnlyWhenStuck`). **Then, per `crew-config` → *Config versioning & migration*** (delegated, not restated here): run the **one-time inherit-first cleanup** — at the inherit-first transition (gated on `crewVersion` < `0.16.0`), present the inheritable project fields whose written value equals the resolved global value as one batched multi-select "reset to inherit? (set to `"inherit"`)", candidates pre-selected; **offer the opt-in revisit pass** — re-walk every inheritable/workflow field with the same inherit-first form (current value pre-selected) so any parameter can be changed or reset; and allow **resetting** any single override back to inherit (set to `"inherit"`). Declining the revisit leaves the reconcile purely additive (lossless). **Also offer once — opt-in — to expand a pre-sentinel (minimal) config to the full inherit form** (`crew-config` → *Known migrations* expansion entry): every currently-absent inheritable leaf written as `"inherit"`, existing concrete freezes untouched — never forced; a declined config stays minimal and equally correct. In the reconcile report, show each inheriting field's **resolved value + source** in the one canonical form (`crew-config` → *Surfacing the source*: `` `language.files`: inherit → `de` (from global) ``). **Do not** re-run the archetype/stack interview. Then stamp `crewVersion` to the current plugin version. **Also offer to migrate the plans layout:** legacy flat files in `plans/` (`_<slug>.md` briefs and bare `<id>_…md` phase plans) predate the numbered-milestone-folder structure — offer to move each into its `plans/<n>_<milestone-slug>/` folder (number-prefixed by milestone; brief → `_spec.md`; see `planning`). A pure `mv`, no content change. Do **not** overwrite `PROJECT.md` / `ROADMAP.md` / `LOG.md` or re-run the archetype interview. Skip the first-run scaffold steps below — the opt-in revisit pass above **reuses their inherit-first question form**, it does not re-scaffold. — Otherwise (`.planning/` absent), continue with the first-run scaffold.
-2. **Pick a project type.** Read the global registry `~/.claude/crew/project-types.json` if present, else use the starter archetypes documented in the `crew-config` skill. Ask the user to pick one (`app` / `api-service` / `cli` / `marketing-site` / …) or "decide later". Seed `tags`, `stack`, and `testingPolicy` from the chosen archetype.
-3. **Stack interview.** Confirm or adjust DB / frontend / UI / backend-API / queue / deploy — pre-filled from the archetype and the user's defaults. Offer the escape "you decide → I propose → you approve".
-
-**Inherit-first for steps 4–7 (read before asking).** Every config-driven question below follows **inherit-first** (`crew-config` → *Inherit-first writes* is the source of truth — reference it, don't restate the rule): the **first, pre-selected** option is **"take from global (currently: `<resolved value>`)"** — read from `~/.claude/crew/config.json`, falling back to the built-in default — and choosing it **writes the sentinel `"inherit"`** (dynamic inheritance, visible in the file). The actual values follow below it. Picking a concrete value **writes it, even when equal to the inherited value** (a deliberate freeze). The pre-selected answer is inherit **except** the two detected/project-specific cases noted below (`ship.releaseTool` on auto-detection, `testingPolicy` from the archetype).
-
-4. **File language (`config.language.files`).** Single-select: which language should crew write this project's files in (`PROJECT.md`, `ROADMAP.md`, `LOG.md`, `plans/`, `backlog/`)? **take from global** (first, pre-selected — writes `"inherit"`) · **English** · **the user's language**. Inherit is stored as the sentinel `"inherit"` (visible in the file), resolved at runtime per `crew-config` → *Resolving inherited fields* — **not** absent.
-5. **Roast level (`workflow.brief.intensity` + `workflow.brief.depth`).** Two independent single-selects — **batch them** (orthogonal axes, neither answer changes the other's options):
-   - `intensity` — how *hard* Roast-Me challenges ideas during `/crew:brief` (and how deep it drills before it may stop): **take from global** (first, pre-selected) · `gentle` · `normal` · `brutal`.
-   - `depth` — how *broad* the questioning is (which branches of the decision tree get covered): **take from global** (first, pre-selected) · `light` · `normal` · `deep`.
-6. **Deploy / release interview (`config.workflow.ship` + runbook).** Ask **per leaf field**, inherit-first, **no block-level shortcut** — each field's first option is **take from global**. `enabled` is the **gating trunk**, asked first; if it resolves to **off**, skip the dependent ship fields below. Batch the independent ones:
-   - `enabled` — take from global · **on** · off. (trunk)
-   - `provider` — take from global · `gh-actions` · `gitlab-ci`.
-   - `releaseTool` — `auto` (**recommended here** — pre-fill the value **detected** from the repo per `deploy` → Release mechanics; the detection exception to inherit-first) · take from global · `changesets` · `release-please` · `semantic-release` · `manual` · `none`.
-   - `runDeploy` — take from global · `off` (push-triggered CI, the push *is* the deploy) · `ask` · `auto`.
-   - `finishRelease` — take from global · `off` · `ask` · `auto` — **only ask when** the resolved `releaseTool` is a bot-PR tool (`changesets`/`release-please`).
-   - `tagPattern` / `environments` — take from global, or a concrete value (free-text / list) to freeze.
-   Then **actively create `reference/deploy.md`**: interview the concrete procedure — release strategy, branch/tag conventions, environments, secrets *policy* (pointers, never values), rollback, and (when `runDeploy ≠ off`) the deploy command(s) — write the runbook and index it one line under `PROJECT.md`'s `## Reference`.
-7. **Workflow gates + cross-cutting (`config.workflow`, `git`, `responseStyle`).** Ask this group so the two-level model and the cross-cutting fields aren't silently defaulted (`crew-conventions`). **Batch these independent questions in an `AskUserQuestion` stepper**; each single-select is inherit-first (**take from global** first and pre-selected, showing the resolved value). Fields:
-   - `responseStyle` — take from global · `concise` · `detailed` · `auto` — verbosity/format of crew's replies. **Actively asked here** (never blindly seeded).
-   - `workflow.mode` — take from global · `manual` · `auto` — does the step chain advance between steps (execute → ship → learn → complete)?
-   - `workflow.ship.run` — take from global · `off` · `ask` · `auto` · `smart` — the ship close-out gate (orthogonal to `ship.enabled` above; `config.git` still authorizes every push/PR).
-   - `workflow.learn.run` — take from global · `off` · `ask` · `auto` · `smart`.
-   - `workflow.complete.run` — take from global · `off` · `ask` · `auto` · `smart`.
-   - `workflow.execute.loop` — take from global · `all` · `one` — the phase loop (`all` works through the whole milestone, `one` stops after each phase); and `workflow.execute.parallel` — take from global · `auto` · `manual` · `off` — the execution strategy.
-   - `workflow.usertest.cadence` — take from global · `off` · `per-phase` · `per-milestone` — when the **human** acceptance-test gate fires at the end of execute (a person confirms a derived checklist). `off` = no gate; `per-phase` = after every phase (useful with `loop: one`); `per-milestone` (default) = once at the milestone boundary. Recommend inherit.
-   - `git.isolation` — take from global · `off` · `worktree-per-milestone` · `branch-per-milestone` — **opt-in** work isolation: `off` is linear, no isolation branch (the default — surface it here so the capability is discoverable, but recommend inherit); `worktree-per-milestone` gives a whole milestone its own worktree+branch (work on different milestones in parallel); `branch-per-milestone` is one branch per milestone, no separate worktree. (Phase-level isolation isn't a setting — it's intrinsic to `dispatch`.) And `git.baseBranch` — take from global · a branch name — fork/merge target for isolation branches (default `main`); recommend inherit, only set it for a project collecting work on a non-`main` integration branch (e.g. `redesign`). Other `git.*` fields keep their defaults — not asked here.
-
-   Write each field into `config.*`: an **explicitly chosen** value as that concrete value (a freeze), and **every "take from global" choice → the sentinel `"inherit"`** so the knob is visible and inherits at runtime through the `defaults < global < project` layering (`crew-config` → *Inherit-first writes*).
-8. **Commit or ignore `.planning/`.** Single-select: **commit** `.planning/` (recommended — shareable, part of project history, readable by PM integrations) or **gitignore** it (local-only)? If **gitignore**, add a `.planning/` line to the project's `.gitignore` (create the file if missing). If **commit**, make sure `.planning/` is not ignored.
-9. **Scaffold `.planning/`:**
-   - `config.json` — **write all inheritable leaves in the full inherit form** (`crew-config` → *Inherit-first writes* + *A written project config* for the exact shape): every inheritable leaf is present, each either a **concrete value** (the user's explicit freeze) or the sentinel **`"inherit"`** (a "take from global" choice). Always **concrete** project facts: `projectType`, `tags`, `stack`, `crewVersion` (the current plugin version, from `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`) — never `"inherit"`. Leaves written **concrete only when explicitly chosen**, else `"inherit"`: `testingPolicy`, `language.files`, `responseStyle`, `workflow.brief.intensity`, the `workflow.ship.*` fields, any `workflow` gate (`mode`/`ship.run`/`learn.run`/`complete.run`/`execute.loop`/`execute.parallel`/`usertest.cadence`), and `git.isolation`/`git.baseBranch`. With every inheritable question answered "take from global", `config.json` carries the project facts concrete and **all** remaining leaves as `"inherit"`.
-   - `PROJECT.md` — architecture decisions (the *why*), current state, constraints, and a stack table **mirrored from `config.stack`** (the source of truth) — written in `config.language.files`.
-   - `ROADMAP.md` — an empty first milestone.
-   - `LOG.md`, `claims.json` (`{}`), and empty `plans/` and `backlog/` directories (no `BACKLOG.md` — see `crew-context`).
-10. **Confirm** and point to `/crew:brief` (new feature) or `/crew:plan`.
-
-Write the files with your file tools — deterministic content, no guessing. Write the project's facts (`projectType`/`tags`/`stack`/`crewVersion`) concrete, plus **all** inheritable leaves in the full inherit form (inherit-first — `crew-config` → *Inherit-first writes*); inherited fields carry the sentinel `"inherit"`.
+1. **Existing `.planning/`** → nothing to scaffold; older crew state works as is. Report what is there; if `PROJECT.md` has no `## Checks`, offer to add one from the manifest. Stop.
+2. **Detect** the stack and the test, typecheck and lint commands from the manifests (`package.json`, `composer.json`, `Makefile`, …).
+3. **Ask**, batched, each with a recommendation:
+   - `language.files` — recommend the global value, else the user's language.
+   - Commit `.planning/` (recommended) or add it to `.gitignore`.
+   - The `## Checks` commands as detected — confirm or correct.
+   - One line on what the project is.
+4. **Write:**
+   - `config.json` with only the keys that differ from the global config (`{}` when none).
+   - `PROJECT.md`: what it is, a stack table, `## Checks`, empty sections for decisions and current state.
+   - `ROADMAP.md` with a title, `LOG.md` with `# Log`, empty `plans/` and `backlog/`.
 
 ## Hand-off
 
-When you're done, end your reply **in the user's language** by prompting a clean context before the next step:
-
-> **Done?** Run `/clear` to reset the context, then `/crew:brief` to clarify your first idea — or `/crew:plan` if the work is already clear.
+"Run `/clear`, then `/crew:brief` for the first idea — or `/crew:plan` if the work is already clear."

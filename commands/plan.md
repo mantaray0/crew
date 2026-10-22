@@ -1,29 +1,21 @@
 ---
-description: Turn a clarified brief into a roadmap (milestones → phases) and detailed plan files. Triage the backlog. Wait for approval before execution.
-argument-hint: "[feature/plan slug, optional]"
+description: Cut a brief into roadmap phases with one plan file per phase, triage the backlog, and wait for approval.
+argument-hint: "[milestone or slug]"
 ---
 
 # /crew:plan
 
-Produce the executable plan from a brief. Uses the `planning` and `crew-conventions` skills.
-
-**Follow `crew-conventions`:** surface decisions as explicit questions (which backlog items to fold in = multi-select; approach choices = single-select), don't silently decide; respond in the user's language. Resolve the `config.workflow.plan`/`models.planning` fields your steps obey **before step 1** (→ *Resolve the config before step 1*).
-
-**Scope line — this command plans the *how*, not the *what*.** The goal and scope were clarified and challenged in `/crew:brief`; here they are **settled input**. So `/crew:plan` deliberately does **not** run `roast-me` — no re-clarifying, no re-challenging the idea. It decides structure: phase cut, sequencing, approach. A genuine **intent** gap is not yours to close — bounce it back to `/crew:brief` (step 1).
+Load the `crew-state` skill. This command decides the how; the what is settled in the brief.
 
 ## Steps
 
-1. **Read context.** Read `.planning/PROJECT.md`, the originating brief `.planning/plans/<n>_<slug>/_spec.md` — the milestone Spec (if any — see `planning` file naming), `.planning/ROADMAP.md`, and the backlog item files `.planning/backlog/*.md` (one file per item — see `crew-context` → *The backlog*; there is no `BACKLOG.md`). **Trust the Spec as locked intent** — plan *structure/sequencing*, do not re-clarify the what/why. If you hit a genuine **intent** gap (a missing requirement, an undecided goal), bounce it back to the brief ("this belongs in `/crew:brief`") instead of silently deciding it. **Pick up the Spec's `Notes for planning`** (if present): these are the structural/sequencing ideas the brief parked *for you* (`planning` → *the brief→plan handoff*). Decide each one here — fold it into the phase cut or drop it with a reason — and never leave one silently unhandled. They are **input, not requirements**: a note may well be dropped; a requirement may not.
-2. **Triage the backlog.** Surface backlog items relevant to this plan (from each item's frontmatter `title`/`priority`/`description`); ask the user which to fold in now vs. leave parked (multi-select). **When folding an item, read its frontmatter + Key Facts and *seed* the plan from them** (pick up the captured motivation / constraints / affected area) — then clarify only the **remaining gaps**, don't re-ask cold (the handoff contract, `crew-context` → *The backlog*). Remove each folded item's file (a promoted item is retired from the backlog — `crew-context` lifecycle); leave parked items untouched.
-3. **Draft the roadmap.** Write/extend `.planning/ROADMAP.md` as milestones → phases using markers `[ ]` open · `[>]` active · `[x]` done · `[~]` deferred. Keep phases independently mergeable. Record inter-phase **dependencies** (for later parallel dispatch).
-4. **Write the plan.** For each phase, write a **numbered** plan file into the numbered milestone folder `.planning/plans/<n>_<milestone-slug>/<id>_<kebab-title>.md` (folder prefixed with the milestone number `<n>`; file named by the roadmap phase id, e.g. `1_fundament/1.2_db-schema.md`). Each phase file carries a short **Scope of this phase** note (1–3 lines: the deliverable + this phase's own acceptance) that **references `_spec.md`** for the full intent, followed by the **Plan** body: affected files, tasks (Action / pattern to mirror / validation command), risks, and this phase's verify configuration. Do **not** copy a full `## Spec` head into the phase file — `_spec.md` is the single, permanent source of intent (the milestone Spec stays; it is never folded into the phase plans). For a **new project**, create one `<n>_<milestone-slug>/` folder per roadmap milestone; for a **feature**, write into the brief's existing `<n>_<slug>/` folder.
-5. **Ground in the codebase.** Mirror existing patterns; reference real files. Use the relevant stack skills based on the project's `tags`. For an **unfamiliar codebase or a complex feature**, you **may** dispatch a read-only investigator first — `crew:code-explorer` (trace execution paths, map architecture, document conventions) or `crew:architect` (approach + phase breakdown) — and fold its returned report into the plan. This is **optional and advisory**: always crew's own `crew:`-namespaced agent (never a free-chosen or foreign-plugin agent), it returns findings only, and the planning conversation itself stays interactive in the main context (sub-agents can't run the decision questions `crew-conventions` requires).
-6. **Present and wait.** Show the roadmap + plan summary and **wait for explicit approval**. Do not start implementation here — that is `/crew:execute` (or `/crew:execute dispatch` for parallel phases).
-
-If a security-sensitive area appears (auth, payments, tokens), note it and recommend a security pass in verify — do not enable it automatically (`security.auto` stays false).
+1. **Read** `PROJECT.md`, `ROADMAP.md`, the backlog, and the milestone's `_spec.md` (named in `$ARGUMENTS`, else the newest without phases; a new project plans from `PROJECT.md`). An intent gap — a missing requirement or goal — goes back to `/crew:brief`. Decide every `Notes for planning` item: fold it in or drop it with a reason.
+2. **Backlog.** Offer the items relevant to this milestone (multi-select). A folded item seeds the plan with its Why; delete its file once the plan is written.
+3. **Ground in the code.** Read what the phases will touch and name real files and patterns to mirror; for wide terrain, send an Explore sub-agent.
+4. **Cut phases.** Each phase is one commit that the `## Checks` can verify, with its `depends:`. Its Risks name what a reviewer must not trade away.
+5. **Show** the roadmap section and a summary per phase; adjust until the user approves.
+6. **Write** in `language.files`: the `ROADMAP.md` section (title, one-line hook, phases) and one plan file per phase in `plans/<n>_<slug>/`.
 
 ## Hand-off
 
-When you're done, end your reply **in the user's language** by prompting a clean context before the next step:
-
-> **Done?** Run `/clear` to reset the context, then `/crew:execute` to build the first phase — or `/crew:execute dispatch` to run independent phases in parallel.
+"Run `/clear`, then `/crew:execute`."
