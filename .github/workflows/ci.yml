@@ -24,3 +24,5 @@ jobs:
           package-manager-cache: false
       - name: Validate plugin structure
         run: node scripts/validate-plugin.mjs
+      - name: Test the SessionStart hook
+        run: node --test scripts/session-start.test.mjs

@@ -1,7 +1,7 @@
 {
   "name": "crew",
   "version": "0.23.0",
-  "description": "Config-driven agentic workflow harness",
+  "description": "Planning state for Claude Code: .planning/ across sessions, one fresh executor per phase",
   "author": {
     "name": "Daniel Baumert"
   },
@@ -10,7 +10,7 @@
   "repository": "https://github.com/mantaray0/crew",
   "keywords": [
     "claude-code",
-    "agent-harness",
-    "workflow"
+    "planning",
+    "roadmap"
   ]
 }
