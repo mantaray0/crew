@@ -23,7 +23,7 @@
     "ai"
   ],
   "scripts": {
-    "test": "node --test scripts/session-start.test.mjs",
+    "test": "node --test scripts/session-start.test.mjs scripts/prune-config.test.mjs",
     "changeset": "changeset",
     "version": "changeset version && node scripts/sync-version.mjs"
   },

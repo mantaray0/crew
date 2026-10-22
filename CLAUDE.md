@@ -40,8 +40,9 @@ A **milestone / phase / plan** always lives in the *planning state* and is *abou
 - **`skills/crew-state`** — the `.planning/` format and the config schema. **Single source of truth**;
   commands point at it instead of restating it.
 - **`skills/roast-me`** — the questioning `/crew:brief` runs, in rounds with recommended answers.
-- **`hooks/`** — SessionStart prints the active milestone and next phase (a few lines).
-- **`scripts/`** — `validate-plugin.mjs` (CI), `session-start.test.mjs`, `sync-version.mjs` (release).
+- **`hooks/`** — SessionStart cleans stale config (`prune-config.mjs`), then prints the active
+  milestone and next phase (a few lines).
+- **`scripts/`** — `validate-plugin.mjs` (CI), `*.test.mjs` (hook and config cleanup), `sync-version.mjs` (release).
 
 ### Guiding decisions (the *why*)
 
@@ -55,9 +56,10 @@ A **milestone / phase / plan** always lives in the *planning state* and is *abou
 - **Foreground only.** The executor hands back only with checks, commit, stamp and LOG line done;
   background checks were lost on hand-back before.
 - **Project conventions stay in the project.** Commit format, branches and tracker come from the
-  project's `CLAUDE.md`. Config has three keys; unknown keys are ignored so older configs keep working.
+  project's `CLAUDE.md`. Config has three keys; the SessionStart hook prunes every other key from the
+  global and project config (backup in `~/.claude/crew/backup/`), so stale settings never linger.
 - **Read old state tolerantly.** Real projects differ in heading style, id depth, backlog and
-  archive layout. Commands read what is there and never migrate.
+  archive layout. Commands read what is there and never migrate it; config is the one exception.
 - **Write only what changes behavior.** Instruction text was cut from 28,922 words (0.23.0) to under
   a quarter; `validate-plugin.mjs` enforces the budget.
 
@@ -69,5 +71,6 @@ A **milestone / phase / plan** always lives in the *planning state* and is *abou
   manifest via `scripts/sync-version.mjs`.
 - **Markdown-first** — new capabilities are commands/skills, not compiled code.
 - **No internal planning identifiers in shipped content.** `commands/`/`agents/`/`skills/`/`hooks/`/`README.md`/`.claude-plugin/` must never name crew's internal milestone/phase numbers (`M8`, `1.2`) or `.planning` slugs. Enforced by `scripts/validate-plugin.mjs` (check 5, run in CI).
-- **Testing:** `pnpm test` covers the SessionStart hook; `node scripts/validate-plugin.mjs` and
+- **Testing:** `pnpm test` covers the SessionStart hook and the config cleanup (tests run with a
+  temporary `HOME`, never the real `~/.claude/crew`); `node scripts/validate-plugin.mjs` and
   `claude plugin validate .` cover structure.

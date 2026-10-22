@@ -56,15 +56,20 @@ test("a finished or empty roadmap says so", () => {
   assert.match(render(summarize("")), /No open phases/);
 });
 
+// Every hook run gets its own HOME, so the tests never touch the real ~/.claude/crew.
+function runHook(cwd, home = mkdtempSync(path.join(tmpdir(), "crew-home-"))) {
+  return execFileSync("node", [HOOK], { cwd, encoding: "utf8", env: { ...process.env, HOME: home } });
+}
+
 test("the hook is silent outside a crew project and brief inside one", () => {
   const outside = mkdtempSync(path.join(tmpdir(), "crew-hook-"));
-  assert.equal(execFileSync("node", [HOOK], { cwd: outside, encoding: "utf8" }), "");
+  assert.equal(runHook(outside), "");
 
   const inside = mkdtempSync(path.join(tmpdir(), "crew-hook-"));
   mkdirSync(path.join(inside, ".planning"));
   writeFileSync(path.join(inside, ".planning", "PROJECT.md"), "# Secret project body\n");
   writeFileSync(path.join(inside, ".planning", "ROADMAP.md"), "## Milestone 1\n- [ ] 1.1 Start\n");
-  const out = execFileSync("node", [HOOK], { cwd: inside, encoding: "utf8" });
+  const out = runHook(inside);
   assert.match(out, /Next: 1\.1 Start/);
   assert.doesNotMatch(out, /Secret project body/);
   assert.ok(out.split("\n").length <= 5);

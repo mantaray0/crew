@@ -125,7 +125,7 @@ Existing archives in other layouts stay where they are.
 }
 ```
 
-Resolve each key as project (`.planning/config.json`) → global (`~/.claude/crew/config.json`) → the defaults above; a value of `"inherit"` means the next layer down. Every other key is ignored. Commit format, branches and the issue tracker come from the project's `CLAUDE.md`.
+Resolve each key as project (`.planning/config.json`) → global (`~/.claude/crew/config.json`) → the defaults above; a value of `"inherit"` means the next layer down. At session start crew removes every other key from both files, with a backup under `~/.claude/crew/backup/`. Commit format, branches and the issue tracker come from the project's `CLAUDE.md`.
 
 ## Working with the user
 

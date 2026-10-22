@@ -88,7 +88,7 @@ Everything is optional. Layers: built-in defaults, then `~/.claude/crew/config.j
 | `workflow.execute.review` | `/code-review` effort per phase: `off`, `low`, `medium`, `high`, `xhigh`, `max` |
 
 Commit format, branch names and issue tracker belong in your project's `CLAUDE.md`. Any other key
-is ignored.
+is removed at session start (backup in `~/.claude/crew/backup/`).
 
 ## Upgrading from 0.x
 
@@ -100,10 +100,13 @@ Existing `.planning/` directories work as they are; nothing is migrated or rewri
 - **Removed agents:** every reviewer, hardening and simplify agent, `architect`, `code-explorer`,
   `build-error-resolver`, `merge-coordinator`. Review is Claude Code's built-in `/code-review`;
   exploring and planning use the built-in Explore and Plan agents.
-- **Config:** only the three keys above are read. `git.*` (commit pattern, base branch, isolation),
-  `tasks`, `models`, `ship`, `learn`, `complete`, `notifications`, `observability`, `testingPolicy`,
-  `usertest`, `brief.intensity`/`depth` and `responseStyle` are ignored. If a project relied on
-  `git.commitPattern` or `git.baseBranch`, write that convention into its `CLAUDE.md`.
+- **Config is cleaned automatically.** At the first session start after the update, crew rewrites
+  `~/.claude/crew/config.json` and the project's `.planning/config.json` down to the three keys
+  above (dropping `"inherit"` values, which mean the same as no value) and moves the unused
+  `~/.claude/crew/project-types.json` aside. Originals go to `~/.claude/crew/backup/`; each
+  project's config is cleaned the first time you open a session in it. Commit the changed
+  `.planning/config.json`. If a project relied on `git.commitPattern` or `git.baseBranch`, write
+  that convention into its `CLAUDE.md`.
 - **`LOG.md`:** new entries are one line each; old entries stay as written.
 - **Hooks:** the Notification and Stop hooks are gone; the SessionStart hook no longer injects
   `PROJECT.md`.

@@ -1,10 +1,12 @@
 #!/usr/bin/env node
-// SessionStart hook: name the active milestone and the next phase from .planning/ROADMAP.md,
-// plus where the state lives. A few lines, never file contents.
+// SessionStart hook: clean configs left by older crew versions, then name the active milestone
+// and the next phase from .planning/ROADMAP.md, plus where the state lives. A few lines,
+// never file contents.
 // Opt out with CREW_SESSION_START_CONTEXT=off.
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { crewHome, projectBackupDir, pruneFile, retireProjectTypes } from "./prune-config.mjs";
 
 const MAX_PHASE_CHARS = 120;
 
@@ -46,8 +48,30 @@ export function render({ milestone, active, next }) {
   return `${lines.join("\n")}\n`;
 }
 
+// Clean configs written by older crew versions; never let a cleanup failure break the session.
+async function cleanConfigs(projectDir) {
+  const home = crewHome();
+  const notes = [];
+  const steps = [
+    () => pruneFile(path.join(home, "config.json"), path.join(home, "backup")),
+    () => retireProjectTypes(home),
+    () => pruneFile(path.join(projectDir, ".planning", "config.json"), projectBackupDir(home, projectDir)),
+  ];
+  for (const step of steps) {
+    try {
+      const note = await step();
+      if (note) notes.push(note);
+    } catch (e) {
+      notes.push(`crew: config cleanup skipped a file: ${e.message}`);
+    }
+  }
+  return notes;
+}
+
 async function main() {
   if (process.env.CREW_SESSION_START_CONTEXT === "off") return;
+  const notes = await cleanConfigs(process.cwd());
+  if (notes.length > 0) process.stdout.write(`${notes.join("\n")}\n`);
   const dir = path.join(process.cwd(), ".planning");
   try {
     await fs.access(dir);

@@ -17,7 +17,7 @@ contributions approachable: most changes are editing a command, agent, or skill 
 | `hooks/` | `hooks.json` + self-contained `.mjs` lifecycle scripts |
 | `.claude-plugin/plugin.json` | The plugin manifest |
 | `scripts/validate-plugin.mjs` | Structure, reference and word-budget check run in CI |
-| `scripts/session-start.test.mjs` | Tests for the SessionStart hook |
+| `scripts/*.test.mjs` | Tests for the SessionStart hook and the config cleanup |
 
 ## Authoring conventions
 
@@ -34,7 +34,7 @@ contributions approachable: most changes are editing a command, agent, or skill 
 
 ```bash
 node scripts/validate-plugin.mjs   # manifest, frontmatter, references, word budget
-pnpm test                          # SessionStart hook
+pnpm test                          # SessionStart hook and config cleanup
 claude plugin validate .           # Claude Code's own manifest check
 ```
 
