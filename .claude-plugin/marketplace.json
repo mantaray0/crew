@@ -11,7 +11,7 @@
       "name": "crew",
       "source": "./",
       "description": "Planning state for Claude Code: .planning/ across sessions, one fresh executor per phase",
-      "version": "0.23.0",
+      "version": "1.0.0",
       "author": {
         "name": "Daniel Baumert"
       }
